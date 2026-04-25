@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion des accès — SDIS 31 Nautique</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+</head>
+<body class="app-layout">
+
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <div class="loader-text">Chargement…</div>
+  </div>
+
+  <div class="sidebar-overlay"></div>
+
+  <!-- ===== SIDEBAR (même structure) ===== -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-badge">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="2" stroke-linecap="round">
+            <path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/>
+            <path d="M6 18c2-1.5 4-1 6-1s4 .5 6 1"/>
+          </svg>
+        </div>
+        <div class="sidebar-brand"><h2>SDIS 31</h2><span>Secours Nautique</span></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Principal</div>
+        <a class="nav-item" href="dashboard.html" data-page="dashboard.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+          Tableau de bord
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Dossiers</div>
+        <a class="nav-item" href="formation.html" data-page="formation.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          Formation
+        </a>
+        <a class="nav-item" href="rh.html" data-page="rh.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          RH
+        </a>
+        <a class="nav-item" href="technique.html" data-page="technique.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
+          Technique
+        </a>
+        <a class="nav-item" href="operationnel.html" data-page="operationnel.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>
+          Opérationnel
+        </a>
+        <a class="nav-item" href="ressources.html" data-page="ressources.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Ressources
+        </a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Administration</div>
+        <a class="nav-item active" href="admin-users.html" data-page="admin-users.html">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="20" y1="6" x2="20" y2="10"/></svg>
+          Gestion des accès
+        </a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">…</div>
+        <div class="user-role" id="userRole">…</div>
+      </div>
+      <button class="btn-logout" id="logoutBtn" title="Déconnexion">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ===== MAIN ===== -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="flex items-center gap-12">
+        <button class="hamburger btn-icon" id="hamburger">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        </button>
+        <span class="topbar-title">Gestion des accès</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-amber" id="btnCreateUser">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Créer un compte
+        </button>
+      </div>
+    </header>
+
+    <main class="page-content">
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">Comptes utilisateurs</span>
+          <input type="search" id="searchUser" placeholder="Rechercher…"
+            style="border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:7px 12px;font-size:.85rem;width:200px;outline:none;">
+        </div>
+
+        <div class="table-wrapper">
+          <table id="usersTable">
+            <thead>
+              <tr>
+                <th>Nom</th>
+                <th>E-mail</th>
+                <th>CIS</th>
+                <th>Rôle</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersBody">
+              <tr><td colspan="5" class="text-muted text-small" style="padding:20px;text-align:center">Chargement…</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- MODAL CRÉER / ÉDITER COMPTE -->
+  <div class="modal-overlay" id="modalUser">
+    <div class="modal">
+      <div class="modal-header">
+        <span class="modal-title" id="modalUserTitle">Créer un compte</span>
+        <button class="modal-close" onclick="closeModal('modalUser')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field">
+            <label>Prénom</label>
+            <input type="text" id="fPrenom" placeholder="Jean">
+          </div>
+          <div class="field">
+            <label>Nom</label>
+            <input type="text" id="fNom" placeholder="DUPONT">
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field">
+            <label>Adresse e-mail</label>
+            <input type="email" id="fEmail" placeholder="jean.dupont@sdis31.fr">
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field" id="fPasswordGroup">
+            <label>Mot de passe initial</label>
+            <input type="password" id="fPassword" placeholder="Min. 8 caractères">
+          </div>
+          <div class="field">
+            <label>CIS / Affectation</label>
+            <input type="text" id="fCis" placeholder="DELRIEU">
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field">
+            <label>Rôle</label>
+            <select id="fRole">
+              <option value="user">Utilisateur</option>
+              <option value="collab">Collaborateur</option>
+              <option value="admin">Administrateur</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Téléphone</label>
+            <input type="tel" id="fTel" placeholder="06 XX XX XX XX">
+          </div>
+        </div>
+        <div id="modalUserError" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalUser')">Annuler</button>
+        <button class="btn btn-navy" id="btnSaveUser">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      requireAuth, can, toast, openModal, closeModal,
+      db, auth, collection, getDocs, doc, updateDoc, deleteDoc
+    } from "../js/auth.js";
+    import {
+      createUserWithEmailAndPassword
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import {
+      setDoc
+    } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    window.closeModal = closeModal;
+
+    let allUsers    = [];
+    let editingUid  = null;
+
+    requireAuth(async (profile) => {
+      if (!can("users.manage")) {
+        window.location.href = "dashboard.html";
+        return;
+      }
+      await loadUsers();
+
+      document.getElementById("btnCreateUser").addEventListener("click", () => {
+        editingUid = null;
+        document.getElementById("modalUserTitle").textContent = "Créer un compte";
+        ["fPrenom","fNom","fEmail","fPassword","fCis","fTel"].forEach(id => document.getElementById(id).value = "");
+        document.getElementById("fRole").value = "user";
+        document.getElementById("fPasswordGroup").style.display = "flex";
+        document.getElementById("modalUserError").style.display = "none";
+        openModal("modalUser");
+      });
+
+      document.getElementById("btnSaveUser").addEventListener("click", saveUser);
+
+      document.getElementById("searchUser").addEventListener("input", function() {
+        const q = this.value.toLowerCase();
+        renderUsers(allUsers.filter(u =>
+          (u.nom || "").toLowerCase().includes(q) ||
+          (u.prenom || "").toLowerCase().includes(q) ||
+          (u.email || "").toLowerCase().includes(q)
+        ));
+      });
+    });
+
+    async function loadUsers() {
+      const snap = await getDocs(collection(db, "users"));
+      allUsers = [];
+      snap.forEach(d => allUsers.push({ uid: d.id, ...d.data() }));
+      allUsers.sort((a, b) => (a.nom || "").localeCompare(b.nom || ""));
+      renderUsers(allUsers);
+    }
+
+    function renderUsers(users) {
+      const tbody = document.getElementById("usersBody");
+      if (!users.length) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-muted text-small" style="padding:20px;text-align:center">Aucun utilisateur</td></tr>`;
+        return;
+      }
+      const ROLE_LABELS = { admin: "Administrateur", collab: "Collaborateur", user: "Utilisateur" };
+      const ROLE_BADGES = { admin: "badge-admin", collab: "badge-collab", user: "badge-user" };
+
+      tbody.innerHTML = users.map(u => `
+        <tr>
+          <td style="font-weight:500">${u.nom || ""} ${u.prenom || ""}</td>
+          <td class="text-muted">${u.email || ""}</td>
+          <td>${u.cis || "—"}</td>
+          <td><span class="badge ${ROLE_BADGES[u.role] || 'badge-user'}">${ROLE_LABELS[u.role] || u.role}</span></td>
+          <td>
+            <div class="flex gap-8">
+              <button class="btn btn-sm btn-outline" onclick="editUser('${u.uid}')">Modifier</button>
+              <button class="btn btn-sm btn-danger" onclick="deleteUser('${u.uid}', '${(u.nom||'')+' '+(u.prenom||'')}')">Supprimer</button>
+            </div>
+          </td>
+        </tr>
+      `).join("");
+    }
+
+    window.editUser = (uid) => {
+      const u = allUsers.find(x => x.uid === uid);
+      if (!u) return;
+      editingUid = uid;
+      document.getElementById("modalUserTitle").textContent = "Modifier le compte";
+      document.getElementById("fPrenom").value  = u.prenom || "";
+      document.getElementById("fNom").value     = u.nom    || "";
+      document.getElementById("fEmail").value   = u.email  || "";
+      document.getElementById("fCis").value     = u.cis    || "";
+      document.getElementById("fTel").value     = u.tel    || "";
+      document.getElementById("fRole").value    = u.role   || "user";
+      document.getElementById("fPasswordGroup").style.display = "none"; // pas de changement de mdp ici
+      document.getElementById("modalUserError").style.display = "none";
+      openModal("modalUser");
+    };
+
+    window.deleteUser = async (uid, nom) => {
+      if (!confirm(`Supprimer le compte de ${nom.trim()} ? Cette action est irréversible.`)) return;
+      try {
+        await deleteDoc(doc(db, "users", uid));
+        toast(`Compte supprimé.`, "success");
+        await loadUsers();
+      } catch (err) {
+        toast("Erreur : " + err.message, "error");
+      }
+    };
+
+    async function saveUser() {
+      const errDiv = document.getElementById("modalUserError");
+      errDiv.style.display = "none";
+
+      const prenom   = document.getElementById("fPrenom").value.trim();
+      const nom      = document.getElementById("fNom").value.trim();
+      const email    = document.getElementById("fEmail").value.trim();
+      const password = document.getElementById("fPassword").value;
+      const cis      = document.getElementById("fCis").value.trim();
+      const tel      = document.getElementById("fTel").value.trim();
+      const role     = document.getElementById("fRole").value;
+
+      if (!nom || !email) {
+        errDiv.textContent = "Nom et e-mail sont requis.";
+        errDiv.style.display = "block";
+        return;
+      }
+
+      const btn = document.getElementById("btnSaveUser");
+      btn.disabled = true; btn.textContent = "Enregistrement…";
+
+      try {
+        if (editingUid) {
+          // Mise à jour profil Firestore seulement
+          await updateDoc(doc(db, "users", editingUid), { prenom, nom, cis, tel, role });
+          toast("Compte mis à jour.", "success");
+        } else {
+          // Création Auth + Firestore
+          if (!password || password.length < 8) {
+            throw new Error("Le mot de passe doit faire au moins 8 caractères.");
+          }
+          const { getAuth, createUserWithEmailAndPassword: createUser }
+            = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+          const { getFirestore, doc: fdoc, setDoc }
+            = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+
+          // Note : createUserWithEmailAndPassword connecte automatiquement le nouvel user.
+          // En production, utilisez Firebase Admin SDK (Cloud Functions) pour éviter ça.
+          const cred = await createUserWithEmailAndPassword(auth, email, password);
+          await setDoc(doc(db, "users", cred.user.uid), {
+            prenom, nom, email, cis, tel, role,
+            createdAt: new Date().toISOString()
+          });
+          toast("Compte créé.", "success");
+        }
+        closeModal("modalUser");
+        await loadUsers();
+      } catch (err) {
+        errDiv.textContent = err.message;
+        errDiv.style.display = "block";
+      } finally {
+        btn.disabled = false; btn.textContent = "Enregistrer";
+      }
+    }
+  </script>
+</body>
+</html>
