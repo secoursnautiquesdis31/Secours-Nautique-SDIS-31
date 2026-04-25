@@ -1,75 +1,85 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SDIS 31 - Connexion</title>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        /* DESIGN DIRECTEMENT INTÉGRÉ */
-        :root { --primary: #e63946; --dark: #1d3557; --light: #f1faee; }
-        body { margin: 0; padding: 0; font-family: 'Barlow', sans-serif; background-color: var(--dark); display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
-        .login-card { background: rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
-        h2 { margin: 0; color: var(--primary); font-size: 2rem; }
-        h3 { margin: 5px 0 30px 0; font-weight: 400; opacity: 0.8; }
-        .form-group { margin-bottom: 20px; text-align: left; }
-        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
-        input { width: 100%; padding: 12px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.9); color: #333; font-size: 1rem; box-sizing: border-box; }
-        button { width: 100%; padding: 15px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
-        button:hover { background-color: #c12e3a; }
-        #loginError { background: rgba(255, 77, 77, 0.2); padding: 10px; border-radius: 5px; font-size: 0.85rem; display: none; margin-top: 10px; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDIS 31 — Secours Nautique</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="login-page">
 
+  <div class="login-bg">
+    <div class="water-layer"></div>
+    <div class="wave w1"></div>
+    <div class="wave w2"></div>
+    <div class="wave w3"></div>
+  </div>
+
+  <div class="login-container">
     <div class="login-card">
-        <h2>SDIS 31</h2>
-        <h3>Secours Nautique</h3>
-        <form id="loginForm">
-            <div class="form-group">
-                <label>Email professionnel</label>
-                <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
-            </div>
-            <div class="form-group">
-                <label>Mot de passe</label>
-                <input type="password" id="password" placeholder="••••••••" required>
-            </div>
-            <button type="submit">Connexion</button>
-            <p id="loginError"></p>
-        </form>
+      <div class="login-header">
+        <div class="emblem">
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+            <circle cx="24" cy="24" r="22" stroke="#E8A020" stroke-width="2"/>
+            <path d="M24 8C24 8 14 16 14 26C14 31.5 18.5 36 24 36C29.5 36 34 31.5 34 26C34 16 24 8 24 8Z" fill="#E8A020" fill-opacity="0.2" stroke="#E8A020" stroke-width="1.5"/>
+            <path d="M12 32C16 29 20 31 24 31C28 31 32 29 36 32" stroke="#4A9EDB" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="login-titles">
+          <span class="login-label">SDIS 31</span>
+          <h1>Secours Nautique</h1>
+          <p>SAL · SAV · SEV · CEN</p>
+        </div>
+      </div>
+
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="email">Adresse e-mail</label>
+          <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
+        </div>
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input type="password" id="password" placeholder="••••••••" required>
+        </div>
+        <div id="loginError" class="error-msg" style="display:none"></div>
+        <button type="submit" class="btn-primary" id="loginBtn">Connexion</button>
+      </form>
     </div>
+  </div>
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-            authDomain: "secours-nautique-31.firebaseapp.com",
-            projectId: "secours-nautique-31",
-            storageBucket: "secours-nautique-31.firebasestorage.app",
-            messagingSenderId: "1013387329575",
-            appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
-        };
+    const firebaseConfig = {
+        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
 
-        document.getElementById("loginForm").addEventListener("submit", async (e) => {
-            e.preventDefault();
-            const errDiv = document.getElementById("loginError");
-            errDiv.style.display = "none";
-            const email = document.getElementById("email").value.trim();
-            const pass = document.getElementById("password").value;
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errDiv = document.getElementById("loginError");
+        errDiv.style.display = "none";
+        const email = document.getElementById("email").value.trim();
+        const pass = document.getElementById("password").value;
 
-            try {
-                await signInWithEmailAndPassword(auth, email, pass);
-                window.location.href = "pages/dashboard.html";
-            } catch (err) {
-                errDiv.style.display = "block";
-                errDiv.textContent = "Erreur : Identifiants incorrects.";
-            }
-        });
-    </script>
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            window.location.href = "pages/dashboard.html";
+        } catch (err) {
+            errDiv.style.display = "block";
+            errDiv.textContent = "Identifiants incorrects.";
+        }
+    });
+  </script>
 </body>
 </html>
