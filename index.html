@@ -4,28 +4,41 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SDIS 31 - Connexion</title>
-    <link rel="stylesheet" href="./main.css">   
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* DESIGN DIRECTEMENT INTÉGRÉ */
+        :root { --primary: #e63946; --dark: #1d3557; --light: #f1faee; }
+        body { margin: 0; padding: 0; font-family: 'Barlow', sans-serif; background-color: var(--dark); display: flex; justify-content: center; align-items: center; height: 100vh; color: white; }
+        .login-card { background: rgba(255, 255, 255, 0.1); padding: 40px; border-radius: 15px; backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.2); text-align: center; width: 320px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        h2 { margin: 0; color: var(--primary); font-size: 2rem; }
+        h3 { margin: 5px 0 30px 0; font-weight: 400; opacity: 0.8; }
+        .form-group { margin-bottom: 20px; text-align: left; }
+        label { display: block; margin-bottom: 8px; font-size: 0.9rem; }
+        input { width: 100%; padding: 12px; border-radius: 8px; border: none; background: rgba(255, 255, 255, 0.9); color: #333; font-size: 1rem; box-sizing: border-box; }
+        button { width: 100%; padding: 15px; background-color: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1.1rem; font-weight: bold; cursor: pointer; transition: background 0.3s; margin-top: 10px; }
+        button:hover { background-color: #c12e3a; }
+        #loginError { background: rgba(255, 77, 77, 0.2); padding: 10px; border-radius: 5px; font-size: 0.85rem; display: none; margin-top: 10px; }
+    </style>
 </head>
-<body class="login-page">
-    <div class="login-container">
-        <div class="login-card">
-            <h2>SDIS 31</h2>
-            <h3>Secours Nautique</h3>
-            <form id="loginForm">
-                <div class="form-group">
-                    <label>Email professionnel</label>
-                    <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
-                </div>
-                <div class="form-group">
-                    <label>Mot de passe</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
-                </div>
-                <button type="submit">Connexion</button>
-                <p id="loginError" style="color: #ff4d4d; display: none; margin-top: 10px; font-weight: bold;"></p>
-            </form>
-        </div>
+<body>
+
+    <div class="login-card">
+        <h2>SDIS 31</h2>
+        <h3>Secours Nautique</h3>
+        <form id="loginForm">
+            <div class="form-group">
+                <label>Email professionnel</label>
+                <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
+            </div>
+            <div class="form-group">
+                <label>Mot de passe</label>
+                <input type="password" id="password" placeholder="••••••••" required>
+            </div>
+            <button type="submit">Connexion</button>
+            <p id="loginError"></p>
+        </form>
     </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
@@ -54,7 +67,7 @@
                 window.location.href = "pages/dashboard.html";
             } catch (err) {
                 errDiv.style.display = "block";
-                errDiv.textContent = "Erreur : Identifiants incorrects ou problème réseau.";
+                errDiv.textContent = "Erreur : Identifiants incorrects.";
             }
         });
     </script>
