@@ -1,35 +1,58 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard - SDIS 31</title>
-    <link rel="stylesheet" href="../main.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord — SDIS 31 Nautique</title>
+  <link rel="stylesheet" href="../main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
-<body style="display: block; padding: 20px;">
-    <h1>Bienvenue sur le Tableau de Bord</h1>
-    <p>La connexion a réussi !</p>
-    <button id="logout">Déconnexion</button>
+<body class="app-layout">
 
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>SDIS 31</h2>
+      <span>Secours Nautique</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="dashboard.html">Tableau de bord</a>
+      <a class="nav-item" href="formation.html">Formation</a>
+      <a class="nav-item" href="rh.html">RH</a>
+      <a class="nav-item" href="technique.html">Technique</a>
+      <a class="nav-item" href="operationnel.html">Opérationnel</a>
+      <a class="nav-item" href="admin-users.html">Gestion des accès</a>
+    </nav>
+    <button id="logoutBtn" style="margin-top:auto; background:none; border:1px solid white; color:white; padding:10px; border-radius:5px; cursor:pointer;">Déconnexion</button>
+  </aside>
 
-        // UTILISE LE MÊME CONFIG QUE INDEX.HTML
-        const firebaseConfig = {
-            apiKey: "TON_API_KEY",
-            authDomain: "TON_PROJET.firebaseapp.com",
-            projectId: "TON_PROJET_ID",
-            storageBucket: "TON_PROJET.firebasestorage.app",
-            messagingSenderId: "TON_SENDER_ID",
-            appId: "TON_APP_ID"
-        };
+  <main class="main-content">
+    <h1>Bienvenue sur le Tableau de bord</h1>
+    <div class="card" style="background:white; padding:20px; border-radius:10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+      <p>Sélectionnez un menu à gauche pour commencer.</p>
+    </div>
+  </main>
 
-        const app = initializeApp(firebaseConfig);
-        const auth = getAuth(app);
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
-        document.getElementById("logout").onclick = () => {
-            signOut(auth).then(() => window.location.href = "../index.html");
-        };
-    </script>
+    const firebaseConfig = {
+        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("logoutBtn").addEventListener("click", () => {
+        signOut(auth).then(() => {
+            window.location.href = "../index.html";
+        });
+    });
+  </script>
 </body>
 </html>
