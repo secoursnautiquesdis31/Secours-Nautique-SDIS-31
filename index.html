@@ -1,97 +1,65 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
+<!DOCTYPE html>
+<html lang="fr">
 <head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2113.65">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; color: #000000; -webkit-text-stroke: #000000}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #061539; color: rgba(6, 21, 57, 0.7); -webkit-text-stroke: rgba(6, 21, 57, 0.7)}
-    p.p3 {margin: 0.0px 0.0px 0.0px 0.0px; font: 14.0px 'Helvetica Neue'; color: #155b23; -webkit-text-stroke: #155b23}
-    span.s1 {font-kerning: none}
-    span.s2 {font: 12.0px Helvetica; font-kerning: none; color: #000000; -webkit-text-stroke: 0px #000000}
-    span.s3 {font-kerning: none; color: #0d3ec5; background-color: rgba(0, 0, 0, 0.039); -webkit-text-stroke: 0px #0d3ec5}
-    span.s4 {font-kerning: none; background-color: rgba(0, 0, 0, 0.039)}
-    span.s5 {font-kerning: none; color: rgba(6, 21, 57, 0.7); background-color: rgba(0, 0, 0, 0.039); -webkit-text-stroke: 0px rgba(6, 21, 57, 0.7)}
-    span.s6 {font-kerning: none; color: #155b23; background-color: rgba(0, 0, 0, 0.039); -webkit-text-stroke: 0px #155b23}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDIS 31 - Connexion</title>
+    <link rel="stylesheet" href="main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
 </head>
-<body>
-<p class="p1"><span class="s1">&lt;!DOCTYPE html&gt;</span></p>
-<p class="p1"><span class="s1">&lt;html lang="fr"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;head&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;title&gt;SDIS 31 - Connexion&lt;/title&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="main.css"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&amp;display=swap" rel="stylesheet"&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/head&gt;</span></p>
-<p class="p1"><span class="s1">&lt;body class="login-page"&gt;</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;div class="login-container"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;div class="login-card"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h2&gt;SDIS 31&lt;/h2&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;h3&gt;Secours Nautique&lt;/h3&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;form id="loginForm"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="form-group"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;label&gt;Email professionnel&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;div class="form-group"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;label&gt;Mot de passe&lt;/label&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                    </span>&lt;input type="password" id="password" placeholder="••••••••" required&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;button type="submit"&gt;Connexion&lt;/button&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>&lt;p id="loginError" style="color: #ff4d4d; display: none; margin-top: 10px; font-weight: bold;"&gt;&lt;/p&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>&lt;/form&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;script type="module"&gt;</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>// === REMPLACE PAR TES NOUVELLES CLÉS ICI ===</span></p>
-<p class="p2"><span class="s2"><span class="Apple-converted-space">  </span></span><span class="s3">const</span><span class="s4"> firebaseConfig = {</span></p>
-<p class="p3"><span class="s5">  apiKey: </span><span class="s4">"AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o"</span><span class="s5">,</span></p>
-<p class="p3"><span class="s5">  authDomain: </span><span class="s4">"secours-nautique-31.firebaseapp.com"</span><span class="s5">,</span></p>
-<p class="p3"><span class="s5">  projectId: </span><span class="s4">"secours-nautique-31"</span><span class="s5">,</span></p>
-<p class="p3"><span class="s5">  storageBucket: </span><span class="s4">"secours-nautique-31.firebasestorage.app"</span><span class="s5">,</span></p>
-<p class="p2"><span class="s4">  messagingSenderId: </span><span class="s6">"1013387329575"</span><span class="s4">,</span></p>
-<p class="p3"><span class="s5">  appId: </span><span class="s4">"1:1013387329575:web:aa1148aedf7e3106bb4e02"</span></p>
-<p class="p2"><span class="s4">};</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const app = initializeApp(firebaseConfig);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>const auth = getAuth(app);</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>document.getElementById("loginForm").addEventListener("submit", async (e) =&gt; {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>e.preventDefault();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const errDiv = document.getElementById("loginError");</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>errDiv.style.display = "none";</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const email = document.getElementById("email").value.trim();</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>const pass = document.getElementById("password").value;</span></p>
-<p class="p1"><span class="s1"><br>
-</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>try {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>await signInWithEmailAndPassword(auth, email, pass);</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>// Si ça marche, on va vers le dashboard</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>window.location.href = "pages/dashboard.html";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>} catch (err) {</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>errDiv.style.display = "block";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">                </span>errDiv.textContent = "Erreur : Identifiants incorrects ou problème réseau.";</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">            </span>}</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">        </span>});</span></p>
-<p class="p1"><span class="s1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/body&gt;</span></p>
-<p class="p1"><span class="s1">&lt;/html&gt;</span></p>
+<body class="login-page">
+
+    <div class="login-container">
+        <div class="login-card">
+            <h2>SDIS 31</h2>
+            <h3>Secours Nautique</h3>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label>Email professionnel</label>
+                    <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
+                </div>
+                <div class="form-group">
+                    <label>Mot de passe</label>
+                    <input type="password" id="password" placeholder="••••••••" required>
+                </div>
+                <button type="submit">Connexion</button>
+                <p id="loginError" style="color: #ff4d4d; display: none; margin-top: 10px; font-weight: bold;"></p>
+            </form>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+            authDomain: "secours-nautique-31.firebaseapp.com",
+            projectId: "secours-nautique-31",
+            storageBucket: "secours-nautique-31.firebasestorage.app",
+            messagingSenderId: "1013387329575",
+            appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        document.getElementById("loginForm").addEventListener("submit", async (e) => {
+            e.preventDefault();
+            const errDiv = document.getElementById("loginError");
+            errDiv.style.display = "none";
+
+            const email = document.getElementById("email").value.trim();
+            const pass = document.getElementById("password").value;
+
+            try {
+                await signInWithEmailAndPassword(auth, email, pass);
+                window.location.href = "pages/dashboard.html";
+            } catch (err) {
+                errDiv.style.display = "block";
+                errDiv.textContent = "Erreur : Identifiants incorrects ou problème réseau.";
+            }
+        });
+    </script>
 </body>
 </html>
