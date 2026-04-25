@@ -19,14 +19,13 @@ import {
 // CONFIG FIREBASE — même objet qu'index.html
 // ──────────────────────────────────────────────
 const firebaseConfig = {
-  apiKey:            "VOTRE_API_KEY",
-  authDomain:        "VOTRE_PROJECT.firebaseapp.com",
-  projectId:         "VOTRE_PROJECT_ID",
-  storageBucket:     "VOTRE_PROJECT.appspot.com",
-  messagingSenderId: "VOTRE_SENDER_ID",
-  appId:             "VOTRE_APP_ID"
-};
-
+  apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
 const app     = initializeApp(firebaseConfig);
 const auth    = getAuth(app);
 const db      = getFirestore(app);
