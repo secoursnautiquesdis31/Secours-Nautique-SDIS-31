@@ -1,71 +1,84 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
-<html>
-<head>
-  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-  <meta http-equiv="Content-Style-Type" content="text/css">
-  <title></title>
-  <meta name="Generator" content="Cocoa HTML Writer">
-  <meta name="CocoaVersion" content="2113.65">
-  <style type="text/css">
-    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
-    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
-  </style>
-</head>
-<body>
-<p class="p1">:root {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>--primary: #e63946;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>--dark: #1d3557;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>--light: #f1faee;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">body {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>margin: 0;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>font-family: 'Barlow', sans-serif;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>background-color: var(--dark);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>display: flex;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>justify-content: center;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>align-items: center;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>height: 100vh;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>color: white;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">.login-card {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>background: rgba(255, 255, 255, 0.05);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>padding: 2rem;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border-radius: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>backdrop-filter: blur(10px);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border: 1px solid rgba(255, 255, 255, 0.1);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>text-align: center;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>width: 300px;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">.form-group {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>margin-bottom: 1rem;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>text-align: left;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">input {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>padding: 8px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>margin-top: 5px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>box-sizing: border-box;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">button {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>width: 100%;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>padding: 10px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>background: var(--primary);</p>
-<p class="p1"><span class="Apple-converted-space">    </span>color: white;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border: none;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>border-radius: 4px;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>cursor: pointer;</p>
-<p class="p1"><span class="Apple-converted-space">    </span>font-weight: bold;</p>
-<p class="p1">}</p>
-<p class="p2"><br></p>
-<p class="p1">button:hover {</p>
-<p class="p1"><span class="Apple-converted-space">    </span>background: #c12e3a;</p>
-<p class="p1">}</p>
-</body>
-</html>
+/* Couleurs SDIS 31 */
+:root {
+    --primary: #e63946;    /* Rouge Pompier */
+    --dark: #1d3557;       /* Bleu Nuit */
+    --light: #f1faee;      /* Blanc Cassé */
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Barlow', sans-serif;
+    background-color: var(--dark);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    color: white;
+}
+
+.login-container {
+    width: 100%;
+    max-width: 400px;
+    padding: 20px;
+}
+
+.login-card {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 40px;
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+}
+
+h2 { margin: 0; color: var(--primary); font-size: 2rem; }
+h3 { margin: 5px 0 30px 0; font-weight: 400; opacity: 0.8; }
+
+.form-group {
+    margin-bottom: 20px;
+    text-align: left;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 0.9rem;
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255, 255, 255, 0.9);
+    color: #333;
+    font-size: 1rem;
+    box-sizing: border-box; /* Très important pour la taille */
+}
+
+button {
+    width: 100%;
+    padding: 15px;
+    background-color: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 10px;
+}
+
+button:hover {
+    background-color: #c12e3a;
+}
+
+#loginError {
+    background: rgba(255, 77, 77, 0.2);
+    padding: 10px;
+    border-radius: 5px;
+    font-size: 0.85rem;
+}
