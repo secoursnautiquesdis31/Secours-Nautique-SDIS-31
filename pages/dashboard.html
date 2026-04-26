@@ -38,59 +38,63 @@
   <script type="module">
 import { db, auth, doc, setDoc, signOut } from "./auth.js";
 
-// --- FONCTION D'IMPORTATION ROBUSTE ---
-window.lancerImportationFinale = function() {
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
+// --- CETTE FONCTION SE LANCE AUTOMATIQUEMENT AU CHARGEMENT ---
+(function() {
+    console.log("Script d'importation prêt.");
     
+    // Création d'une bannière visuelle en haut de page
+    const banner = document.createElement('div');
+    banner.innerHTML = `
+        <div style="position:fixed; top:0; left:0; width:100%; background:#D94040; color:white; padding:15px; z-index:10000; text-align:center; font-family:sans-serif;">
+            <strong>IMPORTATION SDIS 31 :</strong> Cliquez ici pour sélectionner le fichier CSV des agents 
+            <input type="file" id="autoInput" accept=".csv" style="margin-left:20px;">
+        </div>
+    `;
+    document.body.prepend(banner);
+
+    const input = document.getElementById('autoInput');
     input.onchange = async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
         const reader = new FileReader();
         reader.onload = async (event) => {
-            const contenu = event.target.result;
-            const lignes = contenu.split(/\r?\n/);
-            let compteur = 0;
+            const lignes = event.target.result.split(/\r?\n/);
+            let count = 0;
+            
+            // On affiche un message de chargement
+            banner.innerHTML = "Chargement des 86 agents en cours... Patientez...";
 
             for (let i = 1; i < lignes.length; i++) {
                 const ligne = lignes[i].trim();
                 if (!ligne) continue;
-
-                // On découpe par point-virgule
                 const col = ligne.split(';');
-                const nomComplet = col[0] ? col[0].trim() : "";
+                const nom = col[0] ? col[0].trim() : "";
                 const cis = col[1] ? col[1].trim() : "";
                 const tel = col[2] ? col[2].trim() : "";
 
-                if (nomComplet) {
-                    // Création d'un ID propre (ex: arignac_julien)
-                    const id = nomComplet.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
-                    
+                if (nom) {
+                    const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
                     await setDoc(doc(db, "users", id), {
-                        nom: nomComplet,
+                        nom: nom,
                         cis: cis,
                         tel: tel,
-                        role: "Utilisateur", // Par défaut
-                        specialites: [],     // À remplir plus tard
-                        epi: {},             // À remplir plus tard
-                        aptitude: "A vérifier",
-                        lastUpdate: new Date().toISOString()
+                        role: "Agent",
+                        specialites: [],
+                        epi: {},
+                        aptitude: "A vérifier"
                     });
-                    compteur++;
+                    count++;
                 }
             }
-            alert("✅ " + compteur + " agents importés avec succès !");
+            alert("✅ Succès ! " + count + " agents ont été intégrés à la base Nautique.");
+            banner.remove(); // On enlève la bannière rouge
             window.location.reload();
         };
-        // Encodage spécial pour Excel/Mac français
         reader.readAsText(file, 'ISO-8859-1');
     };
-    input.click();
-};
+})();
 
-// Gestion de la déconnexion
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
     signOut(auth).then(() => { window.location.href = "../index.html"; });
 });
