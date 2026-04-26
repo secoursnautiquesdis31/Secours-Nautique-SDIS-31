@@ -109,80 +109,97 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    async function charger() {
+   async function charger() {
         if(!agentId) return;
         
-        // 1. RÉCUPÉRATION DES DONNÉES DE L'AGENT
-        const snap = await getDoc(doc(db, "users", agentId));
-        if (!snap.exists()) return;
-        const agent = snap.data();
-        const agentNom = agent.nom || "Inconnu";
-
-        // AFFICHAGE NOM ET CIS
-        document.getElementById('nomAgent').innerText = agentNom;
-        document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
-
-        // 2. GESTION DES SPÉCIALITÉS (Remise en place)
-        const grid = document.getElementById('specsGrid');
-        grid.innerHTML = "";
-        listeSpecs.forEach(s => {
-            const active = (agent.specialites || []).includes(s);
-            const btn = document.createElement('div');
-            btn.className = `spec-tag ${active ? 'active' : ''}`;
-            btn.innerText = s;
-            btn.onclick = () => toggleSpec(s, agent.specialites || []);
-            grid.appendChild(btn);
-        });
-
-        // 3. GESTION DE L'EPI (Remise en place)
-        const epiList = document.getElementById('epiList');
-        epiList.innerHTML = "";
-        if (agent.epi && agent.epi.length > 0) {
-            agent.epi.forEach(item => {
-                const div = document.createElement('div');
-                div.className = "epi-row";
-                div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
-                    <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                    onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
-                epiList.appendChild(div);
-            });
-        } else {
-            epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
-        }
-
-        // 4. CALCUL DES APTITUDES ET HISTORIQUE (Ton besoin)
-        let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
-        const histTbody = document.getElementById('listeFormations');
-        histTbody.innerHTML = "";
-
-        const fSnap = await getDocs(collection(db, "formations"));
-        
-        fSnap.forEach(fDoc => {
-            const f = fDoc.data();
-            const inscrits = f.inscrits || [];
-            
-            // On vérifie si l'agent est marqué "présent"
-            const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
-
-            if (presence) {
-                // Ajout à l'historique
-                const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
-
-                // Incrémentation des compteurs selon le nom de la formation
-                const titre = f.nom.toUpperCase();
-                if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
-                if (titre.includes("FMPA") || titre.includes("MER")) compteurs.fmpa++;
-                if (titre.includes("CEN")) compteurs.cen++;
-                if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) compteurs.mso++;
+        try {
+            // 1. RÉCUPÉRATION DES DONNÉES DE L'AGENT
+            const snap = await getDoc(doc(db, "users", agentId));
+            if (!snap.exists()) {
+                document.getElementById('nomAgent').innerText = "AGENT INTROUVABLE";
+                return;
             }
-        });
+            
+            const agent = snap.data();
+            const agentNom = agent.nom || "Inconnu";
 
-        // Mise à jour visuelle des compteurs d'aptitudes
-        document.getElementById('q_sav').value = compteurs.sav;
-        document.getElementById('q_fmpa').value = compteurs.fmpa;
-        document.getElementById('q_cen').value = compteurs.cen;
-        document.getElementById('q_mso').value = compteurs.mso;
+            // AFFICHAGE NOM ET CIS
+            document.getElementById('nomAgent').innerText = agentNom;
+            document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+
+            // 2. GESTION DES SPÉCIALITÉS (Sécurisée)
+            const grid = document.getElementById('specsGrid');
+            grid.innerHTML = "";
+            const agentSpecs = agent.specialites || []; // Si vide, on prend un tableau vide []
+            listeSpecs.forEach(s => {
+                const active = agentSpecs.includes(s);
+                const btn = document.createElement('div');
+                btn.className = `spec-tag ${active ? 'active' : ''}`;
+                btn.innerText = s;
+                btn.onclick = () => toggleSpec(s, agentSpecs);
+                grid.appendChild(btn);
+            });
+
+            // 3. GESTION DE L'EPI (Sécurisée)
+            const epiList = document.getElementById('epiList');
+            if (epiList) { // On vérifie que l'élément existe dans le HTML
+                epiList.innerHTML = "";
+                const agentEpi = agent.epi || [];
+                if (agentEpi.length > 0) {
+                    agentEpi.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = "epi-row";
+                        div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
+                            <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
+                            onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
+                        epiList.appendChild(div);
+                    });
+                } else {
+                    epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
+                }
+            }
+
+            // 4. CALCUL DES APTITUDES ET HISTORIQUE
+            let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+            const histTbody = document.getElementById('listeFormations');
+            histTbody.innerHTML = "<tr><td colspan='3'>Recherche des présences...</td></tr>";
+
+            const fSnap = await getDocs(collection(db, "formations"));
+            let htmlHistorique = "";
+            let aDesPresences = false;
+
+            fSnap.forEach(fDoc => {
+                const f = fDoc.data();
+                const inscrits = f.inscrits || [];
+                
+                // On vérifie si l'agent est marqué "présent"
+                const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
+
+                if (presence) {
+                    aDesPresences = true;
+                    const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
+                    htmlHistorique += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
+
+                    const titre = f.nom.toUpperCase();
+                    if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
+                    if (titre.includes("FMPA") || titre.includes("MER")) compteurs.fmpa++;
+                    if (titre.includes("CEN")) compteurs.cen++;
+                    if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) compteurs.mso++;
+                }
+            });
+
+            histTbody.innerHTML = aDesPresences ? htmlHistorique : "<tr><td colspan='3' style='color:#999;'>Aucune présence validée.</td></tr>";
+
+            // Mise à jour visuelle des compteurs
+            document.getElementById('q_sav').value = compteurs.sav;
+            document.getElementById('q_fmpa').value = compteurs.fmpa;
+            document.getElementById('q_cen').value = compteurs.cen;
+            document.getElementById('q_mso').value = compteurs.mso;
+
+        } catch (error) {
+            console.error("Erreur lors du chargement :", error);
+            document.getElementById('nomAgent').innerText = "ERREUR DE CHARGEMENT";
+        }
     }
     const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
