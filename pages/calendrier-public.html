@@ -132,23 +132,43 @@ events: async (info, success, failure) => {
     }
 
     async function inscrire(formationId) {
+        if(!agentConnecte) {
+            alert("Erreur : Nom d'agent introuvable. Retournez à l'accueil.");
+            return;
+        }
+
         try {
             const formationRef = doc(db, "formations", formationId);
-            await updateDoc(formationRef, { inscrits: arrayUnion(agentConnecte) });
+            // On ajoute l'agent au tableau 'inscrits'
+            await updateDoc(formationRef, { 
+                inscrits: arrayUnion(agentConnecte) 
+            });
+            
             alert("Inscription validée !");
-            fermerModal(); calendar.refetchEvents();
-        } catch (e) { alert("Erreur"); }
+            document.getElementById('modalEvent').style.display = 'none';
+            
+            // Rafraîchir le calendrier pour voir le nouveau nombre d'inscrits
+            if(calendar) calendar.refetchEvents();
+        } catch (e) { 
+            console.error("Erreur Firestore :", e);
+            alert("Erreur lors de l'inscription. Vérifiez votre connexion."); 
+        }
     }
 
     async function desinscrire(formationId) {
         try {
             const formationRef = doc(db, "formations", formationId);
-            await updateDoc(formationRef, { inscrits: arrayRemove(agentConnecte) });
+            await updateDoc(formationRef, { 
+                inscrits: arrayRemove(agentConnecte) 
+            });
             alert("Désinscription prise en compte.");
-            fermerModal(); calendar.refetchEvents();
-        } catch (e) { alert("Erreur"); }
+            document.getElementById('modalEvent').style.display = 'none';
+            if(calendar) calendar.refetchEvents();
+        } catch (e) { 
+            console.error("Erreur Désinscription :", e);
+            alert("Erreur lors de la désinscription."); 
+        }
     }
-
     window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
 
     init();
