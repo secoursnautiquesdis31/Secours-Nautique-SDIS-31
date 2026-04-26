@@ -6,26 +6,19 @@
   <link rel="stylesheet" href="../css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --success: #2A9D5C; }
+    :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; }
     body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
     .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
     .header { background: var(--navy); color: white; padding: 30px; }
     .content { padding: 30px; }
     .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
-    
-    /* Spécialités */
     .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; }
     .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
-
-    /* Liste EPI */
     .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
-    .btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
-
-    /* Modal */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
     .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
-    .stock-item-select { padding: 10px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
-    .stock-item-select:hover { background: #F8F9FA; }
+    .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
+    .stock-item:hover { background: #F8F9FA; }
   </style>
 </head>
 <body>
@@ -33,7 +26,7 @@
   <div class="fiche-card">
     <div class="header">
         <a href="rh.html" style="color:white; text-decoration:none; opacity:0.7;">← Retour à l'annuaire</a>
-        <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase;">Chargement...</h1>
+        <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase;">NOM DE L'AGENT</h1>
         <div id="cisAgent" style="color: var(--amber); font-weight: bold;">CIS ...</div>
     </div>
 
@@ -43,41 +36,50 @@
 
       <div class="section-title">
         <span>Paquetage Individuel (EPI)</span>
-        <button onclick="ouvrirModalStock()" style="background:var(--navy); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">+ Affecter Matériel</button>
+        <button id="btnOpenStock" style="background:var(--navy); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">+ Affecter Matériel</button>
       </div>
-      <div id="epiList">
-          <p style="color:#999; font-style:italic;">Aucun équipement affecté.</p>
-      </div>
+      <div id="epiList"></div>
     </div>
   </div>
 
   <div id="modalStock" class="modal">
     <div class="modal-content">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-        <h2 style="margin:0;">Choisir dans le stock</h2>
-        <button onclick="fermerModal()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
-      </div>
-      <input type="text" id="searchStock" placeholder="Filtrer le matériel..." style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #DDD; border-radius:6px;">
+      <h2>Choisir dans le stock</h2>
       <div id="listeChoixStock"></div>
+      <button onclick="document.getElementById('modalStock').style.display='none'" style="margin-top:20px; width:100%; padding:10px;">Fermer</button>
     </div>
   </div>
 
   <script type="module">
-    import { db, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove } from "./auth.js";
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🔴 METS TES CLÉS ICI
+    const firebaseConfig = {
+      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
     const params = new URLSearchParams(window.location.search);
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    async function chargerDonnees() {
+    async function charger() {
       if(!agentId) return;
       const snap = await getDoc(doc(db, "users", agentId));
       if (snap.exists()) {
         const agent = snap.data();
         document.getElementById('nomAgent').innerText = agent.nom;
-        document.getElementById('cisAgent').innerText = agent.cis || "CIS INCONNU";
+        document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
         
-        // Affichage Spécialités
+        // Specs
         const grid = document.getElementById('specsGrid');
         grid.innerHTML = "";
         listeSpecs.forEach(s => {
@@ -89,34 +91,29 @@
           grid.appendChild(btn);
         });
 
-        // Affichage EPI
+        // EPI
         const epiList = document.getElementById('epiList');
         epiList.innerHTML = "";
         if (agent.epi && agent.epi.length > 0) {
           agent.epi.forEach(item => {
             const div = document.createElement('div');
             div.className = "epi-row";
-            div.innerHTML = `
-                <div><strong>${item.type}</strong> <span style="color:#666; font-size:0.8em;">(Taille: ${item.taille || '-'})</span></div>
-                <button class="btn-delete" onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️</button>
-            `;
+            div.innerHTML = `<div><strong>${item.type}</strong> (${item.taille})</div><button style="color:red; border:none; background:none; cursor:pointer;" onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️</button>`;
             epiList.appendChild(div);
           });
         } else {
-          epiList.innerHTML = "<p style='color:#999;'>Aucun équipement affecté.</p>";
+          epiList.innerHTML = "<p>Aucun équipement affecté.</p>";
         }
       }
     }
 
-    // TOGGLE SPECIALITES
     async function toggleSpec(spec, current) {
       const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
       await updateDoc(doc(db, "users", agentId), { specialites: news });
-      chargerDonnees();
+      charger();
     }
 
-    // GESTION STOCK / EPI
-    window.ouvrirModalStock = async () => {
+    document.getElementById('btnOpenStock').onclick = async () => {
       document.getElementById('modalStock').style.display = 'block';
       const snap = await getDocs(collection(db, "stocks"));
       const list = document.getElementById('listeChoixStock');
@@ -124,44 +121,30 @@
       snap.forEach(d => {
         const s = d.data();
         if(s.quantite > 0) {
-            const div = document.createElement('div');
-            div.className = "stock-item-select";
-            div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Stock: ${s.quantite}</strong>`;
-            div.onclick = () => attribuerEPI(d.id, s.type, s.taille, s.quantite);
-            list.appendChild(div);
+          const div = document.createElement('div');
+          div.className = "stock-item";
+          div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Stock: ${s.quantite}</strong>`;
+          div.onclick = async () => {
+            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) });
+            await updateDoc(doc(db, "stocks", d.id), { quantite: s.quantite - 1 });
+            document.getElementById('modalStock').style.display = 'none';
+            charger();
+          };
+          list.appendChild(div);
         }
       });
     };
 
-    window.fermerModal = () => document.getElementById('modalStock').style.display = 'none';
-
-    async function attribuerEPI(stockId, type, taille, qte) {
-      // 1. Ajouter à l'agent
-      await updateDoc(doc(db, "users", agentId), {
-        epi: arrayUnion({ id: stockId, type, taille })
-      });
-      // 2. Baisser le stock
-      await updateDoc(doc(db, "stocks", stockId), { quantite: qte - 1 });
-      fermerModal();
-      chargerDonnees();
-    }
-
     window.retirerEPI = async (stockId, type, taille) => {
-      if(confirm("Confirmer le retour en stock de ce matériel ?")) {
-        // 1. Retirer de l'agent
-        await updateDoc(doc(db, "users", agentId), {
-          epi: arrayRemove({ id: stockId, type, taille })
-        });
-        // 2. Augmenter le stock
+      if(confirm("Rendre ce matériel au stock ?")) {
+        await updateDoc(doc(db, "users", agentId), { epi: arrayRemove({ id: stockId, type, taille }) });
         const sSnap = await getDoc(doc(db, "stocks", stockId));
-        if(sSnap.exists()) {
-            await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
-        }
-        chargerDonnees();
+        if(sSnap.exists()) await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
+        charger();
       }
     };
 
-    chargerDonnees();
+    charger();
   </script>
 </body>
 </html>
