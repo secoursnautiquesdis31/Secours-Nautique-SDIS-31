@@ -85,21 +85,27 @@
             firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
             buttonText: { today: "Aujourd'hui", month: "Mois", year: "Année" },
-            events: async (info, success, failure) => {
-                const snap = await getDocs(collection(db, "formations"));
-                const evts = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    evts.push({
-                        id: d.id,
-                        title: `${data.nom}`,
-                        start: data.date,
-                        extendedProps: { ...data }
-                    });
-                });
-                success(evts);
-            },
-            // DÉSCRIPTION : Pas de création possible pour l'agent au clic sur une date
+            // Remplace ton bloc events par celui-ci :
+events: async (info, success, failure) => {
+    try {
+        const snap = await getDocs(collection(db, "formations"));
+        const evts = snap.docs.map(d => {
+            const data = d.data();
+            return {
+                id: d.id, // L'ID du document Firestore
+                title: data.nom,
+                start: data.date,
+                extendedProps: { 
+                    lieu: data.lieu,
+                    inscrits: data.inscrits || [], // On force la récupération du tableau
+                    nom: data.nom
+                }
+            };
+        });
+        success(evts);
+    } catch (e) { console.error(e); failure(e); }
+},
+          // DÉSCRIPTION : Pas de création possible pour l'agent au clic sur une date
             dateClick: null, 
             eventClick: (info) => ouvrirDetails(info.event)
         });
