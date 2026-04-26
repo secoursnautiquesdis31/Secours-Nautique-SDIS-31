@@ -38,16 +38,17 @@
   <script type="module">
 import { db, auth, doc, setDoc, signOut } from "./auth.js";
 
-// On attache la fonction directement à la fenêtre pour qu'elle soit visible
-window.lancerImportationFichier = function() {
+// --- FONCTION D'IMPORTATION ROBUSTE ---
+window.lancerImportationFinale = function() {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.csv';
     
     input.onchange = async (e) => {
         const file = e.target.files[0];
+        if (!file) return;
+
         const reader = new FileReader();
-        
         reader.onload = async (event) => {
             const contenu = event.target.result;
             const lignes = contenu.split(/\r?\n/);
@@ -57,30 +58,39 @@ window.lancerImportationFichier = function() {
                 const ligne = lignes[i].trim();
                 if (!ligne) continue;
 
-                const colonnes = ligne.split(';');
-                const nom = colonnes[0] ? colonnes[0].trim() : "";
-                const cis = colonnes[1] ? colonnes[1].trim() : "";
-                const tel = colonnes[2] ? colonnes[2].trim() : "";
+                // On découpe par point-virgule
+                const col = ligne.split(';');
+                const nomComplet = col[0] ? col[0].trim() : "";
+                const cis = col[1] ? col[1].trim() : "";
+                const tel = col[2] ? col[2].trim() : "";
 
-                if (nom) {
-                    const id = nom.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                if (nomComplet) {
+                    // Création d'un ID propre (ex: arignac_julien)
+                    const id = nomComplet.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+                    
                     await setDoc(doc(db, "users", id), {
-                        nom: nom,
+                        nom: nomComplet,
                         cis: cis,
                         tel: tel,
-                        role: "Agent"
+                        role: "Utilisateur", // Par défaut
+                        specialites: [],     // À remplir plus tard
+                        epi: {},             // À remplir plus tard
+                        aptitude: "A vérifier",
+                        lastUpdate: new Date().toISOString()
                     });
                     compteur++;
                 }
             }
-            alert(compteur + " agents importés !");
+            alert("✅ " + compteur + " agents importés avec succès !");
             window.location.reload();
         };
+        // Encodage spécial pour Excel/Mac français
         reader.readAsText(file, 'ISO-8859-1');
     };
     input.click();
 };
 
+// Gestion de la déconnexion
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
     signOut(auth).then(() => { window.location.href = "../index.html"; });
 });
