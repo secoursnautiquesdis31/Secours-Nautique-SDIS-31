@@ -6,69 +6,124 @@
   <link rel="stylesheet" href="../css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    .stock-table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-    .stock-table th { background: var(--navy); color: white; padding: 12px; text-align: left; }
-    .stock-table td { padding: 12px; border-bottom: 1px solid var(--gray-100); }
-    .status-alert { color: var(--danger); font-weight: bold; animation: blink 2s infinite; }
-    @keyframes blink { 0% {opacity: 1;} 50% {opacity: 0.5;} 100% {opacity: 1;} }
-    .badge-size { background: var(--gray-100); padding: 2px 6px; border-radius: 4px; font-size: 0.8rem; }
-    .btn-add { background: var(--amber); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    .tech-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .stock-card { background: white; border-radius: 12px; box-shadow: var(--shadow-sm); padding: 20px; }
+    table { width: 100%; border-collapse: collapse; font-family: var(--font-body); }
+    th { text-align: left; padding: 12px; border-bottom: 2px solid var(--gray-100); color: var(--navy); font-family: var(--font-display); text-transform: uppercase; }
+    td { padding: 12px; border-bottom: 1px solid var(--gray-100); vertical-align: middle; }
+    .alert-row { background-color: #fff5f5; }
+    .status-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; }
+    .badge-ok { background: #e6fffa; color: #2c7a7b; }
+    .badge-warn { background: #fff5f5; color: #c53030; animation: pulse 2s infinite; }
+    @keyframes pulse { 0% {opacity: 1;} 50% {opacity: 0.7;} 100% {opacity: 1;} }
+    .btn-import { background: var(--navy); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; }
   </style>
 </head>
 <body class="app-layout">
   <div class="page-content">
-    <div class="page-header">
-      <h1>Dossier Technique : Inventaire & Stocks</h1>
-      <button class="btn-add" onclick="ouvrirModal()">+ Ajouter du matériel</button>
+    <div class="tech-header">
+      <h1>Inventaire & Stocks</h1>
+      <button class="btn-import" onclick="document.getElementById('csvStock').click()">📦 Importer Stock CSV</button>
+      <input type="file" id="csvStock" accept=".csv" style="display:none">
     </div>
 
-    <table class="stock-table">
-      <thead>
-        <tr>
-          <th>Type / Désignation</th>
-          <th>Taille</th>
-          <th>Quantité</th>
-          <th>Seuil Alerte</th>
-          <th>Péremption</th>
-          <th>État</th>
-        </tr>
-      </thead>
-      <tbody id="stockBody">
+    <div class="stock-card">
+      <table>
+        <thead>
+          <tr>
+            <th>Matériel</th>
+            <th>Taille</th>
+            <th>Quantité</th>
+            <th>Seuil</th>
+            <th>Péremption</th>
+            <th>État</th>
+          </tr>
+        </thead>
+        <tbody id="stockTable">
+          <tr><td colspan="6">Chargement des données...</td></tr>
         </tbody>
-    </table>
+      </table>
+    </div>
   </div>
 
   <script type="module">
-    import { db, collection, getDocs } from "./auth.js";
+    import { db, collection, getDocs, doc, setDoc } from "./auth.js";
 
-    async function chargerStock() {
-      const container = document.getElementById('stockBody');
-      const querySnapshot = await getDocs(collection(db, "stocks"));
-      container.innerHTML = "";
+    const tableBody = document.getElementById('stockTable');
+    const fileInput = document.getElementById('csvStock');
 
-      querySnapshot.forEach((doc) => {
-        const item = doc.data();
-        const estEnAlerte = parseInt(item.quantite) <= parseInt(item.seuil);
-        const datePeremp = item.peremption ? new Date(item.peremption) : null;
-        const estPerime = datePeremp && datePeremp < new Date();
+    // 1. CHARGEMENT DU STOCK
+    async function loadStock() {
+      const snap = await getDocs(collection(db, "stocks"));
+      tableBody.innerHTML = "";
+      
+      let items = [];
+      snap.forEach(d => items.push({id: d.id, ...d.data()}));
+      
+      // Tri alphabétique par type
+      items.sort((a,b) => a.type.localeCompare(b.type));
 
+      items.forEach(item => {
+        const q = parseInt(item.quantite) || 0;
+        const s = parseInt(item.seuil) || 0;
+        const isAlert = q <= s && s > 0;
+        
         const tr = document.createElement('tr');
+        if(isAlert) tr.className = "alert-row";
+        
         tr.innerHTML = `
           <td><strong>${item.type}</strong></td>
-          <td><span class="badge-size">${item.taille || 'N/A'}</span></td>
-          <td style="font-weight:bold; ${estEnAlerte ? 'color:red' : ''}">${item.quantite}</td>
-          <td>${item.seuil}</td>
-          <td style="${estPerime ? 'color:red; font-weight:bold' : ''}">${item.peremption || '—'}</td>
+          <td>${item.taille || '-'}</td>
+          <td style="font-weight:bold; color:${isAlert ? 'red' : 'inherit'}">${q}</td>
+          <td>${s}</td>
+          <td>${item.peremption || '-'}</td>
           <td>
-            ${estEnAlerte ? '<span class="status-alert">⚠️ RÉAPPRO !</span>' : ''}
-            ${estPerime ? '<span class="status-alert">❌ PÉRIMÉ !</span>' : ''}
-            ${!estEnAlerte && !estPerime ? '<span style="color:green">OK</span>' : ''}
+            <span class="status-badge ${isAlert ? 'badge-warn' : 'badge-ok'}">
+              ${isAlert ? '⚠️ RÉAPPRO' : 'OK'}
+            </span>
           </td>
         `;
-        container.appendChild(tr);
+        tableBody.appendChild(tr);
       });
     }
-    chargerStock();
+
+    // 2. IMPORTATION DU FICHIER CSV
+    fileInput.onchange = (e) => {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = async (event) => {
+        const lignes = event.target.result.split(/\r?\n/);
+        let dernierType = "";
+        let count = 0;
+
+        for (let i = 1; i < lignes.length; i++) {
+          const col = lignes[i].split(';');
+          if (col.length < 4) continue;
+
+          let type = col[0] ? col[0].trim() : dernierType;
+          if (!type) continue;
+          dernierType = type;
+
+          const taille = col[2] ? col[2].trim() : "";
+          const quantite = col[3] ? col[3].trim() : "0";
+          const seuil = col[4] ? col[4].trim() : "0";
+          const peremp = col[5] ? col[5].trim() : "";
+
+          // ID unique basé sur Type + Taille
+          const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+          await setDoc(doc(db, "stocks", id), {
+            type, taille, quantite, seuil, peremption: peremp
+          });
+          count++;
+        }
+        alert(count + " articles mis à jour dans le stock !");
+        loadStock();
+      };
+      reader.readAsText(file, 'ISO-8859-1');
+    };
+
+    loadStock();
   </script>
 </body>
 </html>
