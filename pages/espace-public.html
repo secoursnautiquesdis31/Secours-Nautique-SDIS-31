@@ -3,80 +3,70 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Espace Agent — SDIS 31</title>
+    <title>Documents Opérationnels — SDIS 31</title>
     <link rel="stylesheet" href="../css/main.css">
     <style>
         :root { --navy: #0B1F3A; --amber: #E8A020; --light-bg: #F0F2F5; }
         body { font-family: 'Barlow', sans-serif; background: var(--light-bg); margin: 0; padding: 0; }
         
-        .header-agent { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
-        .container { max-width: 600px; margin: 20px auto; padding: 10px; }
+        /* Header identique à l'espace agent */
+        .header-ops { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
+        
+        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
 
-        /* Identification Section */
-        .id-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
-        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; margin-top: 10px; background-color: white; }
+        /* Bouton Retour spécial Agents */
+        .btn-back { 
+            display: inline-block;
+            background: white; 
+            color: var(--navy); 
+            padding: 10px 20px; 
+            border-radius: 8px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
 
-        /* Grid de boutons */
-        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent; cursor: pointer; }
-        .menu-btn:active { transform: scale(0.95); background: var(--amber); }
-
-        /* Modal */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
-        .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; position:relative; }
-        textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing: border-box; }
-        .btn-send { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        /* Liste des documents */
+        .doc-list { display: flex; flex-direction: column; gap: 10px; }
+        .doc-item { 
+            background: white; 
+            padding: 15px; 
+            border-radius: 12px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center;
+            text-decoration: none;
+            color: var(--navy);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            transition: 0.2s;
+        }
+        .doc-item:active { transform: scale(0.98); background: #f0f0f0; }
+        .doc-info { display: flex; align-items: center; gap: 15px; }
+        .doc-icon { font-size: 24px; }
+        .doc-title { font-weight: bold; }
+        .btn-view { background: var(--navy); color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; }
     </style>
 </head>
 <body>
 
-    <div class="header-agent">
-        <h1 style="margin:0;">SECOURS NAUTIQUE 31</h1>
-        <p style="margin:5px 0 0 0; opacity:0.8;">Espace Opérationnel & Logistique</p>
+    <div class="header-ops">
+        <h1 style="margin:0;">DOCUMENTS OPS</h1>
+        <p style="margin:5px 0 0 0; opacity:0.8;">Référentiels & Procédures</p>
     </div>
 
     <div class="container">
-        <div class="id-card">
-            <label style="font-weight: bold; color: var(--navy);">QUI ÊTES-VOUS ?</label>
-            <select id="selectAgent">
-                <option value="">-- Sélectionner mon nom --</option>
-            </select>
-            <p id="msgBienvenue" style="margin-top:10px; font-weight:bold; color:var(--amber); display:none;"></p>
-        </div>
+        <a href="javascript:history.back()" class="btn-back">⬅️ RETOUR</a>
 
-        <div class="menu-grid">
-            <a href="calendrier-public.html" class="menu-btn">
-                📅<br>FORMATION<br><small style="font-weight:normal; opacity:0.7;">Calendrier / Inscriptions</small>
-            </a>
-            <button class="menu-btn" onclick="ouvrirDemande()">
-                📦<br>LOGISTIQUE<br><small style="font-weight:normal; opacity:0.7;">Besoin de matériel</small>
-            </button>
-            <a href="operationnel.html" class="menu-btn" style="grid-column: span 2;">
-                🌊<br>OPÉRATIONNEL<br><small style="font-weight:normal; opacity:0.7;">Niveaux d'eau, Crues, Alertes</small>
-            </a>
-        </div>
-    </div>
-
-    <div id="modalMatos" class="modal">
-        <div class="modal-content">
-            <h2 style="margin-top:0; color:var(--navy);">Besoin de matériel</h2>
-            
-            <label>Matériel disponible en stock :</label>
-            <select id="matType">
-                <option value="">-- Chargement du stock... --</option>
-            </select>
-
-            <label>Raison de la demande / Commentaire :</label>
-            <textarea id="matRaison" rows="4" placeholder="ex: Échange suite déchirure, nouveau matériel requis..."></textarea>
-            
-            <button onclick="envoyerDemande()" class="btn-send">ENVOYER LA DEMANDE</button>
-            <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:10px; color:#666; cursor:pointer;">Annuler</button>
+        <div id="listeDocs" class="doc-list">
+            <p style="text-align:center;">Chargement des documents...</p>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -90,80 +80,38 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const selectAgent = document.getElementById('selectAgent');
-        const selectMat = document.getElementById('matType');
-
-        async function chargerAgents() {
-            const snap = await getDocs(collection(db, "users"));
-            snap.forEach(doc => {
-                let opt = document.createElement('option');
-                opt.value = doc.id;
-                opt.text = doc.data().nom;
-                selectAgent.appendChild(opt);
-            });
-        }
-
-        async function chargerListeMateriel() {
+        async function chargerDocuments() {
+            const listeDiv = document.getElementById('listeDocs');
             try {
-                const snap = await getDocs(collection(db, "stocks")); 
-                selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
-                
+                const q = query(collection(db, "bibliotheque_ops"), orderBy("date", "desc"));
+                const snap = await getDocs(q);
+                listeDiv.innerHTML = "";
+
+                if (snap.empty) {
+                    listeDiv.innerHTML = "<p style='text-align:center;'>Aucun document disponible pour le moment.</p>";
+                    return;
+                }
+
                 snap.forEach(doc => {
-                    const item = doc.data();
-                    if(item.type) {
-                        let opt = document.createElement('option');
-                        const affichageTaille = item.taille ? ` (Taille: ${item.taille})` : "";
-                        opt.value = item.type + affichageTaille; // On envoie le type + taille combinés
-                        opt.text = item.type + affichageTaille; 
-                        selectMat.appendChild(opt);
-                    }
+                    const data = doc.data();
+                    const html = `
+                        <a href="${data.url}" target="_blank" class="doc-item">
+                            <div class="doc-info">
+                                <span class="doc-icon">📄</span>
+                                <span class="doc-title">${data.titre}</span>
+                            </div>
+                            <div class="btn-view">VOIR</div>
+                        </a>
+                    `;
+                    listeDiv.innerHTML += html;
                 });
             } catch (e) {
-                console.error("Erreur chargement stock:", e);
-                selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
+                console.error(e);
+                listeDiv.innerHTML = "<p>Erreur lors du chargement.</p>";
             }
         }
 
-        selectAgent.onchange = () => {
-            const nom = selectAgent.options[selectAgent.selectedIndex].text;
-            if(selectAgent.value !== "") {
-                localStorage.setItem('agentIdSelected', selectAgent.value);
-                localStorage.setItem('agentNomSelected', nom);
-                document.getElementById('msgBienvenue').innerText = "Salut " + nom + " !";
-                document.getElementById('msgBienvenue').style.display = "block";
-            } else {
-                document.getElementById('msgBienvenue').style.display = "none";
-            }
-        };
-
-        window.ouvrirDemande = () => {
-            if(!selectAgent.value) return alert("Choisis ton nom d'abord !");
-            document.getElementById('modalMatos').style.display = 'flex';
-            chargerListeMateriel();
-        };
-
-        window.envoyerDemande = async () => {
-            const articleChoisi = selectMat.value;
-            const raison = document.getElementById('matRaison').value;
-
-            if(!articleChoisi) return alert("Sélectionne un article.");
-
-            try {
-                await addDoc(collection(db, "demandes_materiel"), {
-                    agentId: selectAgent.value,
-                    agentNom: selectAgent.options[selectAgent.selectedIndex].text,
-                    type: articleChoisi, // Contient maintenant "Nom + Taille"
-                    raison: raison,
-                    date: new Date().toISOString(),
-                    statut: "en_attente"
-                });
-                alert("Demande envoyée !");
-                document.getElementById('matRaison').value = ""; // Vider le texte pour la prochaine fois
-                document.getElementById('modalMatos').style.display = 'none';
-            } catch (e) { alert("Erreur d'envoi."); }
-        };
-
-        chargerAgents();
+        chargerDocuments();
     </script>
 </body>
 </html>
