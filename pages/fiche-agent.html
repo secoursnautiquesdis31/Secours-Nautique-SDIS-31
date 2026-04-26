@@ -110,19 +110,56 @@
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
     async function charger() {
-        if(!agentId) return;
-        const snap = await getDoc(doc(db, "users", agentId));
-        if (snap.exists()) {
-            const agent = snap.data();
-            document.getElementById('nomAgent').innerText = agent.nom || "Inconnu";
-            document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
-            
-            const q = agent.quotas || {};
-            document.getElementById('q_sav').value = q.sav ?? 1;
-            document.getElementById('q_fmpa').value = q.fmpa ?? 1;
-            document.getElementById('q_cen').value = q.cen ?? 1;
-            document.getElementById('q_mso').value = q.mso ?? 2;
+    if(!agentId) return;
+    const snap = await getDoc(doc(db, "users", agentId));
+    if (!snap.exists()) return;
+    const agent = snap.data();
+    const agentNom = agent.nom;
 
+    // Affichage nom et CIS
+    document.getElementById('nomAgent').innerText = agentNom;
+    document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+
+    // Initialisation des compteurs d'aptitudes (on part de 0)
+    let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+
+    // Nettoyage de l'historique avant remplissage
+    const histTbody = document.getElementById('listeFormations');
+    histTbody.innerHTML = "";
+
+    // RECUPERATION DES FORMATIONS
+    const fSnap = await getDocs(collection(db, "formations"));
+    
+    fSnap.forEach(fDoc => {
+        const f = fDoc.data();
+        const inscrits = f.inscrits || [];
+        
+        // On cherche si l'agent est marqué "présent" dans cette formation
+        const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
+
+        if (presence) {
+            // 1. AJOUT A L'HISTORIQUE (TABLEAU DU BAS)
+            const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
+            histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
+
+            // 2. INCREMENTATION DES APTITUDES (TABLEAU DU HAUT)
+            // On vérifie si le nom de la formation contient des mots clés
+            const titre = f.nom.toUpperCase();
+            if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
+            if (titre.includes("FMPA") || titre.includes("MER")) compteurs.fmpa++;
+            if (titre.includes("CEN")) compteurs.cen++;
+            if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) compteurs.mso++;
+        }
+    });
+
+    // MISE A JOUR VISUELLE DES COMPTEURS (Aptitudes)
+    document.getElementById('q_sav').value = compteurs.sav;
+    document.getElementById('q_fmpa').value = compteurs.fmpa;
+    document.getElementById('q_cen').value = compteurs.cen;
+    document.getElementById('q_mso').value = compteurs.mso;
+
+    // (Le reste de ton code pour les spécialités et EPI ne change pas)
+}
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             listeSpecs.forEach(s => {
