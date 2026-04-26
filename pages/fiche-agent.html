@@ -196,18 +196,37 @@
         });
     };
 
-    window.retirerEPI = async (stockId, type, taille) => {
-        if(confirm(`Retirer ${type} ?`)) {
+   window.retirerEPI = async (stockId, type, taille) => {
+    if(confirm(`Supprimer l'affectation de ${type} ${taille ? `(${taille})` : ''} ?`)) {
+        try {
             const agentRef = doc(db, "users", agentId);
-            await updateDoc(agentRef, {
-                epi: arrayRemove({ id: stockId, type: type, taille: taille })
-            });
-            // On rend l'objet au stock
-            await updateDoc(doc(db, "stocks", stockId), { quantite: increment(1) });
-            charger();
-        }
-    };
+            
+            // On prépare l'objet exact à supprimer
+            // On fait bien attention à inclure la taille seulement si elle existe 
+            // pour que Firestore trouve la ligne correspondante
+            let objetASupprimer = { 
+                id: stockId, 
+                type: type 
+            };
+            
+            if (taille && taille !== "undefined" && taille !== "null" && taille !== "") {
+                objetASupprimer.taille = taille;
+            }
 
+            // Suppression de la ligne sur la fiche agent uniquement
+            await updateDoc(agentRef, {
+                epi: arrayRemove(objetASupprimer)
+            });
+
+            // On rafraîchit l'affichage sans toucher au stock
+            charger();
+
+        } catch (error) {
+            console.error("Erreur lors du retrait :", error);
+            alert("Erreur : Impossible de supprimer la ligne.");
+        }
+    }
+};
     // IMPORTANT : Lancer le chargement au démarrage
     charger();
 
