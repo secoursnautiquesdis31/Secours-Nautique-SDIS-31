@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gestion Opérationnelle — Admin</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F0F2F5; --white: #ffffff; }
+        body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; display: flex; height: 100vh; }
+
+        /* Sidebar */
+        .sidebar { width: 250px; background: var(--navy); color: white; display: flex; flex-direction: column; padding: 20px; border-right: 4px solid var(--amber); }
+        .sidebar h2 { font-size: 1.2rem; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 15px; }
+        .btn-nav { color: white; text-decoration: none; padding: 12px; margin: 5px 0; border-radius: 8px; transition: 0.3s; background: rgba(255,255,255,0.05); text-align: center; font-weight: bold; }
+        .btn-nav:hover { background: var(--amber); color: var(--navy); }
+
+        /* Main Content */
+        .main-content { flex: 1; padding: 30px; overflow-y: auto; }
+        
+        /* Formulaire d'ajout */
+        .admin-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 30px; border-top: 5px solid var(--amber); }
+        input { width: 100%; padding: 12px; margin: 10px 0; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        .btn-add { background: var(--navy); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; }
+        .btn-add:hover { background: #1a3a5f; }
+
+        /* Grille des documents */
+        .doc-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .doc-card { background: var(--white); border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 6px solid var(--navy); position: relative; }
+        .doc-card h3 { margin: 0 0 10px 0; color: var(--navy); font-size: 1.1rem; }
+        .btn-delete { background: #ff4444; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; margin-top: 10px; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>ADMIN OPS</h2>
+        <a href="dashboard.html" class="btn-nav">🏠 TABLEAU DE BORD</a>
+        <p style="font-size: 0.8rem; opacity: 0.6; text-align: center; margin-top: 20px;">Gestion des documents pour les agents</p>
+    </div>
+
+    <div class="main-content">
+        <h1 style="color: var(--navy); border-bottom: 3px solid var(--navy); padding-bottom: 10px;">Gestion des Référentiels</h1>
+
+        <div class="admin-card">
+            <h3>Ajouter un nouveau document / dossier</h3>
+            <input type="text" id="docTitre" placeholder="Titre du document (ex: Guide Nautique 2024)">
+            <input type="text" id="docUrl" placeholder="Lien Google Drive (Partage 'Tous avec le lien')">
+            <button onclick="ajouterDoc()" class="btn-add">PUBLIER POUR LES AGENTS</button>
+        </div>
+
+        <div id="gridDocs" class="doc-grid">
+            <p>Chargement de la bibliothèque...</p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+            authDomain: "secours-nautique-31.firebaseapp.com",
+            projectId: "secours-nautique-31",
+            storageBucket: "secours-nautique-31.firebasestorage.app",
+            messagingSenderId: "1013387329575",
+            appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        // FONCTION : Ajouter un document
+        window.ajouterDoc = async () => {
+            const titre = document.getElementById('docTitre').value;
+            const url = document.getElementById('docUrl').value;
+
+            if(!titre || !url) return alert("Remplis tout !");
+
+            try {
+                await addDoc(collection(db, "bibliotheque_ops"), {
+                    titre: titre,
+                    url: url,
+                    date: new Date().toISOString()
+                });
+                alert("Document ajouté !");
+                location.reload();
+            } catch (e) { alert("Erreur d'ajout."); }
+        };
+
+        // FONCTION : Charger et Afficher avec bouton Supprimer
+        async function chargerDocs() {
+            const grid = document.getElementById('gridDocs');
+            const q = query(collection(db, "bibliotheque_ops"), orderBy("date", "desc"));
+            const snap = await getDocs(q);
+            grid.innerHTML = "";
+
+            snap.forEach(documentFichier => {
+                const data = documentFichier.data();
+                const card = document.createElement('div');
+                card.className = 'doc-card';
+                card.innerHTML = `
+                    <h3>${data.titre}</h3>
+                    <a href="${data.url}" target="_blank" style="font-size:0.8rem; color:blue;">Vérifier le lien</a><br>
+                    <button class="btn-delete" onclick="supprimerDoc('${documentFichier.id}')">SUPPRIMER</button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // FONCTION : Supprimer
+        window.supprimerDoc = async (id) => {
+            if(confirm("Supprimer ce document pour tous les agents ?")) {
+                await deleteDoc(doc(db, "bibliotheque_ops", id));
+                location.reload();
+            }
+        };
+
+        chargerDocs();
+    </script>
+</body>
+</html>
