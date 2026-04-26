@@ -159,9 +159,10 @@
             `;
             container.appendChild(div);
         });
-          }
-            window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
-        if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
+    } // <--- C'EST CETTE ACCOLADE QUI MANQUE DANS TON CODE CI-DESSUS
+
+    window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
+      if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
 
         try {
             // 1. NETTOYAGE DU NOM 
