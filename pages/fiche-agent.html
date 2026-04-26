@@ -43,13 +43,13 @@
     </div>
 
     <div class="content">
-        <div class="section-title">Objectifs de Formation Individuels</div>
+        <div class="section-title">Objectifs & Acquis (Calendrier)</div>
         <div class="quota-container">
             <div class="quota-grid">
-                <div class="quota-item"><label>Recyclage SAV SEV</label><input type="number" id="q_sav" value="0"></div>
-                <div class="quota-item"><label>FMPA Mer</label><input type="number" id="q_fmpa" value="0"></div>
-                <div class="quota-item"><label>Recyclage CEN</label><input type="number" id="q_cen" value="0"></div>
-                <div class="quota-item"><label>Entrainement / MSO</label><input type="number" id="q_mso" value="0"></div>
+                <div class="quota-item"><label>SAV SEV</label><div><b id="count_sav" style="color:var(--green)">0</b> / <input type="number" id="q_sav"></div></div>
+                <div class="quota-item"><label>FMPA Mer</label><div><b id="count_fmpa" style="color:var(--green)">0</b> / <input type="number" id="q_fmpa"></div></div>
+                <div class="quota-item"><label>CEN</label><div><b id="count_cen" style="color:var(--green)">0</b> / <input type="number" id="q_cen"></div></div>
+                <div class="quota-item"><label>MSO / ENT</label><div><b id="count_mso" style="color:var(--green)">0</b> / <input type="number" id="q_mso"></div></div>
             </div>
             <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
         </div>
@@ -101,18 +101,49 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
- async function charger() {
+    async function charger() {
         if(!agentId) return;
         try {
             const snap = await getDoc(doc(db, "users", agentId));
             if (!snap.exists()) return;
             const agent = snap.data();
-            const agentNom = agent.nom || "Inconnu";
+            const agentNom = agent.nom;
 
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+            
+            const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+            document.getElementById('q_sav').value = obj.sav || 0;
+            document.getElementById('q_fmpa').value = obj.fmpa || 0;
+            document.getElementById('q_cen').value = obj.cen || 0;
+            document.getElementById('q_mso').value = obj.mso || 0;
 
-            // 1. SPÉCIALITÉS
+            let presences = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+            const histTbody = document.getElementById('listeFormations');
+            histTbody.innerHTML = "";
+
+            const fSnap = await getDocs(collection(db, "formations"));
+            fSnap.forEach(fDoc => {
+                const f = fDoc.data();
+                const estPresent = (f.inscrits || []).find(i => i.nom === agentNom && i.statut === "présent");
+
+                if (estPresent) {
+                    const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
+                    histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
+
+                    const titre = f.nom.toUpperCase();
+                    if (titre.includes("SAV") || titre.includes("SEV")) presences.sav++;
+                    else if (titre.includes("FMPA") || titre.includes("MER")) presences.fmpa++;
+                    else if (titre.includes("CEN")) presences.cen++;
+                    else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) presences.mso++;
+                }
+            });
+
+            document.getElementById('count_sav').innerText = presences.sav;
+            document.getElementById('count_fmpa').innerText = presences.fmpa;
+            document.getElementById('count_cen').innerText = presences.cen;
+            document.getElementById('count_mso').innerText = presences.mso;
+
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             const agentSpecs = agent.specialites || [];
@@ -125,58 +156,20 @@
                 grid.appendChild(btn);
             });
 
-            // 2. EPI
             const epiList = document.getElementById('epiList');
             epiList.innerHTML = "";
-            const agentEpi = agent.epi || [];
-            if (agentEpi.length > 0) {
-                agentEpi.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "epi-row";
-                    div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
-                        <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                        onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
-                    epiList.appendChild(div);
-                });
-            } else {
-                epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
-            }
-
-            // 3. CALCUL DES APTITUDES (BASÉ UNIQUEMENT SUR LES PRÉSENCES CALENDRIER)
-            let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
-            const histTbody = document.getElementById('listeFormations');
-            histTbody.innerHTML = "";
-
-            const fSnap = await getDocs(collection(db, "formations"));
-            fSnap.forEach(fDoc => {
-                const f = fDoc.data();
-                const inscrits = f.inscrits || [];
-                
-                // On cherche si l'agent est marqué "présent"
-                const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
-
-                if (presence) {
-                    // Ajout à l'historique
-                    const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                    histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
-
-                    // Incrémentation automatique des compteurs
-                    const titre = f.nom.toUpperCase();
-                    if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
-                    if (titre.includes("FMPA") || titre.includes("MER")) compteurs.fmpa++;
-                    if (titre.includes("CEN")) compteurs.cen++;
-                    if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) compteurs.mso++;
-                }
+            (agent.epi || []).forEach(item => {
+                const div = document.createElement('div');
+                div.className = "epi-row";
+                div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille || ""})</small></div>
+                    <button style="color:var(--danger); border:none; background:none; cursor:pointer;" 
+                    onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
+                epiList.appendChild(div);
             });
 
-            // MISE À JOUR DU TABLEAU DES APTITUDES (En haut de la fiche)
-            document.getElementById('q_sav').value = compteurs.sav;
-            document.getElementById('q_fmpa').value = compteurs.fmpa;
-            document.getElementById('q_cen').value = compteurs.cen;
-            document.getElementById('q_mso').value = compteurs.mso;
+        } catch (e) { console.error(e); }
+    }
 
-        } catch (e) { console.error("Erreur chargement:", e); }
-    }    
     async function toggleSpec(spec, current) {
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
@@ -185,13 +178,14 @@
 
     document.getElementById('btnSaveQuotas').onclick = async () => {
         const nouveauxQuotas = {
-            sav: parseInt(document.getElementById('q_sav').value),
-            fmpa: parseInt(document.getElementById('q_fmpa').value),
-            cen: parseInt(document.getElementById('q_cen').value),
-            mso: parseInt(document.getElementById('q_mso').value)
+            sav: parseInt(document.getElementById('q_sav').value) || 0,
+            fmpa: parseInt(document.getElementById('q_fmpa').value) || 0,
+            cen: parseInt(document.getElementById('q_cen').value) || 0,
+            mso: parseInt(document.getElementById('q_mso').value) || 0
         };
         await updateDoc(doc(db, "users", agentId), { quotas: nouveauxQuotas });
-        alert("✅ Objectifs mis à jour !");
+        alert("🎯 Objectifs enregistrés !");
+        charger();
     };
 
     document.getElementById('btnOpenStock').onclick = async () => {
