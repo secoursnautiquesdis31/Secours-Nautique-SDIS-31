@@ -18,7 +18,6 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
-    /* Amélioration de l'affichage des événements pour la vue annuelle */
     .fc-event { 
         cursor: pointer; padding: 2px 5px; border: none !important; 
         background-color: var(--navy) !important; color: white !important;
@@ -36,6 +35,10 @@
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
     .btn-export { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #DDD; cursor: pointer; font-weight: bold; font-size: 0.75rem; background: #f8f9fa; display: flex; align-items: center; justify-content: center; gap: 5px; }
+
+    /* Style pour la liste des inscrits avec boutons de validation */
+    .inscrit-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #EEE; margin-bottom: 5px; }
+    .btn-valide { background: #2A9D5C; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
   </style>
 </head>
 <body>
@@ -68,191 +71,11 @@
           <p id="detLieu" style="font-weight: bold; margin-bottom: 10px;"></p>
           <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
           <strong>Inscrits :</strong>
-          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; background: #F8F9FA; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto;"></div>
+          <div id="detInscrits" style="margin: 10px 0; font-size: 0.85rem; background: #F8F9FA; padding: 10px; border-radius: 6px; max-height: 200px; overflow-y: auto;"></div>
           
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
           
           <div class="btn-group">
             <button class="btn-export" id="btnPDF">📄 PDF ÉMARGEMENT</button>
-            <button class="btn-export" id="btnExcel">📊 EXCEL</button>
-          </div>
-
-          <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.7rem;">Supprimer la session</button>
-      </div>
-      
-      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
-    </div>
-  </div>
-
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-        authDomain: "secours-nautique-31.firebaseapp.com",
-        projectId: "secours-nautique-31",
-        storageBucket: "secours-nautique-31.firebasestorage.app",
-        messagingSenderId: "1013387329575",
-        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    let agentConnecte = "";
-    let calendar;
-
-    async function init() {
-        try {
-            const uSnap = await getDocs(collection(db, "users"));
-            const sel = document.getElementById('selectAgentSession');
-            sel.innerHTML = '<option value="">-- Agent --</option>';
-            uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
-            sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
-
-            const calendarEl = document.getElementById('calendar');
-            calendar = new FullCalendar.Calendar(calendarEl, {
-                // MODIFICATION ICI : Activation de la vue Annuelle et Mensuelle
-                initialView: 'dayGridMonth',
-                locale: 'fr',
-                firstDay: 1,
-                headerToolbar: { 
-                    left: 'prev,next today', 
-                    center: 'title', 
-                    right: 'dayGridMonth,multiMonthYear' // Boutons Mois et Année
-                },
-                buttonText: {
-                    today: "Aujourd'hui",
-                    month: "Mois",
-                    year: "Année"
-                },
-                // Suite du code (inchangé pour garder tes fonctions)
-                events: async (info, success, failure) => {
-                    const snap = await getDocs(collection(db, "formations"));
-                    const evts = [];
-                    snap.forEach(d => {
-                        const data = d.data();
-                        evts.push({
-                            id: d.id,
-                            title: `${data.nom} | 📍 ${data.lieu}`,
-                            start: data.date,
-                            extendedProps: { ...data }
-                        });
-                    });
-                    success(evts);
-                },
-                dateClick: (info) => {
-                    document.getElementById('modalTitle').innerText = "Nouvelle session";
-                    document.getElementById('formSection').style.display = "block";
-                    document.getElementById('detailSection').style.display = "none";
-                    document.getElementById('selectedDate').value = info.dateStr;
-                    document.getElementById('modalEvent').style.display = 'block';
-                },
-                eventClick: (info) => {
-                    ouvrirDetails(info.event);
-                }
-            });
-            calendar.render();
-        } catch (e) { console.error(e); }
-    }
-
-    // Fonction extraite pour plus de clarté
-    function ouvrirDetails(event) {
-        const data = event.extendedProps;
-        const id = event.id;
-        const dateStr = event.startStr;
-        const inscrits = data.inscrits || [];
-
-        document.getElementById('modalTitle').innerText = data.nom;
-        document.getElementById('formSection').style.display = "none";
-        document.getElementById('detailSection').style.display = "block";
-        document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
-        document.getElementById('detInscrits').innerText = inscrits.length > 0 ? inscrits.join(', ') : "Aucun inscrit.";
-        
-        const estInscrit = agentConnecte && inscrits.includes(agentConnecte);
-        document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
-        document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
-
-        // Logic PDF/Excel/Actions (gardée de ton code)
-        document.getElementById('btnPDF').onclick = () => genererPDF(data, inscrits, dateStr);
-        document.getElementById('btnExcel').onclick = () => genererExcel(data, inscrits, dateStr);
-        document.getElementById('btnInscrire').onclick = () => inscrire(id);
-        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
-        document.getElementById('btnSuppr').onclick = async () => {
-            if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
-        };
-        document.getElementById('modalEvent').style.display = 'block';
-    }
-
-    // Tes fonctions de gestion (Inscriptions, PDF, Excel) inchangées pour garantir le fonctionnement
-    async function inscrire(formationId) {
-        if(!agentConnecte) return alert("Sélectionnez votre nom en haut à droite");
-        try {
-            const formationRef = doc(db, "formations", formationId);
-            const formationSnap = await getDoc(formationRef);
-            const formationData = formationSnap.data();
-            await updateDoc(formationRef, { inscrits: arrayUnion(agentConnecte) });
-            const q = query(collection(db, "users"), where("nom", "==", agentConnecte));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                await updateDoc(querySnapshot.docs[0].ref, {
-                    historiqueFormations: arrayUnion({ nom: formationData.nom, date: formationData.date, lieu: formationData.lieu })
-                });
-            }
-            alert("Inscription validée !");
-            fermerModal(); calendar.refetchEvents();
-        } catch (e) { alert("Erreur d'inscription"); }
-    }
-
-    async function desinscrire(formationId) {
-        try {
-            const formationRef = doc(db, "formations", formationId);
-            const formationSnap = await getDoc(formationRef);
-            const formationData = formationSnap.data();
-            await updateDoc(formationRef, { inscrits: arrayRemove(agentConnecte) });
-            const q = query(collection(db, "users"), where("nom", "==", agentConnecte));
-            const querySnapshot = await getDocs(q);
-            if (!querySnapshot.empty) {
-                await updateDoc(querySnapshot.docs[0].ref, {
-                    historiqueFormations: arrayRemove({ nom: formationData.nom, date: formationData.date, lieu: formationData.lieu })
-                });
-            }
-            fermerModal(); calendar.refetchEvents();
-        } catch (e) { console.error(e); }
-    }
-
-    function genererPDF(data, inscrits, dateStr) {
-        const { jsPDF } = window.jspdf;
-        const docPDF = new jsPDF();
-        docPDF.text(`LISTE D'ÉMARGEMENT : ${data.nom}`, 14, 20);
-        const lignes = inscrits.map((nom, i) => [i + 1, nom, ""]);
-        docPDF.autoTable({ startY: 35, head: [['#', 'Nom de l\'agent', 'Signature']], body: lignes, theme: 'grid' });
-        docPDF.save(`Emargement_${data.nom}.pdf`);
-    }
-
-    function genererExcel(data, inscrits, dateStr) {
-        const wb = XLSX.utils.book_new();
-        const wsData = [["FORMATION", data.nom], ["DATE", dateStr], ["LIEU", data.lieu], [], ["N°", "NOM DE L'AGENT"]];
-        inscrits.forEach((nom, i) => wsData.push([i + 1, nom]));
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        XLSX.utils.book_append_sheet(wb, ws, "Inscrits");
-        XLSX.writeFile(wb, `Formation_${data.nom}.xlsx`);
-    }
-
-    window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
-
-    document.getElementById('btnSave').onclick = async () => {
-        const nom = document.getElementById('formNom').value;
-        const lieu = document.getElementById('formLieu').value;
-        const date = document.getElementById('selectedDate').value;
-        if(!nom || !lieu) return alert("Remplissez le nom et le lieu");
-        await addDoc(collection(db, "formations"), { nom, lieu, date, inscrits: [] });
-        document.getElementById('formNom').value = ""; document.getElementById('formLieu').value = "";
-        fermerModal(); calendar.refetchEvents();
-    };
-
-    init();
-  </script>
-</body>
-</html>
+            <button class="btn-export" id="btnExcel">📊
