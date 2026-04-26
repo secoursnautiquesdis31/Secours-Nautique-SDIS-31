@@ -1,43 +1,44 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Technique — SDIS 31</title>
-  <link rel="stylesheet" href="../css/main.css">
-  <style>
-    :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; }
-    body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-    .tech-container { max-width: 1200px; margin: 0 auto; }
-    .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    
-    /* Nouveau style pour le formulaire d'ajout */
-    .add-bar { background: white; padding: 15px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); align-items: flex-end; border-top: 4px solid var(--amber); }
-    .add-bar div { display: flex; flex-direction: column; gap: 5px; }
-    .add-bar input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
-    .btn-add { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 35px; }
+    <meta charset="UTF-8">
+    <title>Technique — SDIS 31</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; }
+        body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
+        .tech-container { max-width: 1200px; margin: 0 auto; }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+        
+        .add-bar { background: white; padding: 15px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); align-items: flex-end; border-top: 4px solid var(--amber); }
+        .add-bar div { display: flex; flex-direction: column; gap: 5px; }
+        .add-bar input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+        .btn-add { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 35px; }
 
-    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
-    .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
-    .stat-card { background: white; padding: 10px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    th { background: #eee; padding: 12px; text-align: left; color: var(--navy); }
-    td { padding: 10px; border-bottom: 1px solid #eee; }
-    .stock-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-    .bg-red { background: #fee2e2; color: var(--red); }
-    .bg-orange { background: #ffedd5; color: #d97706; }
-    .bg-green { background: #dcfce7; color: var(--green); }
-    input.cell-edit { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 85%; }
-    .btn-suppr { border: none; background: none; cursor: pointer; font-size: 1.1rem; }
+        .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
+        .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 10px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        
+        table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        th { background: #eee; padding: 12px; text-align: left; color: var(--navy); }
+        td { padding: 10px; border-bottom: 1px solid #eee; }
+        
+        .stock-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
+        .bg-red { background: #fee2e2; color: var(--red); }
+        .bg-orange { background: #ffedd5; color: #d97706; }
+        .bg-green { background: #dcfce7; color: var(--green); }
+        
+        input.cell-edit { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 85%; }
+        .btn-suppr { border: none; background: none; cursor: pointer; font-size: 1.1rem; }
 
-    /* Styles pour la zone de demandes */
-    .demande-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--amber); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-    .btn-valider { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    .btn-refuser { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
-  </style>
+        .demande-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--amber); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-valider { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn-refuser { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+    </style>
 </head>
 <body>
 
-<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber);">🏠 MENU</a>
+<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber);">🏠 MENU</a>
 
 <div class="tech-container">
 
@@ -83,7 +84,7 @@
     </div>
 
     <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="Rechercher..." style="flex:2; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+        <input type="text" id="searchInput" placeholder="Rechercher un matériel..." style="flex:2; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
         <select id="statusFilter" style="flex:1; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
             <option value="all">Tous les stocks</option>
             <option value="rupture">En rupture</option>
@@ -126,8 +127,7 @@
     const stockBody = document.getElementById('stockBody');
     let allItems = [];
 
-    // --- GESTION DES DEMANDES MATÉRIEL ---
-
+    // --- GESTION DES DEMANDES ---
     async function chargerDemandes() {
         const snap = await getDocs(collection(db, "demandes_materiel"));
         const container = document.getElementById('listeDemandes');
@@ -142,10 +142,7 @@
             const dem = d.data();
             const div = document.createElement('div');
             div.className = "demande-card";
-            
-            // On s'assure que taille est soit le texte, soit une chaîne vide
             const tailleDemande = dem.taille || ""; 
-            
             div.innerHTML = `
                 <div>
                     <strong style="color:var(--navy);">${dem.agentNom}</strong> demande : 
@@ -159,72 +156,39 @@
             `;
             container.appendChild(div);
         });
-    } // <--- C'EST CETTE ACCOLADE QUI MANQUE DANS TON CODE CI-DESSUS
+    }
 
     window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
-      if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
-
+        if(!confirm("Valider cette distribution ?")) return;
         try {
-            // 1. NETTOYAGE DU NOM 
-            // On sépare "Nom de l'article" et "Taille" si l'agent a utilisé le menu déroulant
             let nomPropre = typeFusionne;
             let tailleReelle = tailleAncienne;
-
             if (typeFusionne.includes(" (Taille:")) {
                 const parties = typeFusionne.split(" (Taille:");
                 nomPropre = parties[0].trim();
                 tailleReelle = parties[1].replace(")", "").trim();
             }
 
-            // 2. Trouver l'item en stock
-            let stockId = null;
-            let currentQty = 0;
+            const itemStock = allItems.find(i => i.type.toLowerCase() === nomPropre.toLowerCase() && (i.taille || "") === (tailleReelle || ""));
             
-            allItems.forEach(item => {
-                // On compare le nom propre et la taille extraite
-                if(item.type.toLowerCase() === nomPropre.toLowerCase() && item.taille === tailleReelle) {
-                    stockId = item.id;
-                    currentQty = parseInt(item.quantite || 0);
-                }
-            });
-
-            if(!stockId) {
-                alert("Erreur : Impossible de trouver '" + nomPropre + "' en taille '" + tailleReelle + "' dans l'inventaire.");
+            if(!itemStock || itemStock.quantite <= 0) {
+                alert("Erreur : Article introuvable ou stock épuisé.");
                 return;
             }
 
-            if(currentQty <= 0) {
-                alert("Erreur : Stock épuisé (0 restant).");
-                return;
-            }
+            let objEpi = { id: itemStock.id, type: itemStock.type, date: new Date().toLocaleDateString() };
+            if(itemStock.taille) objEpi.taille = itemStock.taille;
 
-            // 3. Ajouter l'EPI à l'agent (Fiche Agent)
-            await updateDoc(doc(db, "users", agentId), {
-                epi: arrayUnion({ 
-                    id: stockId, 
-                    type: nomPropre, 
-                    taille: tailleReelle, 
-                    date: new Date().toISOString() 
-                })
-            });
-
-            // 4. Déduire du stock (-1)
-            await updateDoc(doc(db, "stocks", stockId), { 
-                quantite: currentQty - 1 
-            });
-
-            // 5. Supprimer la demande traitée
+            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion(objEpi) });
+            await updateDoc(doc(db, "stocks", itemStock.id), { quantite: itemStock.quantite - 1 });
             await deleteDoc(doc(db, "demandes_materiel", demandeId));
 
-            alert("Validation réussie : Stock mis à jour et fiche agent complétée.");
+            alert("Validation réussie !");
             chargerDemandes();
-            charger(); 
-        } catch (e) {
-            alert("Erreur lors de la validation.");
-            console.error(e);
-        }
+            charger();
+        } catch (e) { console.error(e); }
     };
-  
+
     window.refuserDemande = async (id) => {
         if(confirm("Supprimer cette demande ?")) {
             await deleteDoc(doc(db, "demandes_materiel", id));
@@ -232,22 +196,15 @@
         }
     };
 
-    // --- GESTION DU STOCK EXISTANT ---
-
+    // --- GESTION DU STOCK ---
     async function charger() {
         try {
             const snap = await getDocs(collection(db, "stocks"));
-            if (snap.empty) {
-                stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>Base vide.</td></tr>";
-                return;
-            }
             allItems = [];
             snap.forEach(d => allItems.push({ id: d.id, ...d.data() }));
             afficher(allItems);
             updateStats(allItems);
-        } catch (e) {
-            console.error(e);
-        }
+        } catch (e) { console.error(e); }
     }
 
     function afficher(items) {
@@ -264,97 +221,4 @@
                 <td><input class="cell-edit" value="${item.type || ''}" onchange="upd('${item.id}','type',this.value)"></td>
                 <td><input class="cell-edit" value="${item.taille || ''}" onchange="upd('${item.id}','taille',this.value)"></td>
                 <td>
-                    <span class="stock-badge ${cl}">${q}</span>
-                    <input type="number" style="width:40px" value="${q}" onchange="upd('${item.id}','quantite',this.value)">
-                </td>
-                <td><input type="number" class="cell-edit" value="${s}" onchange="upd('${item.id}','seuil',this.value)"></td>
-                <td><input class="cell-edit" value="${item.peremption || ''}" onchange="upd('${item.id}','peremption',this.value)"></td>
-                <td><button class="btn-suppr" onclick="del('${item.id}')">🗑️</button></td>
-            `;
-            stockBody.appendChild(tr);
-        });
-    }
-
-    function updateStats(items) {
-        document.getElementById('statTotal').innerText = items.length;
-        document.getElementById('statRupture').innerText = items.filter(i => parseInt(i.quantite || 0) === 0).length;
-        document.getElementById('statAlerte').innerText = items.filter(i => {
-            const q = parseInt(i.quantite || 0);
-            const s = parseInt(i.seuil || 0);
-            return q > 0 && q <= s;
-        }).length;
-    }
-
-    document.getElementById('btnAddManual').onclick = async () => {
-        const type = document.getElementById('newType').value.trim();
-        const taille = document.getElementById('newTaille').value.trim();
-        const qty = parseInt(document.getElementById('newQty').value) || 0;
-        const seuil = parseInt(document.getElementById('newSeuil').value) || 0;
-
-        if(!type) { alert("Veuillez saisir une désignation."); return; }
-        const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
-        await setDoc(doc(db, "stocks", id), { type, taille, quantite: qty, seuil, peremption: "" });
-        
-        document.getElementById('newType').value = "";
-        document.getElementById('newTaille').value = "";
-        document.getElementById('newQty').value = "0";
-        document.getElementById('newSeuil').value = "1";
-        alert("Matériel ajouté !");
-        charger();
-    };
-
-    window.upd = async (id, f, v) => {
-        const val = (f === 'quantite' || f === 'seuil') ? parseInt(v) : v;
-        await updateDoc(doc(db, "stocks", id), { [f]: val });
-        const i = allItems.find(x => x.id === id);
-        if(i) i[f] = val;
-        updateStats(allItems);
-    };
-
-    window.del = async (id) => {
-        if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "stocks", id)); charger(); }
-    };
-
-    document.getElementById('searchInput').oninput = () => {
-        const val = document.getElementById('searchInput').value.toLowerCase();
-        afficher(allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val)));
-    };
-
-    document.getElementById('statusFilter').onchange = () => {
-        const val = document.getElementById('statusFilter').value;
-        afficher(allItems.filter(i => {
-            const q = parseInt(i.quantite || 0);
-            const s = parseInt(i.seuil || 0);
-            if(val === "rupture") return q === 0;
-            if(val === "alerte") return q > 0 && q <= s;
-            return true;
-        }));
-    };
-
-    document.getElementById('csvInput').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const lignes = ev.target.result.split(/\r?\n/);
-            let dernierType = "";
-            for (let i = 1; i < lignes.length; i++) {
-                const col = lignes[i].split(';');
-                if (col.length < 3) continue;
-                let type = col[0].trim() || dernierType;
-                if (!type || type.toLowerCase().includes("type")) continue;
-                dernierType = type;
-                const id = (type + "_" + (col[2]||'')).toLowerCase().replace(/[^a-z0-9]/g, '_');
-                await setDoc(doc(db, "stocks", id), {
-                    type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||""
-                });
-            }
-            charger();
-        };
-        reader.readAsText(e.target.files[0], 'ISO-8859-1');
-    };
-
-    // Lancement des chargements au démarrage
-    chargerDemandes();
-    charger();
-</script>
-</body>
-</html>
+                    <span class="stock-badge ${cl}">${
