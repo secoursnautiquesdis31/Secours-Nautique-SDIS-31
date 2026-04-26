@@ -7,16 +7,16 @@
     <link rel="stylesheet" href="../css/main.css">
     <style>
         :root { --navy: #0B1F3A; --amber: #E8A020; --light-bg: #F0F2F5; }
-        body { font-family: 'Barlow', sans-serif; background: var(--light-bg); margin: 0; padding: 0; }
+        body { font-family: sans-serif; background: var(--light-bg); margin: 0; padding: 0; }
         .header-agent { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
         .container { max-width: 600px; margin: 20px auto; padding: 10px; }
         .id-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
-        select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; margin-top: 10px; background-color: white; box-sizing: border-box; }
+        select, textarea { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ddd; margin-top: 10px; font-size: 1rem; box-sizing: border-box; }
         .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); cursor: pointer; border:none; }
+        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; cursor: pointer; border:none; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; }
-        .btn-send { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; border: 1px solid var(--amber); }
+        .btn-send { background: var(--navy); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
@@ -44,13 +44,13 @@
 
     <div id="modalMatos" class="modal">
         <div class="modal-content">
-            <h2 style="margin-top:0; color:var(--navy);">Besoin de matériel</h2>
-            <label>Matériel disponible :</label>
-            <select id="matType"><option value="">-- Chargement... --</option></select>
-            <label>Raison :</label>
-            <textarea id="matRaison" rows="3" placeholder="Ex: Remplacement matériel usagé..."></textarea>
-            <button onclick="envoyerDemande()" class="btn-send">ENVOYER LA DEMANDE</button>
-            <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:10px; color:#666; cursor:pointer;">Annuler</button>
+            <h3 style="margin-top:0; color:var(--navy);">Besoin de matériel</h3>
+            <label>Article souhaité :</label>
+            <select id="matType"><option value="">Chargement du stock...</option></select>
+            <label>Motif / Raison :</label>
+            <textarea id="matRaison" rows="3" placeholder="Remplacement, perte..."></textarea>
+            <button id="btnEnvoyer" class="btn-send">ENVOYER LA DEMANDE</button>
+            <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:15px; color:#666; cursor:pointer;">Annuler</button>
         </div>
     </div>
 
@@ -73,34 +73,35 @@
         const selectAgent = document.getElementById('selectAgent');
         const selectMat = document.getElementById('matType');
 
-        // Charger la liste des agents (pour avoir l'ID caché)
         async function chargerAgents() {
-            const snap = await getDocs(collection(db, "users"));
-            snap.forEach(doc => {
-                let opt = document.createElement('option');
-                opt.value = doc.id; // L'ID Firestore
-                opt.text = doc.data().nom;
-                selectAgent.appendChild(opt);
-            });
-        }
-
-        // Charger le stock dans le menu déroulant
-        async function chargerListeMateriel() {
-            const snap = await getDocs(collection(db, "stocks")); 
-            selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
-            snap.forEach(doc => {
-                const item = doc.data();
-                if(item.quantite > 0) {
+            try {
+                const snap = await getDocs(collection(db, "users"));
+                snap.forEach(doc => {
                     let opt = document.createElement('option');
-                    const t = item.taille ? ` (${item.taille})` : "";
-                    opt.value = item.type + t;
-                    opt.text = item.type + t; 
-                    selectMat.appendChild(opt);
-                }
-            });
+                    opt.value = doc.id;
+                    opt.text = doc.data().nom;
+                    selectAgent.appendChild(opt);
+                });
+            } catch(e) { console.error(e); }
         }
 
-        // Bienvenue quand on sélectionne son nom
+        async function chargerListeMateriel() {
+            try {
+                const snap = await getDocs(collection(db, "stocks")); 
+                selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
+                snap.forEach(doc => {
+                    const item = doc.data();
+                    if(item.quantite > 0) {
+                        let opt = document.createElement('option');
+                        const t = item.taille ? ` (${item.taille})` : "";
+                        opt.value = item.type + "##" + (item.taille || "");
+                        opt.text = item.type + t; 
+                        selectMat.appendChild(opt);
+                    }
+                });
+            } catch(e) { console.error(e); }
+        }
+
         selectAgent.onchange = () => {
             const nom = selectAgent.options[selectAgent.selectedIndex].text;
             if(selectAgent.value !== "") {
@@ -110,40 +111,31 @@
         };
 
         window.ouvrirDemande = () => {
-            if(!selectAgent.value) return alert("Choisis ton nom d'abord !");
+            if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
             document.getElementById('modalMatos').style.display = 'flex';
             chargerListeMateriel();
         };
 
-        // LA FONCTION QUI MANQUAIT :
-        window.envoyerDemande = async () => {
-            const matBrut = selectMat.value; 
-            if(!matBrut) return alert("Sélectionne un article.");
+        document.getElementById('btnEnvoyer').onclick = async () => {
+            if(!selectMat.value) return alert("Sélectionne un article.");
             
-            // On sépare le type et la taille pour que la page Technique s'y retrouve
-            let typeNet = matBrut;
-            let tailleNet = "";
-            if (matBrut.includes(" (")) {
-                typeNet = matBrut.split(" (")[0];
-                tailleNet = matBrut.split(" (")[1].replace(")", "");
-            }
+            const [type, taille] = selectMat.value.split("##");
 
             try {
                 await addDoc(collection(db, "demandes_materiel"), {
-                    agentId: selectAgent.value, // Indispensable pour la validation !
+                    agentId: selectAgent.value,
                     agentNom: selectAgent.options[selectAgent.selectedIndex].text,
-                    type: typeNet,
-                    taille: tailleNet,
+                    type: type,
+                    taille: taille,
                     raison: document.getElementById('matRaison').value,
                     date: new Date().toISOString(),
                     statut: "en_attente"
                 });
-                alert("Demande envoyée avec succès !");
+                alert("Demande bien envoyée !");
                 document.getElementById('modalMatos').style.display = 'none';
                 document.getElementById('matRaison').value = "";
             } catch (e) { 
-                console.error(e);
-                alert("Erreur d'envoi."); 
+                alert("Erreur lors de l'envoi : " + e.message); 
             }
         };
 
