@@ -2,31 +2,31 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Suivi Aptitudes — SDIS 31</title>
+  <title>Suivi des Aptitudes Individuelles — SDIS 31</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root { --navy: #0B1F3A; --amber: #E8A020; --green: #2A9D5C; --red: #D94040; --bg: #F4F6F8; }
     body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
     .container { max-width: 1300px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    
     .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--navy); padding-bottom: 15px; margin-bottom: 20px; }
     
-    .config-panel { background: #F8F9FA; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #EEE; }
-    .config-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 15px; margin-top: 10px; }
-    .config-item { display: flex; justify-content: space-between; align-items: center; background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; }
-    .config-item label { font-weight: bold; font-size: 0.85rem; color: var(--navy); }
-    .config-item input { width: 50px; padding: 5px; border-radius: 4px; border: 1px solid #CCC; text-align: center; font-weight: bold; }
-
-    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    th { background: var(--navy); color: white; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; border-right: 1px solid #ffffff33; }
-    td { padding: 12px; border-bottom: 1px solid #EEE; font-size: 0.9rem; border-right: 1px solid #F4F4F4; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: var(--navy); color: white; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 12px; border-bottom: 1px solid #EEE; font-size: 0.9rem; }
     
-    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; display: inline-block; width: 100px; text-align: center; }
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; display: inline-block; min-width: 100px; text-align: center; }
     .ok { background: #D4EDDA; color: var(--green); border: 1px solid var(--green); }
     .ko { background: #F8D7DA; color: var(--red); border: 1px solid var(--red); }
     
     .score-detail { font-weight: bold; color: var(--navy); }
-    .btn-export { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .quota-info { color: #888; font-size: 0.8rem; }
+    
+    .btn-export { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-export:hover { background: #217a48; }
+
+    .ko-text { color: var(--red); font-weight: bold; }
   </style>
 </head>
 <body>
@@ -35,30 +35,11 @@
 
   <div class="container">
     <div class="header-flex">
-        <h1 style="color: var(--navy); margin:0;">📊 Suivi des Aptitudes Opérationnelles</h1>
-        <button class="btn-export" id="btnExport">📥 EXPORTER EXCEL</button>
-    </div>
-
-    <div class="config-panel">
-        <strong>⚙️ Quotas Annuels Requis (en jours)</strong>
-        <div class="config-grid">
-            <div class="config-item">
-                <label>Recyclage SAV SEV</label>
-                <input type="number" id="q_SAV" value="1" class="quota-input">
-            </div>
-            <div class="config-item">
-                <label>FMPA Mer</label>
-                <input type="number" id="q_FMPA" value="1" class="quota-input">
-            </div>
-            <div class="config-item">
-                <label>Recyclage CEN</label>
-                <input type="number" id="q_CEN" value="1" class="quota-input">
-            </div>
-            <div class="config-item">
-                <label>Entrainement / MSO</label>
-                <input type="number" id="q_MSO" value="2" class="quota-input">
-            </div>
+        <div>
+            <h1 style="color: var(--navy); margin:0;">📊 Suivi des Aptitudes Opérationnelles</h1>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Calculé selon les objectifs individuels définis dans chaque fiche agent.</p>
         </div>
+        <button class="btn-export" id="btnExport">📥 EXPORTER EXCEL (2026)</button>
     </div>
 
     <table id="tableAptitudes">
@@ -69,7 +50,7 @@
                 <th>FMPA Mer</th>
                 <th>Recyclage CEN</th>
                 <th>Entrainement / MSO</th>
-                <th style="text-align: center;">Aptitude 2026</th>
+                <th style="text-align: center;">Statut Aptitude</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -94,14 +75,7 @@
     const db = getFirestore(app);
     const currentYear = 2026;
 
-    async function calculerAptitudes() {
-        const q = {
-            SAV: parseInt(document.getElementById('q_SAV').value),
-            FMPA: parseInt(document.getElementById('q_FMPA').value),
-            CEN: parseInt(document.getElementById('q_CEN').value),
-            MSO: parseInt(document.getElementById('q_MSO').value)
-        };
-
+    async function genererTableau() {
         const querySnapshot = await getDocs(collection(db, "users"));
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -109,6 +83,12 @@
 
         querySnapshot.forEach((doc) => {
             const agent = doc.data();
+            
+            // 1. RÉCUPÉRATION DES QUOTAS INDIVIDUELS
+            // Si l'agent n'a pas de quotas définis, on utilise des valeurs par défaut
+            const q = agent.quotas || { sav: 1, fmpa: 1, cen: 1, mso: 2 };
+
+            // 2. CALCUL DES PRÉSENCES
             const formations = agent.historiqueFormations || [];
             const formationsAnnee = formations.filter(f => new Date(f.date).getFullYear() === currentYear);
 
@@ -122,15 +102,34 @@
                 else if (titre.includes("ENTRAINEMENT") || titre.includes("MSO")) score.MSO++;
             });
 
-            const isApte = (score.SAV >= q.SAV) && (score.FMPA >= q.FMPA) && (score.CEN >= q.CEN) && (score.MSO >= q.MSO);
+            // 3. VÉRIFICATION DE L'APTITUDE SELON SES QUOTAS PERSO
+            const checkSAV = score.SAV >= q.sav;
+            const checkFMPA = score.FMPA >= q.fmpa;
+            const checkCEN = score.CEN >= q.cen;
+            const checkMSO = score.MSO >= q.mso;
 
+            const isApte = checkSAV && checkFMPA && checkCEN && checkMSO;
+
+            // 4. AFFICHAGE
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${agent.nom}</strong><br><small style="color:#888">${agent.cis || ''}</small></td>
-                <td class="${score.SAV >= q.SAV ? '' : 'ko-text'}"><span class="score-detail">${score.SAV}</span> / ${q.SAV}</td>
-                <td class="${score.FMPA >= q.FMPA ? '' : 'ko-text'}"><span class="score-detail">${score.FMPA}</span> / ${q.FMPA}</td>
-                <td class="${score.CEN >= q.CEN ? '' : 'ko-text'}"><span class="score-detail">${score.CEN}</span> / ${q.CEN}</td>
-                <td class="${score.MSO >= q.MSO ? '' : 'ko-text'}"><span class="score-detail">${score.MSO}</span> / ${q.MSO}</td>
+                <td><strong>${agent.nom}</strong><br><small style="color:#888">${agent.cis || 'N/A'}</small></td>
+                <td>
+                    <span class="${checkSAV ? 'score-detail' : 'ko-text'}">${score.SAV}</span> 
+                    <span class="quota-info">/ ${q.sav}</span>
+                </td>
+                <td>
+                    <span class="${checkFMPA ? 'score-detail' : 'ko-text'}">${score.FMPA}</span> 
+                    <span class="quota-info">/ ${q.fmpa}</span>
+                </td>
+                <td>
+                    <span class="${checkCEN ? 'score-detail' : 'ko-text'}">${score.CEN}</span> 
+                    <span class="quota-info">/ ${q.cen}</span>
+                </td>
+                <td>
+                    <span class="${checkMSO ? 'score-detail' : 'ko-text'}">${score.MSO}</span> 
+                    <span class="quota-info">/ ${q.mso}</span>
+                </td>
                 <td style="text-align: center;">
                     <span class="status-badge ${isApte ? 'ok' : 'ko'}">${isApte ? '✅ APTE' : '❌ INCOMPLET'}</span>
                 </td>
@@ -139,11 +138,12 @@
 
             dataExport.push({
                 "Agent": agent.nom,
-                "SAV SEV": `${score.SAV}/${q.SAV}`,
-                "FMPA Mer": `${score.FMPA}/${q.FMPA}`,
-                "Recyclage CEN": `${score.CEN}/${q.CEN}`,
-                "MSO": `${score.MSO}/${q.MSO}`,
-                "Statut": isApte ? "APTE" : "INCOMPLET"
+                "CIS": agent.cis || "",
+                "SAV/SEV": `${score.SAV}/${q.sav}`,
+                "FMPA Mer": `${score.FMPA}/${q.fmpa}`,
+                "Recyclage CEN": `${score.CEN}/${q.cen}`,
+                "MSO": `${score.MSO}/${q.mso}`,
+                "Aptitude": isApte ? "APTE" : "INCOMPLET"
             });
         });
 
@@ -151,12 +151,11 @@
             const ws = XLSX.utils.json_to_sheet(dataExport);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Aptitudes");
-            XLSX.writeFile(wb, `Aptitudes_Nautiques_${currentYear}.xlsx`);
+            XLSX.writeFile(wb, `Aptitudes_Individuelles_2026.xlsx`);
         };
     }
 
-    document.querySelectorAll('.quota-input').forEach(i => i.onchange = calculerAptitudes);
-    calculerAptitudes();
+    genererTableau();
   </script>
 </body>
 </html>
