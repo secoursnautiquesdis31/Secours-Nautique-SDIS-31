@@ -2,73 +2,88 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Technique — SDIS 31</title>
+  <title>Gestion RH — SDIS 31 Nautique</title>
   <link rel="stylesheet" href="../css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; }
-    body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
-    .tech-container { max-width: 1200px; margin: 0 auto; }
-    .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
-    .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
-    .stat-card { background: white; padding: 10px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
-    th { background: #eee; padding: 12px; text-align: left; color: var(--navy); }
-    td { padding: 10px; border-bottom: 1px solid #eee; }
-    .stock-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
-    .bg-red { background: #fee2e2; color: var(--red); }
-    .bg-orange { background: #ffedd5; color: #d97706; }
-    .bg-green { background: #dcfce7; color: var(--green); }
-    input.cell-edit { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 85%; }
-    .btn-suppr { border: none; background: none; cursor: pointer; font-size: 1.1rem; }
+    :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F4F6F8; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 1200px; margin: 40px auto; }
+    
+    /* Header & Recherche */
+    .rh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .search-bar { width: 100%; padding: 15px; border-radius: 10px; border: 1px solid #DDD; font-size: 1rem; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+
+    /* Grille Agents */
+    .agents-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+    .agent-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); cursor: pointer; transition: 0.3s; border-left: 5px solid var(--navy); }
+    .agent-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+    .agent-card h3 { margin: 0 0 5px 0; color: var(--navy); }
+    .agent-card p { margin: 2px 0; color: #666; font-size: 0.9rem; }
+
+    /* Modal / Fiche Agent */
+    .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 1000; justify-content: center; align-items: center; }
+    .modal-content { background: white; width: 90%; max-width: 800px; max-height: 90vh; border-radius: 15px; padding: 30px; overflow-y: auto; position: relative; }
+    .close-btn { position: absolute; top: 20px; right: 20px; font-size: 1.5rem; cursor: pointer; }
+
+    .quota-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; background: #f9f9f9; padding: 15px; border-radius: 8px; margin-top: 15px; }
+    .quota-item { display: flex; justify-content: space-between; align-items: center; }
+    .quota-item input { width: 60px; padding: 5px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
+    
+    .btn-save { background: var(--navy); color: white; border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; margin-top: 20px; width: 100%; }
+    .btn-save:hover { background: #152e50; }
   </style>
 </head>
 <body>
 
-<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber);">🏠 MENU</a>
+<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: var(--navy); color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid var(--amber);">🏠 MENU</a>
 
-<div class="tech-container">
-    <div class="header-flex">
-      <h1>LOGISTIQUE TECHNIQUE</h1>
-      <button style="background: var(--amber); border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
-      <input type="file" id="csvInput" accept=".csv" style="display:none">
+<div class="container">
+    <div class="rh-header">
+        <h1>Annuaire du Personnel Nautique</h1>
+        <a href="suivi-aptitudes.html" style="background: var(--amber); color: var(--navy); padding: 10px 20px; border-radius: 8px; text-decoration: none; font-weight: bold;">📊 VOIR LES APTITUDES</a>
     </div>
 
-    <div class="stats-bar">
-        <div class="stat-card">TOTAL: <span id="statTotal">0</span></div>
-        <div class="stat-card" style="color: var(--red);">RUPTURE: <span id="statRupture">0</span></div>
-        <div class="stat-card" style="color: #d97706;">ALERTE: <span id="statAlerte">0</span></div>
-    </div>
+    <input type="text" id="searchInput" class="search-bar" placeholder="Rechercher un nom, un CIS ou une spécialité...">
 
-    <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="Rechercher..." style="flex:2; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-        <select id="statusFilter" style="flex:1; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
-            <option value="all">Tous les stocks</option>
-            <option value="rupture">En rupture</option>
-            <option value="alerte">En alerte</option>
-        </select>
-    </div>
+    <div class="agents-grid" id="agentsGrid">
+        </div>
+</div>
 
-    <table>
-      <thead>
-        <tr>
-          <th>Matériel</th>
-          <th>Taille</th>
-          <th>Stock</th>
-          <th>Seuil</th>
-          <th>Péremption</th>
-          <th>Action</th>
-        </tr>
-      </thead>
-      <tbody id="stockBody">
-        <tr><td colspan="6" style="text-align:center; padding:30px;">Connexion à Firestore...</td></tr>
-      </tbody>
-    </table>
+<div id="agentModal" class="modal">
+    <div class="modal-content">
+        <span class="close-btn" onclick="closeModal()">×</span>
+        <h2 id="modalNom" style="color: var(--navy); margin-bottom: 5px;">---</h2>
+        <p id="modalCis" style="color: var(--amber); font-weight: bold; margin-bottom: 20px;">---</p>
+        
+        <hr>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; margin-top: 20px;">
+            <div>
+                <h3>Informations Contact</h3>
+                <p><strong>Téléphone :</strong> <input type="text" id="editTel" style="width: 100%; padding: 8px; margin-top:5px;"></p>
+                <p><strong>Rôle :</strong> <input type="text" id="editRole" style="width: 100%; padding: 8px; margin-top:5px;"></p>
+            </div>
+
+            <div>
+                <h3>Objectifs Annuels (Quotas)</h3>
+                <p style="font-size: 0.8rem; color: #777;">Définit le nombre de jours requis pour être "APTE".</p>
+                <div class="quota-grid">
+                    <div class="quota-item"><span>SAV/SEV</span> <input type="number" id="qSav"></div>
+                    <div class="quota-item"><span>FMPA Mer</span> <input type="number" id="qFmpa"></div>
+                    <div class="quota-item"><span>Recycl. CEN</span> <input type="number" id="qCen"></div>
+                    <div class="quota-item"><span>MSO / Entr.</span> <input type="number" id="qMso"></div>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-save" id="btnSave">ENREGISTRER LA FICHE</button>
+    </div>
 </div>
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -81,129 +96,93 @@
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
-    const stockBody = document.getElementById('stockBody');
-    let allItems = [];
+    
+    let allAgents = [];
+    let currentAgentId = null;
 
-    async function charger() {
-        console.log("Lecture de la collection 'stocks'...");
-        try {
-            const snap = await getDocs(collection(db, "stocks"));
-            console.log("Documents trouvés :", snap.size);
-            
-            if (snap.empty) {
-                stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>La collection 'stocks' est vide dans Firestore.</td></tr>";
-                return;
-            }
-
-            allItems = [];
-            snap.forEach(d => {
-                allItems.push({ id: d.id, ...d.data() });
-            });
-
-            afficher(allItems);
-            updateStats(allItems);
-        } catch (e) {
-            console.error("Erreur Firestore :", e);
-            stockBody.innerHTML = `<tr><td colspan='6' style='color:red;'>Erreur : ${e.message}</td></tr>`;
-        }
+    // CHARGEMENT
+    async function chargerAgents() {
+        const snap = await getDocs(collection(db, "users"));
+        allAgents = [];
+        snap.forEach(d => allAgents.push({ id: d.id, ...d.data() }));
+        afficherAgents(allAgents);
     }
 
-    function afficher(items) {
-        stockBody.innerHTML = "";
-        items.forEach(item => {
-            // Sécurité sur les noms de champs (avec ou sans accents)
-            const type = item.type || item.Type || "Inconnu";
-            const q = parseInt(item.quantite || item.quantité || 0);
-            const s = parseInt(item.seuil || 0);
-            const t = item.taille || "";
-            const p = item.peremption || "";
-
-            let cl = "bg-green";
-            if (q === 0) cl = "bg-red";
-            else if (q <= s) cl = "bg-orange";
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input class="cell-edit" value="${type}" onchange="upd('${item.id}','type',this.value)"></td>
-                <td><input class="cell-edit" value="${t}" onchange="upd('${item.id}','taille',this.value)"></td>
-                <td>
-                    <span class="stock-badge ${cl}">${q}</span>
-                    <input type="number" style="width:40px" value="${q}" onchange="upd('${item.id}','quantite',this.value)">
-                </td>
-                <td><input type="number" class="cell-edit" value="${s}" onchange="upd('${item.id}','seuil',this.value)"></td>
-                <td><input class="cell-edit" value="${p}" onchange="upd('${item.id}','peremption',this.value)"></td>
-                <td><button class="btn-suppr" onclick="del('${item.id}')">🗑️</button></td>
+    function afficherAgents(agents) {
+        const grid = document.getElementById('agentsGrid');
+        grid.innerHTML = "";
+        agents.sort((a,b) => a.nom.localeCompare(b.nom)).forEach(agent => {
+            const card = document.createElement('div');
+            card.className = "agent-card";
+            card.onclick = () => openModal(agent);
+            card.innerHTML = `
+                <h3>${agent.nom}</h3>
+                <p><strong>CIS :</strong> ${agent.cis || 'Non renseigné'}</p>
+                <p><strong>Tél :</strong> ${agent.tel || '-'}</p>
+                <p style="margin-top:10px;"><span style="background:#EEE; padding:3px 8px; border-radius:4px; font-size:0.7rem;">${agent.role || 'Agent'}</span></p>
             `;
-            stockBody.appendChild(tr);
+            grid.appendChild(card);
         });
     }
 
-    function updateStats(items) {
-        document.getElementById('statTotal').innerText = items.length;
-        document.getElementById('statRupture').innerText = items.filter(i => parseInt(i.quantite || i.quantité || 0) === 0).length;
-        document.getElementById('statAlerte').innerText = items.filter(i => {
-            const q = parseInt(i.quantite || i.quantité || 0);
-            const s = parseInt(i.seuil || 0);
-            return q > 0 && q <= s;
-        }).length;
-    }
-
-    window.upd = async (id, f, v) => {
-        const val = (f === 'quantite' || f === 'seuil') ? parseInt(v) : v;
-        await updateDoc(doc(db, "stocks", id), { [f]: val });
-        // Mise à jour locale sans recharger tout
-        const i = allItems.find(x => x.id === id);
-        if(i) i[f] = val;
-        updateStats(allItems);
+    // RECHERCHE
+    document.getElementById('searchInput').oninput = (e) => {
+        const val = e.target.value.toLowerCase();
+        const filtered = allAgents.filter(a => 
+            a.nom.toLowerCase().includes(val) || 
+            (a.cis && a.cis.toLowerCase().includes(val))
+        );
+        afficherAgents(filtered);
     };
 
-    window.del = async (id) => {
-        if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "stocks", id)); charger(); }
+    // MODAL
+    window.openModal = (agent) => {
+        currentAgentId = agent.id;
+        document.getElementById('modalNom').innerText = agent.nom;
+        document.getElementById('modalCis').innerText = agent.cis || "CIS non renseigné";
+        document.getElementById('editTel').value = agent.tel || "";
+        document.getElementById('editRole').value = agent.role || "Agent";
+        
+        // Quotas par défaut si inexistants
+        const q = agent.quotas || { sav: 1, fmpa: 1, cen: 1, mso: 2 };
+        document.getElementById('qSav').value = q.sav;
+        document.getElementById('qFmpa').value = q.fmpa;
+        document.getElementById('qCen').value = q.cen;
+        document.getElementById('qMso').value = q.mso;
+
+        document.getElementById('agentModal').style.display = "flex";
     };
 
-    // Filtres
-    document.getElementById('searchInput').oninput = () => {
-        const val = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val));
-        afficher(filtered);
+    window.closeModal = () => {
+        document.getElementById('agentModal').style.display = "none";
     };
 
-    document.getElementById('statusFilter').onchange = () => {
-        const val = document.getElementById('statusFilter').value;
-        const filtered = allItems.filter(i => {
-            const q = parseInt(i.quantite || i.quantité || 0);
-            const s = parseInt(i.seuil || 0);
-            if(val === "rupture") return q === 0;
-            if(val === "alerte") return q > 0 && q <= s;
-            return true;
-        });
-        afficher(filtered);
-    };
+    // SAUVEGARDE
+    document.getElementById('btnSave').onclick = async () => {
+        if (!currentAgentId) return;
 
-    // Import CSV
-    document.getElementById('csvInput').onchange = (e) => {
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const lignes = ev.target.result.split(/\r?\n/);
-            let dernierType = "";
-            for (let i = 1; i < lignes.length; i++) {
-                const col = lignes[i].split(';');
-                if (col.length < 3) continue;
-                let type = col[0].trim() || dernierType;
-                if (!type || type.toLowerCase().includes("type")) continue;
-                dernierType = type;
-                const id = (type + "_" + (col[2]||'')).toLowerCase().replace(/[^a-z0-9]/g, '_');
-                await setDoc(doc(db, "stocks", id), {
-                    type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||""
-                });
+        const updatedData = {
+            tel: document.getElementById('editTel').value,
+            role: document.getElementById('editRole').value,
+            quotas: {
+                sav: parseInt(document.getElementById('qSav').value),
+                fmpa: parseInt(document.getElementById('qFmpa').value),
+                cen: parseInt(document.getElementById('qCen').value),
+                mso: parseInt(document.getElementById('qMso').value)
             }
-            alert("Import terminé !");
-            charger();
         };
-        reader.readAsText(e.target.files[0], 'ISO-8859-1');
+
+        try {
+            await updateDoc(doc(db, "users", currentAgentId), updatedData);
+            alert("Fiche agent mise à jour !");
+            closeModal();
+            chargerAgents();
+        } catch (e) {
+            alert("Erreur lors de la sauvegarde.");
+        }
     };
 
-    charger();
+    chargerAgents();
 </script>
 </body>
 </html>
