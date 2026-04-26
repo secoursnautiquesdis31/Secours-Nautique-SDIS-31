@@ -1,108 +1,176 @@
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-  // 🔴 METS TES CLÉS ICI
-  const firebaseConfig = {
-   apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-        authDomain: "secours-nautique-31.firebaseapp.com",
-        projectId: "secours-nautique-31",
-        storageBucket: "secours-nautique-31.firebasestorage.app",
-        messagingSenderId: "1013387329575",
-        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-  let agentConnecteId = ""; // Stockera l'ID de l'agent qui s'inscrit
-
-  // 1. CHARGER LES AGENTS POUR LE SELECTEUR (Simule la connexion)
-  async function chargerSelecteurAgents() {
-      const snap = await getDocs(collection(db, "users"));
-      const select = document.createElement('select');
-      select.id = "selectAgentSession";
-      select.style = "position: fixed; top: 15px; right: 15px; width: 200px; z-index: 1000;";
-      select.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
-      
-      snap.forEach(d => {
-          select.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`;
-      });
-      
-      select.onchange = (e) => { agentConnecteId = e.target.value; };
-      document.body.appendChild(select);
-  }
-
-  // 2. CHARGER LES SESSIONS
-  async function chargerSessions() {
-    const querySnapshot = await getDocs(collection(db, "formations"));
-    const grid = document.getElementById('formationGrid');
-    grid.innerHTML = "";
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Formation — SDIS 31</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F4F6F8; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    .container { max-width: 1000px; margin: 60px auto 20px auto; }
+    .header-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.05); }
     
-    querySnapshot.forEach((d) => {
-      const s = d.data();
-      const id = d.id;
-      const inscrits = s.inscrits || [];
-      const dejaInscrit = inscrits.includes(agentConnecteId);
+    .btn-add { background: var(--navy); color: white; border: none; padding: 12px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .formation-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+    .session-card { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-left: 5px solid var(--amber); position: relative; }
+    .session-date { font-weight: bold; color: var(--navy); font-size: 1.2rem; }
+    .inscrit-tag { background: #E9EEF5; color: var(--navy); padding: 3px 8px; border-radius: 4px; font-size: 0.8rem; margin: 2px; display: inline-block; }
+    
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+    .modal-content { background: white; margin: 10% auto; padding: 25px; width: 400px; border-radius: 12px; }
+    input, select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
+  </style>
+</head>
+<body>
 
-      const card = document.createElement('div');
-      card.className = "session-card";
-      card.innerHTML = `
-        <div class="session-date">${new Date(s.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long'})}</div>
-        <div style="font-weight:bold; color:var(--amber); margin-top:5px;">${s.type}</div>
-        <div class="session-info">📍 ${s.lieu}</div>
-        
-        <div style="margin-top:10px;">
-            <strong>Inscrits (${inscrits.length}) :</strong><br>
-            <span style="font-size:0.8rem; color:#666;">${inscrits.join(', ') || 'Personne pour le moment'}</span>
+  <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020;">🏠 MENU</a>
+
+  <div style="position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 5px 15px; border-radius: 8px; border: 1px solid #DDD; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+      <label style="font-size: 0.7rem; color: #888; display: block;">Session active :</label>
+      <select id="selectAgentSession" style="margin:0; border:none; font-weight:bold; color:var(--navy); padding:5px 0; width:150px;">
+          <option value="">-- Choisir mon nom --</option>
+      </select>
+  </div>
+
+  <div class="container">
+    <div class="header-flex">
+        <div>
+            <h1 style="color: var(--navy); margin:0;">Sessions de Formation</h1>
+            <p style="color: #888; margin: 5px 0 0 0;">Planification et inscriptions nautiques</p>
         </div>
+        <button class="btn-add" onclick="document.getElementById('modalForm').style.display='block'">+ Créer une session</button>
+    </div>
 
-        <div style="margin-top:15px; display:flex; gap:10px;">
-            ${dejaInscrit 
-                ? `<button onclick="desinscrire('${id}')" style="flex:1; background:#D94040; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">Se désister</button>`
-                : `<button onclick="inscrire('${id}')" style="flex:1; background:#2A9D5C; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">S'inscrire</button>`
+    <div class="formation-grid" id="formationGrid">
+        </div>
+  </div>
+
+  <div id="modalForm" class="modal">
+    <div class="modal-content">
+      <h2 style="margin-top:0;">Nouvelle Session</h2>
+      <label>Date :</label><input type="date" id="formDate">
+      <label>Lieu :</label><input type="text" id="formLieu" placeholder="ex: Lac de la Thésauque">
+      <label>Type :</label>
+      <select id="formType">
+          <option value="Entraînement SAL">Entraînement SAL</option>
+          <option value="Recyclage SAV">Recyclage SAV</option>
+          <option value="Manœuvre CEN">Manœuvre CEN</option>
+          <option value="Formation Initiale">Formation Initiale</option>
+      </select>
+      <button id="btnSaveSession" style="width:100%; padding:12px; background:var(--amber); border:none; font-weight:bold; cursor:pointer; border-radius:6px; margin-top:10px;">ENREGISTRER</button>
+      <button onclick="document.getElementById('modalForm').style.display='none'" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:10px;">Annuler</button>
+    </div>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    // 🔴 RECOPIE TES CLÉS ICI
+    const firebaseConfig = {
+      apiKey: "TON_API_KEY",
+      authDomain: "TON_PROJET.firebaseapp.com",
+      projectId: "TON_PROJET_ID",
+      storageBucket: "TON_PROJET.appspot.com",
+      appId: "TON_APP_ID"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    let agentConnecte = "";
+
+    // 1. CHARGER LES AGENTS DANS LE SELECTEUR
+    async function chargerAgents() {
+        try {
+            const snap = await getDocs(collection(db, "users"));
+            const select = document.getElementById('selectAgentSession');
+            snap.forEach(d => {
+                const opt = document.createElement('option');
+                opt.value = d.data().nom;
+                opt.innerText = d.data().nom;
+                select.appendChild(opt);
+            });
+            select.onchange = (e) => { 
+                agentConnecte = e.target.value; 
+                chargerSessions(); // Rafraîchir pour mettre à jour les boutons d'inscription
+            };
+        } catch (e) { console.error("Erreur agents:", e); }
+    }
+
+    // 2. CHARGER LES SESSIONS
+    async function chargerSessions() {
+        try {
+            const querySnapshot = await getDocs(collection(db, "formations"));
+            const grid = document.getElementById('formationGrid');
+            grid.innerHTML = "";
+            
+            if (querySnapshot.empty) {
+                grid.innerHTML = "<p style='color:#888;'>Aucune session prévue. Cliquez sur le bouton pour en créer une.</p>";
             }
-            <button onclick="supprimerSession('${id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
-        </div>
-      `;
-      grid.appendChild(card);
-    });
-  }
 
-  // 3. ACTIONS
-  window.inscrire = async (sessionId) => {
-    if (!agentConnecteId) return alert("Veuillez d'abord sélectionner votre nom en haut à droite !");
-    await updateDoc(doc(db, "formations", sessionId), {
-        inscrits: arrayUnion(agentConnecteId)
-    });
-    chargerSessions();
-  };
+            querySnapshot.forEach((d) => {
+                const s = d.data();
+                const id = d.id;
+                const inscrits = s.inscrits || [];
+                const dejaInscrit = agentConnecte && inscrits.includes(agentConnecte);
 
-  window.desinscrire = async (sessionId) => {
-    await updateDoc(doc(db, "formations", sessionId), {
-        inscrits: arrayRemove(agentConnecteId)
-    });
-    chargerSessions();
-  };
+                const card = document.createElement('div');
+                card.className = "session-card";
+                card.innerHTML = `
+                    <div class="session-date">${new Date(s.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long'})}</div>
+                    <div style="font-weight:bold; color:var(--amber); margin-top:5px;">${s.type}</div>
+                    <div style="color:#666; font-size:0.9rem; margin: 10px 0;">📍 ${s.lieu}</div>
+                    
+                    <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin:15px 0;">
+                        <strong style="font-size:0.8rem;">INSCRITS (${inscrits.length}) :</strong><br>
+                        ${inscrits.map(name => `<span class="inscrit-tag">${name}</span>`).join('') || '<span style="color:#CCC; font-size:0.8rem;">Aucun inscrit</span>'}
+                    </div>
 
-  window.creerSession = async () => {
-    const date = document.getElementById('formDate').value;
-    const lieu = document.getElementById('formLieu').value;
-    const type = document.getElementById('formType').value;
-    if(!date || !lieu) return alert("Remplis tout !");
-    await addDoc(collection(db, "formations"), { date, lieu, type, inscrits: [] });
-    fermerModal();
-    chargerSessions();
-  };
+                    <div style="display:flex; gap:10px; align-items:center;">
+                        <button id="btn-ins-${id}" style="flex:1; padding:10px; border-radius:6px; border:none; cursor:pointer; font-weight:bold; ${dejaInscrit ? 'background:#D94040; color:white;' : 'background:#2A9D5C; color:white;'}">
+                            ${dejaInscrit ? 'Se désister' : "S'inscrire"}
+                        </button>
+                        <button id="btn-del-${id}" style="background:none; border:none; cursor:pointer; font-size:1.2rem;">🗑️</button>
+                    </div>
+                `;
+                grid.appendChild(card);
 
-  window.supprimerSession = async (id) => {
-    if(confirm("Supprimer cette session ?")) {
-        await deleteDoc(doc(db, "formations", id));
+                // Evenements
+                document.getElementById(`btn-ins-${id}`).onclick = () => gererInscription(id, dejaInscrit);
+                document.getElementById(`btn-del-${id}`).onclick = () => supprimerSession(id);
+            });
+        } catch (e) { console.error("Erreur sessions:", e); }
+    }
+
+    async function gererInscription(sessionId, dejaInscrit) {
+        if (!agentConnecte) return alert("Veuillez d'abord sélectionner votre nom en haut à droite !");
+        const docRef = doc(db, "formations", sessionId);
+        await updateDoc(docRef, {
+            inscrits: dejaInscrit ? arrayRemove(agentConnecte) : arrayUnion(agentConnecte)
+        });
         chargerSessions();
     }
-  };
 
-  // Initialisation
-  chargerSelecteurAgents();
-  chargerSessions();
-</script>
+    document.getElementById('btnSaveSession').onclick = async () => {
+        const date = document.getElementById('formDate').value;
+        const lieu = document.getElementById('formLieu').value;
+        const type = document.getElementById('formType').value;
+        if(!date || !lieu) return alert("Remplis la date et le lieu !");
+        await addDoc(collection(db, "formations"), { date, lieu, type, inscrits: [] });
+        document.getElementById('modalForm').style.display='none';
+        chargerSessions();
+    };
+
+    async function supprimerSession(id) {
+        if(confirm("Supprimer cette session ?")) {
+            await deleteDoc(doc(db, "formations", id));
+            chargerSessions();
+        }
+    }
+
+    chargerAgents();
+    chargerSessions();
+  </script>
+</body>
+</html>
