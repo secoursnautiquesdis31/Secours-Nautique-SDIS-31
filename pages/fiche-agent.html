@@ -117,14 +117,12 @@
             document.getElementById('nomAgent').innerText = agent.nom || "Inconnu";
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
             
-            // Quotas
             const q = agent.quotas || {};
             document.getElementById('q_sav').value = q.sav ?? 1;
             document.getElementById('q_fmpa').value = q.fmpa ?? 1;
             document.getElementById('q_cen').value = q.cen ?? 1;
             document.getElementById('q_mso').value = q.mso ?? 2;
 
-            // Spécialités
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             listeSpecs.forEach(s => {
@@ -136,16 +134,17 @@
                 grid.appendChild(btn);
             });
 
-            // EPI
             const epiList = document.getElementById('epiList');
             epiList.innerHTML = "";
             if (agent.epi && agent.epi.length > 0) {
                 agent.epi.forEach(item => {
                     const div = document.createElement('div');
                     div.className = "epi-row";
-                    div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille})</small></div>
+                    // Note: On passe "null" en texte si la taille n'existe pas
+                    const tailleArg = item.taille ? item.taille : "";
+                    div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
                         <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                        onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️ RETIRER</button>`;
+                        onclick="retirerEPI('${item.id}', '${item.type}', '${tailleArg}')">🗑️ RETIRER</button>`;
                     epiList.appendChild(div);
                 });
             } else {
@@ -182,10 +181,13 @@
             if(s.quantite > 0) {
                 const div = document.createElement('div');
                 div.className = "stock-item";
-                div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Dispo: ${s.quantite}</strong>`;
+                div.innerHTML = `<span>${s.type} ${s.taille ? `(${s.taille})` : ''}</span> <strong>Dispo: ${s.quantite}</strong>`;
                 div.onclick = async () => {
+                    let objetAajouter = { id: d.id, type: s.type };
+                    if(s.taille) objetAajouter.taille = s.taille;
+
                     await updateDoc(doc(db, "users", agentId), { 
-                        epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) 
+                        epi: arrayUnion(objetAajouter) 
                     });
                     await updateDoc(doc(db, "stocks", d.id), { quantite: increment(-1) });
                     document.getElementById('modalStock').style.display = 'none';
@@ -196,38 +198,30 @@
         });
     };
 
-   window.retirerEPI = async (stockId, type, taille) => {
-    if(confirm(`Supprimer l'affectation de ${type} ${taille ? `(${taille})` : ''} ?`)) {
-        try {
-            const agentRef = doc(db, "users", agentId);
-            
-            // On prépare l'objet exact à supprimer
-            // On fait bien attention à inclure la taille seulement si elle existe 
-            // pour que Firestore trouve la ligne correspondante
-            let objetASupprimer = { 
-                id: stockId, 
-                type: type 
-            };
-            
-            if (taille && taille !== "undefined" && taille !== "null" && taille !== "") {
-                objetASupprimer.taille = taille;
+    window.retirerEPI = async (stockId, type, taille) => {
+        if(confirm(`Supprimer l'affectation de ${type} ?`)) {
+            try {
+                const agentRef = doc(db, "users", agentId);
+                let objetASupprimer = { id: stockId, type: type };
+                
+                // Si la taille existe et n'est pas vide, on l'ajoute à l'objet de recherche
+                if (taille && taille !== "" && taille !== "undefined") {
+                    objetASupprimer.taille = taille;
+                }
+
+                await updateDoc(agentRef, {
+                    epi: arrayRemove(objetASupprimer)
+                });
+
+                charger();
+            } catch (error) {
+                console.error(error);
+                alert("Erreur lors de la suppression.");
             }
-
-            // Suppression de la ligne sur la fiche agent uniquement
-            await updateDoc(agentRef, {
-                epi: arrayRemove(objetASupprimer)
-            });
-
-            // On rafraîchit l'affichage sans toucher au stock
-            charger();
-
-        } catch (error) {
-            console.error("Erreur lors du retrait :", error);
-            alert("Erreur : Impossible de supprimer la ligne.");
         }
-    }
-};
-    // IMPORTANT : Lancer le chargement au démarrage
+    };
+
+    // Lancer le chargement
     charger();
 
 </script>
