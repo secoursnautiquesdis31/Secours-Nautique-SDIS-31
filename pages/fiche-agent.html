@@ -6,78 +6,115 @@
   <link rel="stylesheet" href="../css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   <style>
-    :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; }
+    :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --green: #2A9D5C; }
     body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
-    .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .header { background: var(--navy); color: white; padding: 30px; }
-    .content { padding: 30px; }
-    .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; }
-    .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
-    .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
     
-    /* Styles pour le tableau de formations */
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header { background: var(--navy); color: white; padding: 30px; position: relative; }
+    .content { padding: 30px; }
+    
+    .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+    
+    /* Zone Quotas Personnalisés */
+    .quota-container { background: #F0F4F8; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid var(--amber); }
+    .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .quota-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; display: flex; justify-content: space-between; align-items: center; }
+    .quota-item label { font-size: 0.8rem; font-weight: bold; color: #555; }
+    .quota-item input { width: 45px; padding: 5px; text-align: center; border: 1px solid #CCC; border-radius: 4px; font-weight: bold; color: var(--navy); }
+    .btn-save-quotas { width: 100%; margin-top: 15px; background: var(--navy); color: white; border: 2px solid var(--amber); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+    .btn-save-quotas:hover { background: var(--amber); color: var(--navy); }
+
+    /* Spécialités */
+    .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; transition: 0.2s; }
+    .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
+    
+    /* Tableaux et Listes */
+    table { width: 100%; border-collapse: collapse; }
     th { background: #F8F9FA; color: var(--navy); text-align: left; padding: 12px; border-bottom: 2px solid #EEE; font-size: 0.85rem; }
     td { padding: 12px; border-bottom: 1px solid #F0F0F0; font-size: 0.95rem; }
     .badge-date { background: #EEE; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #555; font-weight: bold; }
-
+    
+    .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
+    
+    /* Modal */
     .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
     .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
-    .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
-    .stock-item:hover { background: #F8F9FA; }
+    .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
+    .stock-item:hover { background: #F0F4F8; color: var(--navy); }
   </style>
 </head>
 <body>
-  
-  <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
-    🏠 MENU
-  </a>
 
-  <div class="fiche-card">
+<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020;">🏠 MENU</a>
+
+<div class="fiche-card">
     <div class="header">
-        <a href="rh.html" style="color:white; text-decoration:none; opacity:0.7;">← Retour à l'annuaire</a>
-        <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase;">NOM DE L'AGENT</h1>
-        <div id="cisAgent" style="color: var(--amber); font-weight: bold;">CIS ...</div>
+        <a href="rh.html" style="color:white; text-decoration:none; opacity:0.8;">← Retour à l'annuaire</a>
+        <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">CHARGEMENT...</h1>
+        <div id="cisAgent" style="color: var(--amber); font-weight: bold; font-size: 1.1rem;">CIS ...</div>
     </div>
 
     <div class="content">
-      <div class="section-title">Spécialités (Cliquer pour modifier)</div>
-      <div id="specsGrid" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;"></div>
+        
+        <div class="section-title">Objectifs de Formation Individuels</div>
+        <div class="quota-container">
+            <div class="quota-grid">
+                <div class="quota-item">
+                    <label>Recyclage SAV SEV</label>
+                    <input type="number" id="q_sav" value="1">
+                </div>
+                <div class="quota-item">
+                    <label>FMPA Mer</label>
+                    <input type="number" id="q_fmpa" value="1">
+                </div>
+                <div class="quota-item">
+                    <label>Recyclage CEN</label>
+                    <input type="number" id="q_cen" value="1">
+                </div>
+                <div class="quota-item">
+                    <label>Entrainement / MSO</label>
+                    <input type="number" id="q_mso" value="2">
+                </div>
+            </div>
+            <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS POUR CET AGENT</button>
+        </div>
 
-      <div class="section-title">Suivi des Formations & Manœuvres</div>
-      <div style="margin-bottom: 30px; overflow-x: auto;">
-          <table>
-              <thead>
-                  <tr>
-                      <th>Date</th>
-                      <th>Désignation</th>
-                      <th>Lieu</th>
-                  </tr>
-              </thead>
-              <tbody id="listeFormations">
-                  <tr><td colspan="3" style="text-align:center; padding:20px; color:#999;">Chargement de l'historique...</td></tr>
-              </tbody>
-          </table>
-      </div>
+        <div class="section-title">Spécialités Détachées</div>
+        <div id="specsGrid" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;"></div>
 
-      <div class="section-title">
-        <span>Paquetage Individuel (EPI)</span>
-        <button id="btnOpenStock" style="background:var(--navy); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">+ Affecter Matériel</button>
-      </div>
-      <div id="epiList"></div>
+        <div class="section-title">Historique des Présences</div>
+        <div style="margin-bottom: 30px; overflow-x: auto;">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Désignation</th>
+                        <th>Lieu</th>
+                    </tr>
+                </thead>
+                <tbody id="listeFormations">
+                    <tr><td colspan="3" style="text-align:center; padding:20px; color:#999;">Aucune donnée.</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="section-title">
+            <span>Paquetage Individuel (EPI)</span>
+            <button id="btnOpenStock" style="background:var(--navy); color:white; border:1px solid var(--amber); padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">+ Affecter Matériel</button>
+        </div>
+        <div id="epiList"></div>
     </div>
-  </div>
+</div>
 
-  <div id="modalStock" class="modal">
+<div id="modalStock" class="modal">
     <div class="modal-content">
-      <h2>Choisir dans le stock</h2>
-      <div id="listeChoixStock"></div>
-      <button onclick="document.getElementById('modalStock').style.display='none'" style="margin-top:20px; width:100%; padding:10px; cursor:pointer;">Fermer</button>
+        <h2 style="color:var(--navy); border-bottom:2px solid var(--amber); padding-bottom:10px;">Stock Disponible</h2>
+        <div id="listeChoixStock"></div>
+        <button onclick="document.getElementById('modalStock').style.display='none'" style="margin-top:20px; width:100%; padding:12px; cursor:pointer; border-radius:6px; border:none; background:#DDD; font-weight:bold;">ANNULER</button>
     </div>
-  </div>
+</div>
 
-  <script type="module">
+<script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -97,103 +134,37 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
+    // FONCTION PRINCIPALE : CHARGEMENT
     async function charger() {
-      if(!agentId) return;
-      const snap = await getDoc(doc(db, "users", agentId));
-      
-      if (snap.exists()) {
-        const agent = snap.data();
-        document.getElementById('nomAgent').innerText = agent.nom;
-        document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+        if(!agentId) return;
+        const snap = await getDoc(doc(db, "users", agentId));
         
-        // 1. Affichage des Spécialités
-        const grid = document.getElementById('specsGrid');
-        grid.innerHTML = "";
-        listeSpecs.forEach(s => {
-          const active = (agent.specialites || []).includes(s);
-          const btn = document.createElement('div');
-          btn.className = `spec-tag ${active ? 'active' : ''}`;
-          btn.innerText = s;
-          btn.onclick = () => toggleSpec(s, agent.specialites || []);
-          grid.appendChild(btn);
-        });
+        if (snap.exists()) {
+            const agent = snap.data();
+            document.getElementById('nomAgent').innerText = agent.nom || "Inconnu";
+            document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+            
+            // 1. Quotas
+            if (agent.quotas) {
+                document.getElementById('q_sav').value = agent.quotas.sav ?? 1;
+                document.getElementById('q_fmpa').value = agent.quotas.fmpa ?? 1;
+                document.getElementById('q_cen').value = agent.quotas.cen ?? 1;
+                document.getElementById('q_mso').value = agent.quotas.mso ?? 2;
+            }
 
-        // 2. Affichage des Formations (Logique demandée)
-        const formTable = document.getElementById('listeFormations');
-        formTable.innerHTML = "";
-        if (agent.historiqueFormations && agent.historiqueFormations.length > 0) {
-          // Tri par date décroissante
-          const triFormations = agent.historiqueFormations.sort((a, b) => new Date(b.date) - new Date(a.date));
-          
-          triFormations.forEach(f => {
-            const dateStr = new Date(f.date).toLocaleDateString('fr-FR');
-            const row = `<tr>
-              <td><span class="badge-date">${dateStr}</span></td>
-              <td><strong>${f.nom}</strong></td>
-              <td>📍 ${f.lieu}</td>
-            </tr>`;
-            formTable.innerHTML += row;
-          });
-        } else {
-          formTable.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px; color:#999;'>Aucune formation enregistrée.</td></tr>";
-        }
+            // 2. Spécialités
+            const grid = document.getElementById('specsGrid');
+            grid.innerHTML = "";
+            listeSpecs.forEach(s => {
+                const active = (agent.specialites || []).includes(s);
+                const btn = document.createElement('div');
+                btn.className = `spec-tag ${active ? 'active' : ''}`;
+                btn.innerText = s;
+                btn.onclick = () => toggleSpec(s, agent.specialites || []);
+                grid.appendChild(btn);
+            });
 
-        // 3. Affichage des EPI
-        const epiList = document.getElementById('epiList');
-        epiList.innerHTML = "";
-        if (agent.epi && agent.epi.length > 0) {
-          agent.epi.forEach(item => {
-            const div = document.createElement('div');
-            div.className = "epi-row";
-            div.innerHTML = `<div><strong>${item.type}</strong> (${item.taille})</div>
-                             <button style="color:red; border:none; background:none; cursor:pointer;" 
-                             onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️ Retirer</button>`;
-            epiList.appendChild(div);
-          });
-        } else {
-          epiList.innerHTML = "<p>Aucun équipement affecté.</p>";
-        }
-      }
-    }
-
-    async function toggleSpec(spec, current) {
-      const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
-      await updateDoc(doc(db, "users", agentId), { specialites: news });
-      charger();
-    }
-
-    document.getElementById('btnOpenStock').onclick = async () => {
-      document.getElementById('modalStock').style.display = 'block';
-      const snap = await getDocs(collection(db, "stocks"));
-      const list = document.getElementById('listeChoixStock');
-      list.innerHTML = "";
-      snap.forEach(d => {
-        const s = d.data();
-        if(s.quantite > 0) {
-          const div = document.createElement('div');
-          div.className = "stock-item";
-          div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Stock: ${s.quantite}</strong>`;
-          div.onclick = async () => {
-            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) });
-            await updateDoc(doc(db, "stocks", d.id), { quantite: s.quantite - 1 });
-            document.getElementById('modalStock').style.display = 'none';
-            charger();
-          };
-          list.appendChild(div);
-        }
-      });
-    };
-
-    window.retirerEPI = async (stockId, type, taille) => {
-      if(confirm("Rendre ce matériel au stock ?")) {
-        await updateDoc(doc(db, "users", agentId), { epi: arrayRemove({ id: stockId, type, taille }) });
-        const sSnap = await getDoc(doc(db, "stocks", stockId));
-        if(sSnap.exists()) await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
-        charger();
-      }
-    };
-
-    charger();
-  </script>
-</body>
-</html>
+            // 3. Formations
+            const formTable = document.getElementById('listeFormations');
+            formTable.innerHTML = "";
+            const forms = agent.historiqueForm
