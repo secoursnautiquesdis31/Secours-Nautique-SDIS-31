@@ -110,7 +110,7 @@
   function afficherLigne(agent) {
     const container = document.getElementById('tableBody');
     const tr = document.createElement('tr');
-    tr.onclick = () => window.location.href = `fiche_agent.html?id=${agent.id}`;
+    tr.onclick = () => window.location.href = `fiche-agent.html?id=${agent.id}`;
     
     // Génération des petits badges de spécialités
     const specsHTML = (agent.specialites || []).map(s => `<span class="spec-pill active">${s}</span>`).join('');
