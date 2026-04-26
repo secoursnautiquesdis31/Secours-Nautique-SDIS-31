@@ -58,7 +58,7 @@
     </table>
   </div>
 
-  <script type="module">
+ <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
@@ -76,6 +76,11 @@
     const currentYear = 2026;
 
     async function genererTableau() {
+        // 1. On récupère TOUTES les formations une seule fois pour tout le monde
+        const fSnap = await getDocs(collection(db, "formations"));
+        const toutesLesFormations = fSnap.docs.map(doc => doc.data());
+
+        // 2. On récupère les agents
         const querySnapshot = await getDocs(collection(db, "users"));
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
@@ -83,37 +88,41 @@
 
         querySnapshot.forEach((doc) => {
             const agent = doc.data();
+            const agentNom = agent.nom;
             
-            // 1. RÉCUPÉRATION DES QUOTAS INDIVIDUELS
-            // Si l'agent n'a pas de quotas définis, on utilise des valeurs par défaut
+            // QUOTAS (Objectifs définis dans la fiche agent)
             const q = agent.quotas || { sav: 1, fmpa: 1, cen: 1, mso: 2 };
 
-            // 2. CALCUL DES PRÉSENCES
-            const formations = agent.historiqueFormations || [];
-            const formationsAnnee = formations.filter(f => new Date(f.date).getFullYear() === currentYear);
-
+            // CALCUL DES PRÉSENCES RÉELLES (Scan du calendrier)
             let score = { SAV: 0, FMPA: 0, CEN: 0, MSO: 0 };
 
-            formationsAnnee.forEach(f => {
-                const titre = f.nom.toUpperCase();
-                if (titre.includes("SAV") || titre.includes("SEV")) score.SAV++;
-                else if (titre.includes("FMPA") || titre.includes("MER")) score.FMPA++;
-                else if (titre.includes("CEN")) score.CEN++;
-                else if (titre.includes("ENTRAINEMENT") || titre.includes("MSO")) score.MSO++;
+            toutesLesFormations.forEach(f => {
+                // On vérifie l'année et si l'agent est présent
+                const formationDate = new Date(f.date);
+                if (formationDate.getFullYear() === currentYear) {
+                    const estPresent = (f.inscrits || []).find(i => i.nom === agentNom && i.statut === "présent");
+                    
+                    if (estPresent) {
+                        const titre = f.nom.toUpperCase();
+                        if (titre.includes("SAV") || titre.includes("SEV")) score.SAV++;
+                        if (titre.includes("FMPA") || titre.includes("MER")) score.FMPA++;
+                        if (titre.includes("CEN")) score.CEN++;
+                        if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) score.MSO++;
+                    }
+                }
             });
 
-            // 3. VÉRIFICATION DE L'APTITUDE SELON SES QUOTAS PERSO
-            const checkSAV = score.SAV >= q.sav;
-            const checkFMPA = score.FMPA >= q.fmpa;
-            const checkCEN = score.CEN >= q.cen;
-            const checkMSO = score.MSO >= q.mso;
-
+            // VÉRIFICATION DE L'APTITUDE
+            const checkSAV = score.SAV >= (q.sav || 0);
+            const checkFMPA = score.FMPA >= (q.fmpa || 0);
+            const checkCEN = score.CEN >= (q.cen || 0);
+            const checkMSO = score.MSO >= (q.mso || 0);
             const isApte = checkSAV && checkFMPA && checkCEN && checkMSO;
 
-            // 4. AFFICHAGE
+            // AFFICHAGE
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><strong>${agent.nom}</strong><br><small style="color:#888">${agent.cis || 'N/A'}</small></td>
+                <td><strong>${agentNom}</strong><br><small style="color:#888">${agent.cis || 'N/A'}</small></td>
                 <td>
                     <span class="${checkSAV ? 'score-detail' : 'ko-text'}">${score.SAV}</span> 
                     <span class="quota-info">/ ${q.sav}</span>
@@ -137,7 +146,7 @@
             tbody.appendChild(tr);
 
             dataExport.push({
-                "Agent": agent.nom,
+                "Agent": agentNom,
                 "CIS": agent.cis || "",
                 "SAV/SEV": `${score.SAV}/${q.sav}`,
                 "FMPA Mer": `${score.FMPA}/${q.fmpa}`,
@@ -156,6 +165,6 @@
     }
 
     genererTableau();
-  </script>
+</script>
 </body>
 </html>
