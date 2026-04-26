@@ -1,0 +1,107 @@
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+  // 🔴 METS TES CLÉS ICI
+  const firebaseConfig = {
+    apiKey: "TON_API_KEY",
+    authDomain: "TON_PROJET.firebaseapp.com",
+    projectId: "TON_PROJET_ID",
+    storageBucket: "TON_PROJET.appspot.com",
+    appId: "TON_APP_ID"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  let agentConnecteId = ""; // Stockera l'ID de l'agent qui s'inscrit
+
+  // 1. CHARGER LES AGENTS POUR LE SELECTEUR (Simule la connexion)
+  async function chargerSelecteurAgents() {
+      const snap = await getDocs(collection(db, "users"));
+      const select = document.createElement('select');
+      select.id = "selectAgentSession";
+      select.style = "position: fixed; top: 15px; right: 15px; width: 200px; z-index: 1000;";
+      select.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
+      
+      snap.forEach(d => {
+          select.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`;
+      });
+      
+      select.onchange = (e) => { agentConnecteId = e.target.value; };
+      document.body.appendChild(select);
+  }
+
+  // 2. CHARGER LES SESSIONS
+  async function chargerSessions() {
+    const querySnapshot = await getDocs(collection(db, "formations"));
+    const grid = document.getElementById('formationGrid');
+    grid.innerHTML = "";
+    
+    querySnapshot.forEach((d) => {
+      const s = d.data();
+      const id = d.id;
+      const inscrits = s.inscrits || [];
+      const dejaInscrit = inscrits.includes(agentConnecteId);
+
+      const card = document.createElement('div');
+      card.className = "session-card";
+      card.innerHTML = `
+        <div class="session-date">${new Date(s.date).toLocaleDateString('fr-FR', {day: 'numeric', month: 'long'})}</div>
+        <div style="font-weight:bold; color:var(--amber); margin-top:5px;">${s.type}</div>
+        <div class="session-info">📍 ${s.lieu}</div>
+        
+        <div style="margin-top:10px;">
+            <strong>Inscrits (${inscrits.length}) :</strong><br>
+            <span style="font-size:0.8rem; color:#666;">${inscrits.join(', ') || 'Personne pour le moment'}</span>
+        </div>
+
+        <div style="margin-top:15px; display:flex; gap:10px;">
+            ${dejaInscrit 
+                ? `<button onclick="desinscrire('${id}')" style="flex:1; background:#D94040; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">Se désister</button>`
+                : `<button onclick="inscrire('${id}')" style="flex:1; background:#2A9D5C; color:white; border:none; padding:8px; border-radius:5px; cursor:pointer;">S'inscrire</button>`
+            }
+            <button onclick="supprimerSession('${id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+        </div>
+      `;
+      grid.appendChild(card);
+    });
+  }
+
+  // 3. ACTIONS
+  window.inscrire = async (sessionId) => {
+    if (!agentConnecteId) return alert("Veuillez d'abord sélectionner votre nom en haut à droite !");
+    await updateDoc(doc(db, "formations", sessionId), {
+        inscrits: arrayUnion(agentConnecteId)
+    });
+    chargerSessions();
+  };
+
+  window.desinscrire = async (sessionId) => {
+    await updateDoc(doc(db, "formations", sessionId), {
+        inscrits: arrayRemove(agentConnecteId)
+    });
+    chargerSessions();
+  };
+
+  window.creerSession = async () => {
+    const date = document.getElementById('formDate').value;
+    const lieu = document.getElementById('formLieu').value;
+    const type = document.getElementById('formType').value;
+    if(!date || !lieu) return alert("Remplis tout !");
+    await addDoc(collection(db, "formations"), { date, lieu, type, inscrits: [] });
+    fermerModal();
+    chargerSessions();
+  };
+
+  window.supprimerSession = async (id) => {
+    if(confirm("Supprimer cette session ?")) {
+        await deleteDoc(doc(db, "formations", id));
+        chargerSessions();
+    }
+  };
+
+  // Initialisation
+  chargerSelecteurAgents();
+  chargerSessions();
+</script>
