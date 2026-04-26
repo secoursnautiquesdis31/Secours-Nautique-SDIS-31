@@ -14,17 +14,21 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     /* Style du calendrier */
+    .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     .fc-header-toolbar { padding: 10px; }
     .fc-event { cursor: pointer; padding: 3px; border: none !important; }
     .event-sal { background-color: var(--navy) !important; color: white !important; }
     .event-sav { background-color: var(--amber) !important; color: var(--navy) !important; font-weight: bold; }
     
-    /* Sélecteur d'agent en haut */
+    /* Barre de session utilisateur */
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     
-    /* Modal */
+    /* Bouton Retour */
+    .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+    /* Modales */
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-    .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; }
+    .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; position: relative; }
     label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: block; margin-top: 10px; }
     input, select { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
@@ -32,10 +36,10 @@
 </head>
 <body>
 
-  <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🏠 MENU</a>
+  <a href="dashboard.html" class="btn-back">🏠 MENU</a>
 
   <div class="user-session">
-      <span style="font-size: 0.7rem; font-weight: bold; color: #888; text-transform: uppercase;">Agent :</span>
+      <span style="font-size: 0.7rem; font-weight: bold; color: #888;">AGENT :</span>
       <select id="selectAgentSession" style="width: 150px; margin:0; padding:5px; border:none; font-weight: bold; color: var(--navy);"></select>
   </div>
 
@@ -49,11 +53,10 @@
       
       <div id="formSection">
           <input type="hidden" id="selectedDate">
+          <label>Nom de la formation (Ex: Manœuvre Garonne) :</label>
+          <input type="text" id="formNom" placeholder="Nom personnalisé">
           
-          <label>Nom de la formation :</label>
-          <input type="text" id="formNom" placeholder="ex: Manœuvre Garonne Blagnac">
-          
-          <label>Type (Couleur) :</label>
+          <label>Type de spécialité :</label>
           <select id="formType">
               <option value="Entraînement SAL">Entraînement SAL (Bleu)</option>
               <option value="SAV-SEV">SAV-SEV (Ambre)</option>
@@ -63,23 +66,22 @@
           
           <label>Lieu :</label>
           <input type="text" id="formLieu" placeholder="ex: Cale de mise à l'eau">
-          
-          <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">ENREGISTRER</button>
+          <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">ENREGISTRER LA SESSION</button>
       </div>
       
       <div id="detailSection" style="display:none;">
-          <p id="detLieu" style="margin-bottom: 5px;"></p>
+          <p id="detLieu" style="font-weight: bold; margin-bottom: 5px;"></p>
           <p id="detType" style="font-size: 0.9rem; color: #666;"></p>
           <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
           <strong>Inscrits :</strong>
-          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; line-height: 1.5; color: #444; background: #F8F9FA; padding: 10px; border-radius: 6px;"></div>
+          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; background: #F8F9FA; padding: 10px; border-radius: 6px;"></div>
           
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
           <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.8rem;">Supprimer la session</button>
       </div>
       
-      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-size: 0.9rem;">Annuler / Fermer</button>
+      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
     </div>
   </div>
 
@@ -87,9 +89,9 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🔴 REMPLACER PAR TES CLÉS FIREBASE
+    // 🔴 TES CLES FIREBASE ICI
     const firebaseConfig = {
-      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+     apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
         projectId: "secours-nautique-31",
         storageBucket: "secours-nautique-31.firebasestorage.app",
@@ -103,75 +105,96 @@
     let calendar;
 
     async function init() {
-        // 1. Charger les agents pour le sélecteur
-        const uSnap = await getDocs(collection(db, "users"));
-        const sel = document.getElementById('selectAgentSession');
-        sel.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
-        uSnap.forEach(d => { 
-            const name = d.data().nom;
-            sel.innerHTML += `<option value="${name}">${name}</option>`; 
-        });
-        sel.onchange = (e) => { 
-            agentConnecte = e.target.value; 
-            calendar.refetchEvents(); // Rafraîchit les chiffres sur le calendrier
-        };
+        try {
+            // Charger les agents
+            const uSnap = await getDocs(collection(db, "users"));
+            const sel = document.getElementById('selectAgentSession');
+            sel.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
+            uSnap.forEach(d => { 
+                sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; 
+            });
+            sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
 
-        // 2. Initialiser FullCalendar
-        const calendarEl = document.getElementById('calendar');
-        calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'fr',
-            firstDay: 1,
-            buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine" },
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
-            events: async (info, success, failure) => {
-                const snap = await getDocs(collection(db, "formations"));
-                const evts = [];
-                snap.forEach(d => {
-                    const data = d.data();
-                    evts.push({
-                        id: d.id,
-                        title: `${data.nom || data.type} (${data.inscrits ? data.inscrits.length : 0})`,
-                        start: data.date,
-                        extendedProps: { ...data },
-                        className: data.type && data.type.includes('SAL') ? 'event-sal' : 'event-sav'
+            // Configurer le calendrier
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
+                events: async (info, success, failure) => {
+                    const snap = await getDocs(collection(db, "formations"));
+                    const evts = [];
+                    snap.forEach(d => {
+                        const data = d.data();
+                        evts.push({
+                            id: d.id,
+                            title: `${data.nom || data.type} (${data.inscrits ? data.inscrits.length : 0})`,
+                            start: data.date,
+                            extendedProps: { ...data },
+                            className: data.type && data.type.includes('SAL') ? 'event-sal' : 'event-sav'
+                        });
                     });
-                });
-                success(evts);
-            },
-            dateClick: (info) => ouvrirAjout(info.dateStr),
-            eventClick: (info) => ouvrirDetails(info.event)
-        });
-        calendar.render();
+                    success(evts);
+                },
+                dateClick: (info) => {
+                    document.getElementById('modalTitle').innerText = "Nouvelle session";
+                    document.getElementById('formSection').style.display = "block";
+                    document.getElementById('detailSection').style.display = "none";
+                    document.getElementById('selectedDate').value = info.dateStr;
+                    document.getElementById('modalEvent').style.display = 'block';
+                },
+                eventClick: (info) => {
+                    const data = info.event.extendedProps;
+                    const id = info.event.id;
+                    const inscrits = data.inscrits || [];
+
+                    document.getElementById('modalTitle').innerText = data.nom || data.type;
+                    document.getElementById('formSection').style.display = "none";
+                    document.getElementById('detailSection').style.display = "block";
+                    document.getElementById('detLieu').innerText = "📍 " + data.lieu;
+                    document.getElementById('detType').innerText = "Type : " + data.type;
+                    document.getElementById('detInscrits').innerText = inscrits.length > 0 ? inscrits.join(', ') : "Aucun inscrit.";
+                    
+                    const estInscrit = agentConnecte && inscrits.includes(agentConnecte);
+                    document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
+                    document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+
+                    document.getElementById('btnInscrire').onclick = async () => {
+                        if(!agentConnecte) return alert("Sélectionnez votre nom en haut à droite");
+                        await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion(agentConnecte) });
+                        fermerModal(); calendar.refetchEvents();
+                    };
+                    document.getElementById('btnDesinscrire').onclick = async () => {
+                        await updateDoc(doc(db, "formations", id), { inscrits: arrayRemove(agentConnecte) });
+                        fermerModal(); calendar.refetchEvents();
+                    };
+                    document.getElementById('btnSuppr').onclick = async () => {
+                        if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
+                    };
+                    document.getElementById('modalEvent').style.display = 'block';
+                }
+            });
+            calendar.render();
+        } catch (e) { console.error("Erreur Init:", e); }
     }
 
     window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
 
-    function ouvrirAjout(date) {
-        document.getElementById('modalTitle').innerText = "Planifier une session";
-        document.getElementById('formSection').style.display = "block";
-        document.getElementById('detailSection').style.display = "none";
-        document.getElementById('selectedDate').value = date;
-        document.getElementById('modalEvent').style.display = 'block';
-    }
-
-    function ouvrirDetails(event) {
-        const data = event.extendedProps;
-        const id = event.id;
-        const inscrits = data.inscrits || [];
-
-        document.getElementById('modalTitle').innerText = data.nom || data.type;
-        document.getElementById('formSection').style.display = "none";
-        document.getElementById('detailSection').style.display = "block";
-        document.getElementById('detLieu').innerText = "📍 " + data.lieu;
-        document.getElementById('detType').innerText = "Type : " + data.type;
-        document.getElementById('detInscrits').innerText = inscrits.length > 0 ? inscrits.join(', ') : "Aucun inscrit pour le moment.";
+    document.getElementById('btnSave').onclick = async () => {
+        const nom = document.getElementById('formNom').value;
+        const type = document.getElementById('formType').value;
+        const lieu = document.getElementById('formLieu').value;
+        const date = document.getElementById('selectedDate').value;
+        if(!nom || !lieu) return alert("Veuillez remplir le nom et le lieu.");
         
-        const estInscrit = agentConnecte && inscrits.includes(agentConnecte);
-        document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
-        document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+        await addDoc(collection(db, "formations"), { nom, type, lieu, date, inscrits: [] });
+        document.getElementById('formNom').value = "";
+        document.getElementById('formLieu').value = "";
+        fermerModal();
+        calendar.refetchEvents();
+    };
 
-        document.getElementById('btnInscrire').onclick = () => inscrire(id);
-        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
-        document.getElementById('btnSuppr').onclick = () => supprimer(id);
-        document.getElementById('modalEvent').style.display = 'block
+    init();
+  </script>
+</body>
+</html>
