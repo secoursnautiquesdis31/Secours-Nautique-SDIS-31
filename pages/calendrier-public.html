@@ -1,25 +1,95 @@
-// Dans ton calendrier-public.html, la fonction d'inscription ressemblerait à ceci :
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Formations — SDIS 31</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --green: #2A9D5C; }
+        body { font-family: sans-serif; background: #f4f6f8; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .event-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-inscrire { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    </style>
+</head>
+<body>
 
-async function inscriptionFormation(formationId) {
-    // 1. On récupère l'ID de l'agent stocké (on peut utiliser le localStorage)
-    const agentId = localStorage.getItem('agentIdSelected');
-    const agentNom = localStorage.getItem('agentNomSelected');
+<div class="container">
+    <a href="espace-public.html" style="text-decoration: none;">⬅ Retour</a>
+    <h1 style="color: var(--navy);">Prochaines Formations</h1>
+    <div id="listeFormations">Chargement...</div>
+</div>
 
-    if(!agentId) {
-        alert("Retourne sur l'accueil pour sélectionner ton nom !");
-        return;
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // 1. FONCTION D'INSCRIPTION (Celle qui s'affichait mal)
+    window.inscriptionFormation = async function(formationId) {
+        const agentId = localStorage.getItem('agentIdSelected');
+        const agentNom = localStorage.getItem('agentNomSelected');
+
+        if(!agentId) {
+            alert("Retourne sur l'accueil pour sélectionner ton nom !");
+            return;
+        }
+
+        try {
+            const formationRef = doc(db, "formations", formationId);
+            await updateDoc(formationRef, {
+                participants: arrayUnion({ 
+                    id: agentId, 
+                    nom: agentNom, 
+                    dateInscription: new Date().toISOString() 
+                })
+            });
+            alert("Inscription validée pour " + agentNom);
+            chargerFormations(); // Rafraîchir la liste
+        } catch (e) {
+            console.error(e);
+            alert("Erreur lors de l'inscription.");
+        }
     }
 
-    // 2. On met à jour le document de la formation dans Firestore
-    const formationRef = doc(db, "formations", formationId);
-    
-    await updateDoc(formationRef, {
-        participants: arrayUnion({
-            id: agentId,
-            nom: agentNom,
-            dateInscription: new Date().toISOString()
-        })
-    });
+    // 2. CHARGEMENT DES FORMATIONS
+    async function chargerFormations() {
+        const container = document.getElementById('listeFormations');
+        const snap = await getDocs(collection(db, "formations"));
+        
+        if (snap.empty) {
+            container.innerHTML = "Aucune formation prévue.";
+            return;
+        }
 
-    alert("Inscription validée !");
-}
+        container.innerHTML = "";
+        snap.forEach(d => {
+            const form = d.data();
+            const div = document.createElement('div');
+            div.className = "event-card";
+            div.innerHTML = `
+                <div>
+                    <strong>${form.titre || "Formation"}</strong><br>
+                    <small>📅 ${form.date || 'À venir'}</small>
+                </div>
+                <button class="btn-inscrire" onclick="inscriptionFormation('${d.id}')">S'INSCRIRE</button>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    chargerFormations();
+</script>
+</body>
+</html>
