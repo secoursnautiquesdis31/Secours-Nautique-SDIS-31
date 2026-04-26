@@ -243,15 +243,28 @@
         });
     };
 
-    window.retirerEPI = async (stockId, type, taille) => {
-        if(confirm("Réintégrer ce matériel au stock ?")) {
-            await updateDoc(doc(db, "users", agentId), { epi: arrayRemove({ id: stockId, type, taille }) });
-            const sSnap = await getDoc(doc(db, "stocks", stockId));
-            if(sSnap.exists()) await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
-            charger();
-        }
-    };
+   window.retirerEPI = async (stockId, type, taille) => {
+    // Message plus explicite pour l'utilisateur
+    if(confirm(`Supprimer l'affectation de : ${type} (${taille}) ?\n\nNote : Cela ne modifiera pas le stock général.`)) {
+        try {
+            const agentRef = doc(db, "users", agentId);
 
+            // 1. On retire uniquement l'élément de la liste de l'agent
+            await updateDoc(agentRef, { 
+                epi: arrayRemove({ id: stockId, type, taille }) 
+            });
+
+            // LOGIQUE DE STOCK SUPPRIMÉE ICI : 
+            // On ne touche plus à la collection "stocks"
+            
+            alert("Affectation supprimée.");
+            charger(); // On rafraîchit l'affichage de la fiche
+        } catch (e) {
+            console.error("Erreur lors de la suppression :", e);
+            alert("Erreur lors de la suppression de l'affectation.");
+        }
+    }
+};
     charger();
 </script>
 </body>
