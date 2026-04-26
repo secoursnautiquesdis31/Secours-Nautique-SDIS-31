@@ -27,6 +27,9 @@
 
   <main class="main-content">
     <h1>Bienvenue sur le Tableau de bord</h1>
+    <button onclick="lancerImportationFichier()" style="background: red; color: white; padding: 10px; margin: 10px; cursor: pointer;">
+   CLIQUEZ ICI POUR IMPORTER LE CSV
+</button>
     <div class="card" style="background:white; padding:20px; border-radius:10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
       <p>Sélectionnez un menu à gauche pour commencer.</p>
     </div>
@@ -35,68 +38,47 @@
   <script type="module">
 import { db, auth, doc, setDoc, signOut } from "./auth.js";
 
-// FONCTION D'IMPORTATION DE SECOURS
-async function importerFichierCSV(event) {
-    const file = event.target.files[0];
-    const reader = new FileReader();
+// On attache la fonction directement à la fenêtre pour qu'elle soit visible
+window.lancerImportationFichier = function() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    
+    input.onchange = async (e) => {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = async (event) => {
+            const contenu = event.target.result;
+            const lignes = contenu.split(/\r?\n/);
+            let compteur = 0;
 
-    reader.onload = async (e) => {
-        const contenu = e.target.result;
-        const lignes = contenu.split(/\r?\n/);
-        let compteur = 0;
+            for (let i = 1; i < lignes.length; i++) {
+                const ligne = lignes[i].trim();
+                if (!ligne) continue;
 
-        console.log("Analyse du fichier...");
+                const colonnes = ligne.split(';');
+                const nom = colonnes[0] ? colonnes[0].trim() : "";
+                const cis = colonnes[1] ? colonnes[1].trim() : "";
+                const tel = colonnes[2] ? colonnes[2].trim() : "";
 
-        for (let i = 1; i < lignes.length; i++) {
-            const ligne = lignes[i].trim();
-            if (!ligne) continue;
-
-            // Découpage par point-virgule
-            const colonnes = ligne.split(';');
-            const nomBrut = colonnes[0] ? colonnes[0].trim() : "";
-            const cisBrut = colonnes[1] ? colonnes[1].trim() : "";
-            const telBrut = colonnes[2] ? colonnes[2].trim() : "";
-
-            if (nomBrut) {
-                // On crée un ID sans caractères spéciaux pour la base de données
-                const docId = nomBrut.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
-                
-                try {
-                    await setDoc(doc(db, "users", docId), {
-                        nom: nomBrut, // ICI : On garde le nom EXACT du fichier
-                        prenom: "",
-                        cis: cisBrut,
-                        tel: telBrut,
-                        role: "Agent",
-                        statut: "Actif",
-                        importDate: new Date().toISOString()
+                if (nom) {
+                    const id = nom.toLowerCase().replace(/[^a-z0-9]/g, '_');
+                    await setDoc(doc(db, "users", id), {
+                        nom: nom,
+                        cis: cis,
+                        tel: tel,
+                        role: "Agent"
                     });
                     compteur++;
-                } catch (err) {
-                    console.error("Erreur pour " + nomBrut, err);
                 }
             }
-        }
-        alert("Bravo ! " + compteur + " agents ont été importés avec les noms exacts.");
-        window.location.reload(); 
+            alert(compteur + " agents importés !");
+            window.location.reload();
+        };
+        reader.readAsText(file, 'ISO-8859-1');
     };
-
-    // Lecture avec encodage Windows-1252 (celui d'Excel en France) pour éviter les bugs d'accents
-    reader.readAsText(file, 'windows-1252');
-}
-
-// Création du bouton invisible
-const input = document.createElement('input');
-input.type = 'file';
-input.id = 'importateurCache';
-input.accept = '.csv';
-input.style.display = 'none';
-input.addEventListener('change', importerFichierCSV);
-document.body.appendChild(input);
-
-// Fonction pour déclencher l'ouverture du fichier
-window.lancerImportationFichier = () => {
-    document.getElementById('importateurCache').click();
+    input.click();
 };
 
 document.getElementById("logoutBtn")?.addEventListener("click", () => {
