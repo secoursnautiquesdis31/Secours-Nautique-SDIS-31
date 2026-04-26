@@ -2,102 +2,142 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Technique — SDIS 31 Nautique</title>
+  <title>Technique — SDIS 31</title>
   <link rel="stylesheet" href="../css/main.css">
   <style>
-    .tech-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 20px; background: #0B1F3A; color: white; border-radius: 8px; }
-    .stock-card { background: white; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); padding: 20px; margin-top: 20px; }
-    table { width: 100%; border-collapse: collapse; color: #333; }
-    th { text-align: left; padding: 12px; border-bottom: 2px solid #E8ECF0; color: #0B1F3A; text-transform: uppercase; font-size: 0.85rem; }
-    td { padding: 12px; border-bottom: 1px solid #E8ECF0; }
-    .badge-warn { background: #D94040; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-    .badge-ok { background: #2A9D5C; color: white; padding: 4px 8px; border-radius: 4px; font-weight: bold; font-size: 0.7rem; }
-    .btn-import { background: #E8A020; color: #0B1F3A; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    .tech-container { padding: 20px; font-family: 'Barlow', sans-serif; }
+    .btn-action { background: #E8A020; color: #0B1F3A; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; margin-bottom: 20px; }
+    table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+    th { background: #0B1F3A; color: white; padding: 12px; text-align: left; }
+    td { padding: 10px; border-bottom: 1px solid #EEE; }
+    input { border: 1px solid #DDD; padding: 5px; border-radius: 4px; width: 90%; }
+    .alert-qty { background: #FFEBEE; color: #C62828; font-weight: bold; }
   </style>
 </head>
-<body style="background: #F4F6F8; padding: 20px; font-family: sans-serif;">
+<body style="background: #F4F6F8;">
 
-  <div class="tech-header">
-    <h1>DOSSIER TECHNIQUE : INVENTAIRE</h1>
-    <button class="btn-import" onclick="document.getElementById('csvStock').click()">📦 IMPORTER LE CSV STOCK</button>
-    <input type="file" id="csvStock" accept=".csv" style="display:none">
-  </div>
+  <div class="tech-container">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h1>Gestion du Matériel - SDIS 31</h1>
+        <div>
+            <button class="btn-action" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
+            <input type="file" id="csvInput" accept=".csv" style="display:none">
+        </div>
+    </div>
 
-  <div class="stock-card">
     <table>
       <thead>
         <tr>
-          <th>Matériel</th>
+          <th>Type</th>
           <th>Taille</th>
-          <th>Quantité</th>
+          <th>Stock</th>
           <th>Seuil</th>
           <th>Péremption</th>
-          <th>État</th>
+          <th>Actions</th>
         </tr>
       </thead>
-      <tbody id="stockTable">
-        <tr><td colspan="6" style="text-align:center; padding:40px;">Chargement du module technique...</td></tr>
+      <tbody id="stockBody">
+        <tr><td colspan="6" style="text-align:center; padding:30px;">Chargement... Si rien ne s'affiche, importez le fichier CSV.</td></tr>
       </tbody>
     </table>
   </div>
 
   <script type="module">
- import { db, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "./auth.js";
+    import { db, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "./auth.js";
 
-const tableBody = document.getElementById('stockTable');
+    const stockBody = document.getElementById('stockBody');
 
-// 1. CHARGEMENT ET AFFICHAGE (Avec fonctions de modification)
-async function loadStock() {
-    const snap = await getDocs(collection(db, "stocks"));
-    tableBody.innerHTML = "";
-    
-    snap.forEach(d => {
-        const item = d.data();
-        const id = d.id;
-        const q = parseInt(item.quantite) || 0;
-        const s = parseInt(item.seuil) || 0;
-        const isAlert = q <= s && s > 0;
+    // --- CHARGEMENT ---
+    async function chargerStock() {
+      try {
+        const querySnapshot = await getDocs(collection(db, "stocks"));
+        stockBody.innerHTML = "";
         
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><input type="text" value="${item.type}" onchange="updateItem('${id}', 'type', this.value)" style="border:none; font-weight:bold; width:100%"></td>
-            <td><input type="text" value="${item.taille || ''}" onchange="updateItem('${id}', 'taille', this.value)" style="border:none; width:50px"></td>
-            <td><input type="number" value="${q}" onchange="updateItem('${id}', 'quantite', this.value)" style="width:50px; font-weight:bold; color:${isAlert ? 'red' : 'black'}"></td>
-            <td><input type="number" value="${s}" onchange="updateItem('${id}', 'seuil', this.value)" style="width:50px"></td>
-            <td><input type="text" value="${item.peremption || ''}" onchange="updateItem('${id}', 'peremption', this.value)" style="border:none; width:80px"></td>
-            <td>
-                <button onclick="supprimerItem('${id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
-            </td>
-        `;
-        tableBody.appendChild(tr);
-    });
-}
+        if (querySnapshot.empty) {
+          stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>La base est vide. Utilisez le bouton 'Importer'.</td></tr>";
+          return;
+        }
 
-// 2. FONCTION DE MISE À JOUR AUTOMATIQUE
-window.updateItem = async (id, champ, valeur) => {
-    try {
-        const itemRef = doc(db, "stocks", id);
-        let valFinal = valeur;
-        // Si c'est un nombre, on le convertit pour les calculs
-        if (champ === 'quantite' || champ === 'seuil') valFinal = parseInt(valeur);
-        
-        await updateDoc(itemRef, { [champ]: valFinal });
-        console.log("Mis à jour : ", champ, valeur);
-    } catch (e) {
-        alert("Erreur de sauvegarde : " + e.message);
+        querySnapshot.forEach((d) => {
+          const item = d.data();
+          const id = d.id;
+          const enAlerte = parseInt(item.quantite) <= parseInt(item.seuil);
+
+          const tr = document.createElement('tr');
+          if(enAlerte) tr.className = "alert-qty";
+          
+          tr.innerHTML = `
+            <td><input type="text" value="${item.type || ''}" onchange="updateValue('${id}', 'type', this.value)"></td>
+            <td><input type="text" value="${item.taille || ''}" onchange="updateValue('${id}', 'taille', this.value)"></td>
+            <td><input type="number" value="${item.quantite || 0}" onchange="updateValue('${id}', 'quantite', this.value)"></td>
+            <td><input type="number" value="${item.seuil || 0}" onchange="updateValue('${id}', 'seuil', this.value)"></td>
+            <td><input type="text" value="${item.peremption || ''}" onchange="updateValue('${id}', 'peremption', this.value)"></td>
+            <td><button onclick="supprimer('${id}')">🗑️</button></td>
+          `;
+          stockBody.appendChild(tr);
+        });
+      } catch (e) {
+        alert("Erreur de connexion base : " + e.message);
+      }
     }
-};
 
-// 3. FONCTION DE SUPPRESSION
-window.supprimerItem = async (id) => {
-    if (confirm("Supprimer cet article définitivement ?")) {
+    // --- MISE À JOUR MANUELLE ---
+    window.updateValue = async (id, champ, valeur) => {
+      try {
+        const v = (champ === 'quantite' || champ === 'seuil') ? parseInt(valeur) : valeur;
+        await updateDoc(doc(db, "stocks", id), { [champ]: v });
+      } catch (e) { alert("Erreur sauvegarde : " + e.message); }
+    };
+
+    window.supprimer = async (id) => {
+      if(confirm("Supprimer ?")) {
         await deleteDoc(doc(db, "stocks", id));
-        loadStock();
-    }
-};
+        chargerStock();
+      }
+    };
 
-// Lancement au démarrage
-loadStock();
+    // --- IMPORTATION ---
+    document.getElementById('csvInput').onchange = (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+      
+      const reader = new FileReader();
+      reader.onload = async (ev) => {
+        try {
+          const lignes = ev.target.result.split(/\r?\n/);
+          let dernierType = "";
+          let imports = 0;
+
+          for (let i = 1; i < lignes.length; i++) {
+            const col = lignes[i].split(';');
+            if (col.length < 3) continue;
+
+            let type = col[0].trim() || dernierType;
+            if (!type || type === "Type") continue;
+            dernierType = type;
+
+            const taille = col[2] ? col[2].trim() : "";
+            const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+            await setDoc(doc(db, "stocks", id), {
+              type: type,
+              taille: taille,
+              quantite: parseInt(col[3]) || 0,
+              seuil: parseInt(col[4]) || 0,
+              peremption: col[5] || ""
+            });
+            imports++;
+          }
+          alert(imports + " articles importés avec succès !");
+          chargerStock();
+        } catch (err) {
+          alert("Erreur lors de la lecture du fichier : " + err.message);
+        }
+      };
+      reader.readAsText(file, 'ISO-8859-1');
+    };
+
+    chargerStock();
   </script>
 </body>
 </html>
