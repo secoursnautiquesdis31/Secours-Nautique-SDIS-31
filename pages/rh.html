@@ -40,22 +40,24 @@
           return;
         }
 
-        querySnapshot.forEach((doc) => {
-          const agent = doc.data();
-          const card = document.createElement('div');
-          card.className = 'agent-card';
-          card.innerHTML = `
-            <div class="agent-info">
-              <h3>${agent.nom || "Nom inconnu"}</h3>
-              <p><strong>Affectation :</strong> ${agent.cis || "Non renseigné"}</p>
-              <p><strong>Contact :</strong> ${agent.tel || "NC"}</p>
-            </div>
-            <div class="agent-status">
-              <span class="badge">${agent.role || "Agent"}</span>
-            </div>
-          `;
-          container.appendChild(card);
-        });
+       querySnapshot.forEach((doc) => {
+    const data = doc.data();
+    const div = document.createElement('div');
+    div.className = 'test-card';
+    
+    // C'est ici qu'on ajoute le lien vers la fiche
+    div.style.cursor = "pointer";
+    div.onclick = () => {
+        window.location.href = `fiche-agent.html?id=${doc.id}`;
+    };
+
+    div.innerHTML = `
+        <strong>NOM : ${data.nom || 'Inconnu'}</strong><br>
+        <span class="debug-info">CIS : ${data.cis || 'NC'} | TPH : ${data.tel || 'NC'}</span>
+        <div style="margin-top:10px; color:var(--amber); font-size:0.8em;">→ Voir la fiche individuelle</div>
+    `;
+    container.appendChild(div);
+});
       } catch (error) {
         console.error("Erreur RH:", error);
         container.innerHTML = "<p>Erreur lors du chargement des données.</p>";
