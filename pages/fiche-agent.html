@@ -244,19 +244,21 @@
     };
 
 window.retirerEPI = async (stockId, type, taille) => {
-    if(confirm("Supprimer cette ligne de la fiche (sans toucher au stock) ?")) {
+    if(confirm(`Supprimer l'affectation de ${type} (${taille}) sur cette fiche ?`)) {
         try {
-            await updateDoc(doc(db, "users", agentId), { 
-                epi: arrayRemove({ id: stockId, type, taille }) 
+            // On cible le document de l'agent
+            const agentRef = doc(db, "users", agentId);
+            
+            // IMPORTANT : L'objet dans arrayRemove doit être le clone exact 
+            // de celui créé lors de l'affectation (dans btnOpenStock)
+            await updateDoc(agentRef, {
+                epi: arrayRemove({ 
+                    id: stockId, 
+                    type: type, 
+                    taille: taille 
+                })
             });
-            alert("Supprimé de la fiche.");
-            charger();
-        } catch (e) {
-            alert("Erreur lors de la suppression.");
-        }
-    }
-};
-  charger();
+charger();
 </script>
 </body>
 </html>
