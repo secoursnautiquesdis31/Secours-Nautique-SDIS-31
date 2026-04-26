@@ -1,0 +1,1069 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Technique — SDIS 31 Nautique</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .tabs{display:flex;gap:4px;margin-bottom:20px;background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:6px;overflow-x:auto;width:fit-content;max-width:100%}
+    .tab-btn{padding:8px 16px;border:none;border-radius:var(--radius-md);font-family:var(--font-body);font-size:.85rem;font-weight:500;cursor:pointer;background:none;color:var(--gray-600);transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:6px}
+    .tab-btn.active{background:var(--navy);color:white}
+    .tab-pane{display:none}.tab-pane.active{display:block}
+    .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+    .filter-bar input,.filter-bar select{border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:8px 12px;font-size:.85rem;outline:none;transition:border-color .15s}
+    .filter-bar input:focus,.filter-bar select:focus{border-color:var(--blue)}
+
+    /* Stock jauge */
+    .stock-bar{height:6px;background:var(--gray-100);border-radius:3px;overflow:hidden;margin-top:4px;min-width:60px}
+    .stock-fill{height:100%;border-radius:3px}
+    .fill-ok{background:var(--success)}
+    .fill-warn{background:var(--amber)}
+    .fill-crit{background:var(--danger)}
+    .qty-ok{color:var(--success);font-weight:600}
+    .qty-warn{color:var(--amber-dark);font-weight:600}
+    .qty-crit{color:var(--danger);font-weight:600}
+
+    /* VSN cards */
+    .vsn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+    .vsn-card{background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:20px;transition:box-shadow .15s}
+    .vsn-card:hover{box-shadow:var(--shadow-md)}
+    .vsn-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+    .vsn-name{font-family:var(--font-display);font-size:1.05rem;font-weight:700;color:var(--navy)}
+    .vsn-detail{font-size:.82rem;color:var(--gray-400);margin-top:2px}
+    .vsn-field{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--gray-100);font-size:.85rem}
+    .vsn-field:last-child{border:none}
+    .vsn-label{color:var(--gray-600)}
+    .vsn-val{font-weight:500;color:var(--navy)}
+
+    /* Demande EPI card */
+    .demande-card{background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:12px;display:flex;align-items:center;gap:16px;transition:box-shadow .15s}
+    .demande-card:hover{box-shadow:var(--shadow-sm)}
+    .demande-info{flex:1;min-width:0}
+    .demande-materiel{font-weight:600;font-size:.92rem;color:var(--navy)}
+    .demande-sub{font-size:.8rem;color:var(--gray-400);margin-top:3px}
+    .demande-actions{display:flex;gap:8px;flex-shrink:0}
+
+    /* Fiche contrôle */
+    .fiche-ctrl{background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:16px 20px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+    .fiche-ctrl-info{flex:1}
+    .fiche-ctrl-title{font-weight:600;font-size:.9rem;color:var(--navy)}
+    .fiche-ctrl-sub{font-size:.78rem;color:var(--gray-400);margin-top:2px}
+
+    /* Commandes timeline */
+    .cmd-row{display:flex;align-items:center;gap:14px;padding:14px 0;border-bottom:1px solid var(--gray-100)}
+    .cmd-row:last-child{border:none}
+    .cmd-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+    .cmd-info{flex:1;min-width:0}
+    .cmd-title{font-weight:500;font-size:.9rem;color:var(--navy)}
+    .cmd-sub{font-size:.78rem;color:var(--gray-400);margin-top:2px}
+
+    @media(max-width:640px){.vsn-grid{grid-template-columns:1fr}.demande-card{flex-direction:column;align-items:flex-start}.demande-actions{width:100%}}
+  </style>
+</head>
+<body class="app-layout">
+  <div id="pageLoader" class="page-loader">
+    <div class="loader-dots"><span></span><span></span><span></span></div>
+    <div class="loader-text">Chargement Technique…</div>
+  </div>
+  <div class="sidebar-overlay"></div>
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">
+        <div class="logo-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="2" stroke-linecap="round"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/><path d="M6 18c2-1.5 4-1 6-1s4 .5 6 1"/></svg></div>
+        <div class="sidebar-brand"><h2>SDIS 31</h2><span>Secours Nautique</span></div>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-section">
+        <div class="nav-section-label">Principal</div>
+        <a class="nav-item" href="dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Tableau de bord</a>
+      </div>
+      <div class="nav-section">
+        <div class="nav-section-label">Dossiers</div>
+        <a class="nav-item" href="formation.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Formation</a>
+        <a class="nav-item" href="rh.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>RH</a>
+        <a class="nav-item active" href="technique.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Technique</a>
+        <a class="nav-item" href="operationnel.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Opérationnel</a>
+        <a class="nav-item" href="ressources.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Ressources</a>
+      </div>
+      <div class="nav-section" id="adminNavSection">
+        <div class="nav-section-label">Administration</div>
+        <a class="nav-item" href="admin-users.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>Gestion des accès</a>
+      </div>
+    </nav>
+    <div class="sidebar-user">
+      <div class="user-avatar" id="userAvatar">--</div>
+      <div class="user-info"><div class="user-name" id="userName">…</div><div class="user-role" id="userRole">…</div></div>
+      <button class="btn-logout" id="logoutBtn" title="Déconnexion"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <header class="topbar">
+      <div class="flex items-center gap-12">
+        <button class="hamburger btn-icon" id="hamburger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
+        <span class="topbar-title">Technique</span>
+      </div>
+      <div class="topbar-actions" id="techActions"></div>
+    </header>
+
+    <main class="page-content">
+      <!-- ONGLETS -->
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="stock">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v2"/></svg>Stock matériel
+        </button>
+        <button class="tab-btn" data-tab="vsn">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17l9-13 9 13H3z"/><line x1="12" y1="17" x2="12" y2="21"/></svg>VSN / Engins
+        </button>
+        <button class="tab-btn" data-tab="commandes">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>Commandes
+        </button>
+        <button class="tab-btn" data-tab="epi">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Contrôle EPI
+        </button>
+        <button class="tab-btn" data-tab="demandes">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>Demandes EPI
+          <span id="badgeDemandes" class="nav-badge" style="display:none">0</span>
+        </button>
+      </div>
+
+      <!-- ===== STOCK ===== -->
+      <div class="tab-pane active" id="tabStock">
+        <div class="filter-bar">
+          <input type="search" id="searchStock" placeholder="🔍  Rechercher…" style="min-width:200px">
+          <select id="filterStockStatus">
+            <option value="">Tous les statuts</option>
+            <option value="ok">OK</option>
+            <option value="alerte">En alerte</option>
+            <option value="critique">Critique / rupture</option>
+          </select>
+          <select id="filterStockCat">
+            <option value="">Toutes catégories</option>
+            <option value="SAL SAV">SAL SAV</option>
+            <option value="SEV">SEV</option>
+            <option value="CEN">CEN</option>
+            <option value="Divers">Divers</option>
+          </select>
+          <span id="stockCount" class="text-muted text-small" style="margin-left:auto"></span>
+          <button class="btn btn-outline btn-sm" id="btnImportStock" title="Import depuis Excel">⬆ Import initial</button>
+          <button class="btn btn-amber btn-sm" id="btnAddStock">+ Article</button>
+        </div>
+        <div class="card" style="padding:0">
+          <div class="table-wrapper">
+            <table>
+              <thead><tr>
+                <th>Désignation</th>
+                <th>Taille</th>
+                <th>Catégorie</th>
+                <th>Qté en stock</th>
+                <th>Stock mini</th>
+                <th>Statut</th>
+                <th>Péremption</th>
+                <th>Actions</th>
+              </tr></thead>
+              <tbody id="stockBody"><tr><td colspan="8" class="text-muted" style="padding:20px;text-align:center">Chargement…</td></tr></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== VSN ===== -->
+      <div class="tab-pane" id="tabVsn">
+        <div class="filter-bar">
+          <input type="search" id="searchVsn" placeholder="🔍  Rechercher un engin…" style="min-width:200px">
+          <button class="btn btn-amber btn-sm" id="btnAddVsn" style="margin-left:auto">+ Ajouter un engin</button>
+        </div>
+        <div class="vsn-grid" id="vsnGrid"><p class="text-muted text-small">Chargement…</p></div>
+      </div>
+
+      <!-- ===== COMMANDES ===== -->
+      <div class="tab-pane" id="tabCommandes">
+        <div class="filter-bar">
+          <select id="filterCmdStatus">
+            <option value="">Tous les statuts</option>
+            <option value="en_cours">En cours</option>
+            <option value="livree">Livrée</option>
+            <option value="annulee">Annulée</option>
+          </select>
+          <button class="btn btn-amber btn-sm" id="btnAddCommande" style="margin-left:auto">+ Nouvelle commande</button>
+        </div>
+        <div class="card" id="commandesCard">
+          <div id="commandesList"><p class="text-muted text-small">Chargement…</p></div>
+        </div>
+      </div>
+
+      <!-- ===== CONTRÔLE EPI ===== -->
+      <div class="tab-pane" id="tabEpi">
+        <div class="filter-bar">
+          <input type="search" id="searchEpiCtrl" placeholder="🔍  Rechercher…" style="min-width:200px">
+          <button class="btn btn-amber btn-sm" id="btnAddFicheCtrl" style="margin-left:auto">+ Nouvelle fiche de contrôle</button>
+        </div>
+        <div id="ficheCtrlList"><p class="text-muted text-small">Chargement…</p></div>
+      </div>
+
+      <!-- ===== DEMANDES EPI ===== -->
+      <div class="tab-pane" id="tabDemandes">
+        <div class="filter-bar">
+          <button class="btn btn-amber btn-sm" id="btnAddDemande">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Faire une demande
+          </button>
+          <span class="text-muted text-small" style="margin-left:auto" id="demandesCount"></span>
+        </div>
+        <div id="demandesList"><p class="text-muted text-small">Chargement…</p></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ====== MODALES ====== -->
+
+  <!-- Stock article -->
+  <div class="modal-overlay" id="modalStock">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header">
+        <span class="modal-title" id="modalStockTitle">Ajouter un article</span>
+        <button class="modal-close" onclick="closeModal('modalStock')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>Désignation *</label><input type="text" id="sDesig" placeholder="Ex: Tenue semi-étanche"></div>
+          <div class="field"><label>Taille / Pointure</label><input type="text" id="sTaille" placeholder="M, L, XL…"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Catégorie</label>
+            <select id="sCat"><option value="SAL SAV">SAL SAV</option><option value="SEV">SEV</option><option value="CEN">CEN</option><option value="Divers">Divers</option></select>
+          </div>
+          <div class="field"><label>Quantité en stock *</label><input type="number" id="sQty" min="0" placeholder="0"></div>
+          <div class="field"><label>Stock minimum</label><input type="number" id="sMini" min="0" placeholder="0"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Date de péremption</label><input type="date" id="sPerem"></div>
+          <div class="field" style="flex:2"><label>Notes</label><input type="text" id="sNotes" placeholder="Remarques…"></div>
+        </div>
+        <div id="stockErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalStock')">Annuler</button>
+        <button class="btn btn-danger btn-sm" id="btnDeleteStock" style="margin-right:auto;display:none">Supprimer</button>
+        <button class="btn btn-navy" id="btnSaveStock">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Distribution stock (déduire) -->
+  <div class="modal-overlay" id="modalDistrib">
+    <div class="modal" style="max-width:460px">
+      <div class="modal-header">
+        <span class="modal-title">Distribuer — <span id="distribDesig"></span></span>
+        <button class="modal-close" onclick="closeModal('modalDistrib')">×</button>
+      </div>
+      <div class="modal-body">
+        <p class="text-muted text-small mb-16">La distribution mettra à jour le stock automatiquement et enregistrera l'EPI dans la fiche de l'agent.</p>
+        <div class="form-row">
+          <div class="field"><label>Agent bénéficiaire</label>
+            <select id="distribAgent"><option value="">— Sélectionner —</option></select>
+          </div>
+          <div class="field"><label>Quantité à distribuer</label>
+            <input type="number" id="distribQty" min="1" value="1">
+          </div>
+        </div>
+        <p class="text-muted text-small mt-16">Stock actuel : <strong id="distribStockActuel">—</strong></p>
+        <div id="distribErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalDistrib')">Annuler</button>
+        <button class="btn btn-navy" id="btnDoDistrib">Distribuer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VSN -->
+  <div class="modal-overlay" id="modalVsn">
+    <div class="modal" style="max-width:560px">
+      <div class="modal-header">
+        <span class="modal-title" id="modalVsnTitle">Ajouter un engin</span>
+        <button class="modal-close" onclick="closeModal('modalVsn')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>Nom de l'engin *</label><input type="text" id="vNom" placeholder="Ex: VSN01 — ZODIAC PRO"></div>
+          <div class="field"><label>Type</label>
+            <select id="vType"><option>VSN</option><option>Pneumatique</option><option>Rigide</option><option>Hydrospeed</option><option>Autre</option></select>
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Immatriculation</label><input type="text" id="vImmat" placeholder="12345 T 31"></div>
+          <div class="field"><label>Année</label><input type="number" id="vAnnee" placeholder="2020" min="1990" max="2099"></div>
+          <div class="field"><label>Statut</label>
+            <select id="vStatut"><option value="operationnel">Opérationnel</option><option value="maintenance">Maintenance</option><option value="hors_service">Hors service</option></select>
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Moteur</label><input type="text" id="vMoteur" placeholder="Honda 60cv"></div>
+          <div class="field"><label>Prochaine révision</label><input type="date" id="vRevision"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>CIS responsable</label><input type="text" id="vCis" placeholder="LOUGNON"></div>
+          <div class="field" style="flex:2"><label>Notes</label><input type="text" id="vNotes" placeholder="Remarques…"></div>
+        </div>
+        <div id="vsnErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalVsn')">Annuler</button>
+        <button class="btn btn-danger btn-sm" id="btnDeleteVsn" style="margin-right:auto;display:none">Supprimer</button>
+        <button class="btn btn-navy" id="btnSaveVsn">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Commande -->
+  <div class="modal-overlay" id="modalCommande">
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <span class="modal-title" id="modalCmdTitle">Nouvelle commande</span>
+        <button class="modal-close" onclick="closeModal('modalCommande')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>Désignation *</label><input type="text" id="cDesig" placeholder="Gilets SAV L/XL x5"></div>
+          <div class="field"><label>Quantité</label><input type="number" id="cQty" min="1" value="1"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Fournisseur</label><input type="text" id="cFourn" placeholder="Rédac, Seyntex…"></div>
+          <div class="field"><label>Date de commande</label><input type="date" id="cDate"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Livraison prévue</label><input type="date" id="cDateLiv"></div>
+          <div class="field"><label>Statut</label>
+            <select id="cStatut"><option value="en_cours">En cours</option><option value="livree">Livrée</option><option value="annulee">Annulée</option></select>
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Notes / N° de commande</label><input type="text" id="cNotes" placeholder="Ref, remarques…"></div>
+        </div>
+        <div id="cmdErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalCommande')">Annuler</button>
+        <button class="btn btn-danger btn-sm" id="btnDeleteCmd" style="margin-right:auto;display:none">Supprimer</button>
+        <button class="btn btn-navy" id="btnSaveCmd">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Fiche contrôle EPI -->
+  <div class="modal-overlay" id="modalFicheCtrl">
+    <div class="modal" style="max-width:540px">
+      <div class="modal-header">
+        <span class="modal-title" id="modalFicheCtrlTitle">Nouvelle fiche de contrôle</span>
+        <button class="modal-close" onclick="closeModal('modalFicheCtrl')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>EPI contrôlé *</label><input type="text" id="fcEpi" placeholder="Tenue néoprène, Gilet…"></div>
+          <div class="field"><label>Date du contrôle *</label><input type="date" id="fcDate"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Contrôleur</label><input type="text" id="fcControleur" placeholder="Nom de l'agent"></div>
+          <div class="field"><label>Résultat</label>
+            <select id="fcResultat"><option value="conforme">Conforme</option><option value="a_surveiller">À surveiller</option><option value="non_conforme">Non conforme</option></select>
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Prochaine échéance</label><input type="date" id="fcEcheance"></div>
+          <div class="field" style="flex:2"><label>Observations</label><input type="text" id="fcObs" placeholder="Remarques…"></div>
+        </div>
+        <div id="fcErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalFicheCtrl')">Annuler</button>
+        <button class="btn btn-danger btn-sm" id="btnDeleteFc" style="margin-right:auto;display:none">Supprimer</button>
+        <button class="btn btn-navy" id="btnSaveFc">Enregistrer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Demande remplacement EPI -->
+  <div class="modal-overlay" id="modalDemande">
+    <div class="modal" style="max-width:500px">
+      <div class="modal-header">
+        <span class="modal-title">Demande de remplacement EPI</span>
+        <button class="modal-close" onclick="closeModal('modalDemande')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="field" style="flex:2"><label>Matériel à remplacer *</label><input type="text" id="dMateriel" placeholder="Ex: Gants sav kevlar XL"></div>
+          <div class="field"><label>Taille / Ref</label><input type="text" id="dTaille" placeholder="XL…"></div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Raison *</label>
+            <select id="dRaison"><option value="usure">Usure normale</option><option value="perte">Perte</option><option value="degradation">Dégradation</option><option value="peremption">Péremption</option><option value="autre">Autre</option></select>
+          </div>
+        </div>
+        <div class="form-row mt-16">
+          <div class="field"><label>Commentaire</label><input type="text" id="dComment" placeholder="Précisions…"></div>
+        </div>
+        <div id="dErr" class="error-msg mt-16" style="display:none"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalDemande')">Annuler</button>
+        <button class="btn btn-navy" id="btnSaveDemande">Envoyer la demande</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Import initial stock -->
+  <div class="modal-overlay" id="modalImportStock">
+    <div class="modal" style="max-width:480px">
+      <div class="modal-header">
+        <span class="modal-title">Import initial — 145 articles</span>
+        <button class="modal-close" onclick="closeModal('modalImportStock')">×</button>
+      </div>
+      <div class="modal-body">
+        <p style="font-size:.9rem;color:var(--gray-600);line-height:1.7;margin-bottom:16px">Importe les <strong>145 références matériel</strong> depuis votre fichier Excel dans Firestore.<br>Les doublons (même désignation + taille) sont ignorés.</p>
+        <div id="importStockProgress" style="display:none">
+          <div style="background:var(--gray-100);border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px"><div id="importStockBar" style="height:100%;background:var(--blue);width:0%;transition:width .2s"></div></div>
+          <p id="importStockStatus" class="text-muted text-small"></p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-outline" onclick="closeModal('modalImportStock')">Annuler</button>
+        <button class="btn btn-navy" id="btnDoImportStock">Lancer l'import</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import {
+      requireAuth, can, toast, openModal, closeModal,
+      db, collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc,
+      query, where, orderBy, serverTimestamp
+    } from "../js/auth.js";
+    import { setDoc, writeBatch } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    window.closeModal = closeModal;
+
+    // ── Données Excel pré-chargées (145 articles)
+    const STOCK_INITIAL = [{"designation":"2 detendeurs helix pro complets","taille":null,"quantite":6,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Valise protection détendeurs","taille":null,"quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"tour de cou","taille":null,"quantite":0,"stockMini":10,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"S.S.G.","taille":"S","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"S.S.G.","taille":"M","quantite":2,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"S.S.G.","taille":"L","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"S.S.G.","taille":"XL","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"flash light","taille":null,"quantite":25,"stockMini":10,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"lampe de secours -2000 lumens","taille":null,"quantite":1,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"S","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"M","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"ML","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"L","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"XL","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue semi-étanche","taille":"XXL","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ceinture de plomb","taille":null,"quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ceinture de plomb (godets)","taille":"M","quantite":5,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ceinture de plomb (godets)","taille":"L","quantite":3,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"plombs x 8 kg","taille":null,"quantite":6,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Poignard cisaille","taille":null,"quantite":2,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Compas","taille":null,"quantite":1,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Profondimètre électronique","taille":null,"quantite":6,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Montre de plongée","taille":null,"quantite":3,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Bouée de paliers","taille":null,"quantite":0,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"spirale leash accessoires","taille":null,"quantite":2,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Accroche flexible","taille":null,"quantite":25,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Mousqueton à targette double","taille":null,"quantite":2,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Shaker","taille":null,"quantite":20,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ardoise sous marine","taille":null,"quantite":12,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Protège embout","taille":null,"quantite":0,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"gants semi etanche","taille":"S","quantite":4,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"gants semi etanche","taille":"M","quantite":15,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"gants semi etanche","taille":"L","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"gants semi etanche","taille":"XL","quantite":26,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"gants semi etanche","taille":"XXL","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tables opération MT","taille":null,"quantite":12,"stockMini":8,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Touret devidoir","taille":null,"quantite":5,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ardoise avant bras","taille":null,"quantite":20,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ordinateur de plongée","taille":null,"quantite":0,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ordinateur de plongée","taille":null,"quantite":5,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Casques SAV ( SH plus)","taille":"S/M","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Casques SAV ( SH plus)","taille":"L/XL","quantite":11,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"XS","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"S","quantite":5,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"M (41)","quantite":14,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"L (42-43)","quantite":11,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"XL (44-45)","quantite":16,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons botillons","taille":"XXL (46-47)","quantite":12,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"XS (36-37)","quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"S (38-39)","quantite":1,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"M (40-41)","quantite":14,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"L (42-43)","quantite":22,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"XL (44-45)","quantite":12,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussons chaussettes sav","taille":"XXL (46-47)","quantite":11,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"3.5","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"4.5","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"5.5","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"6,5 (39 2/3)","quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"7,5 (41)","quantite":1,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"8,5 (42 2/3)","quantite":5,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"9,5 (44)","quantite":10,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"10","quantite":2,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"10,5 (45 1/3)","quantite":6,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"11","quantite":1,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"11,5 (46 2/3)","quantite":3,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"12","quantite":1,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Chaussures sav","taille":"12,5 (48)","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Cintre multiusage","taille":null,"quantite":12,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Coupe drisse SAV","taille":null,"quantite":22,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Couteau de sauvetage aquatique","taille":null,"quantite":0,"stockMini":8,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"XS (T6)","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"S (T7)","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"M (T8)","quantite":6,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"L (T9)","quantite":16,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"XL (T10)","quantite":4,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants","taille":"XXL (T11)","quantite":1,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants manutention","taille":null,"quantite":6,"stockMini":10,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"S","quantite":4,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"M","quantite":7,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"L","quantite":13,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"XL","quantite":13,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"XXL","quantite":10,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gants sav kevlar","taille":"XXXL","quantite":4,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gilet victime","taille":null,"quantite":24,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Cartouche CO2","taille":null,"quantite":6,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gilets SAV","taille":"S/M","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Gilets SAV","taille":"L/XL","quantite":3,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Lampe frontale etanche SAV","taille":null,"quantite":10,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Lunettes sav","taille":null,"quantite":12,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Masque","taille":null,"quantite":12,"stockMini":8,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"mini strobe light","taille":null,"quantite":37,"stockMini":8,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Mousquetons nomad auto","taille":null,"quantite":17,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Mousquetons vis","taille":null,"quantite":12,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes","taille":"XS (34-37)","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes","taille":"S (37-41)","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes","taille":"R (41-44)","quantite":6,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes","taille":"XL (44-48)","quantite":1,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sangles de palme","taille":null,"quantite":18,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes Apeks","taille":"Medium","quantite":4,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes Apeks","taille":"Large","quantite":4,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Palmes Apeks","taille":"Super","quantite":1,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"parka","taille":"S","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"parka","taille":"M","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"parka","taille":"L","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"parka","taille":"XL","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"parka","taille":"XXL","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"peignoir / poncho","taille":null,"quantite":8,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sac a lancer","taille":null,"quantite":13,"stockMini":4,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sac de plongée n°1","taille":null,"quantite":2,"stockMini":3,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sifflet","taille":null,"quantite":16,"stockMini":6,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sur tenue neoprene","taille":"S","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sur tenue neoprene","taille":"M","quantite":9,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sur tenue neoprene","taille":"L","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sur tenue neoprene","taille":"XL","quantite":9,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sur tenue neoprene","taille":"XXL","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"XS","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"S","quantite":5,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"M","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"ML","quantite":0,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"L","quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"XL","quantite":6,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tenue néoprène humide","taille":"XXL","quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Topstar rouge","taille":null,"quantite":1,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung femme","taille":"S","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung","taille":"S","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung","taille":"M","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung","taille":"L","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung","taille":"XL","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Top néoprene Aqualung","taille":"XXL","quantite":0,"stockMini":null,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Tuba","taille":null,"quantite":1,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Rescue Tube","taille":null,"quantite":5,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Poulie","taille":null,"quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Girgri","taille":null,"quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Croll","taille":null,"quantite":10,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Mousqueton poulie","taille":null,"quantite":5,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sangle bleue","taille":null,"quantite":10,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Sangle rouge","taille":null,"quantite":10,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Bonnet","taille":null,"quantite":12,"stockMini":2,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Hydrospeed","taille":null,"quantite":2,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Lampe VTL 4200","taille":null,"quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Ancre champignon","taille":null,"quantite":1,"stockMini":1,"categorie":"SAL SAV","datePeremption":null,"notes":""},{"designation":"Salopette","taille":null,"quantite":1,"stockMini":0,"categorie":"SAL SAV","datePeremption":null,"notes":""}];
+
+    let allStock=[], allVsn=[], allCommandes=[], allFichesCtrl=[], allDemandes=[], allAgents=[];
+    let editingStock=null, editingVsn=null, editingCmd=null, editingFc=null, distribItem=null;
+    let currentUser=null;
+
+    // ─── Helpers statut stock ───
+    function stockStatus(qty, mini) {
+      if (mini === null || mini === undefined) return 'ok';
+      if (qty === 0) return 'critique';
+      if (qty < mini) return 'alerte';
+      return 'ok';
+    }
+    function stockClass(status) {
+      return {ok:'qty-ok', alerte:'qty-warn', critique:'qty-crit'}[status]||'';
+    }
+    function stockFill(status) {
+      return {ok:'fill-ok', alerte:'fill-warn', critique:'fill-crit'}[status]||'fill-ok';
+    }
+    function stockPct(qty, mini) {
+      if (!mini) return 100;
+      return Math.min(100, Math.round((qty/mini)*100));
+    }
+    function fmtDate(d) {
+      if (!d) return '—';
+      return new Date(d+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+    }
+
+    requireAuth(async (profile) => {
+      currentUser = profile;
+      if (!can('technique.manage') && !can('technique.requestReplacement')) { window.location.href='dashboard.html'; return; }
+      if (!can('users.manage')) document.getElementById('adminNavSection').style.display='none';
+      setupTabs();
+      await Promise.all([loadStock(), loadVsn(), loadCommandes(), loadFichesCtrl(), loadDemandes(), loadAgents()]);
+      setupStockActions();
+      setupVsnActions();
+      setupCommandeActions();
+      setupFicheCtrlActions();
+      setupDemandeActions();
+      setupImportStock();
+    });
+
+    // ─── ONGLETS ───
+    function setupTabs() {
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+          document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+          btn.classList.add('active');
+          document.getElementById('tab'+btn.dataset.tab.charAt(0).toUpperCase()+btn.dataset.tab.slice(1)).classList.add('active');
+        });
+      });
+    }
+
+    // ══════════════════════════════════
+    //  STOCK
+    // ══════════════════════════════════
+    async function loadStock() {
+      const snap = await getDocs(query(collection(db,'stock'), orderBy('designation')));
+      allStock=[];
+      snap.forEach(d=>allStock.push({id:d.id,...d.data()}));
+      applyStockFilters();
+    }
+
+    function applyStockFilters() {
+      const q  = document.getElementById('searchStock').value.toLowerCase();
+      const st = document.getElementById('filterStockStatus').value;
+      const ct = document.getElementById('filterStockCat').value;
+      const filtered = allStock.filter(s => {
+        const label = `${s.designation||''} ${s.taille||''}`.toLowerCase();
+        if (q && !label.includes(q)) return false;
+        if (ct && s.categorie!==ct) return false;
+        if (st) {
+          const status = stockStatus(s.quantite, s.stockMini);
+          if (status !== st) return false;
+        }
+        return true;
+      });
+      document.getElementById('stockCount').textContent = `${filtered.length} article${filtered.length>1?'s':''}`;
+      renderStock(filtered);
+    }
+
+    function renderStock(items) {
+      const tbody = document.getElementById('stockBody');
+      if (!items.length) {
+        tbody.innerHTML=`<tr><td colspan="8" class="text-muted" style="padding:20px;text-align:center">Aucun article.${allStock.length===0?' Utilisez "Import initial" pour charger les 145 articles.':''}</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = items.map(s => {
+        const status = stockStatus(s.quantite, s.stockMini);
+        const pct    = stockPct(s.quantite, s.stockMini);
+        const statusBadge = {ok:'<span class="badge badge-ok">OK</span>', alerte:'<span class="badge badge-warn">Alerte</span>', critique:'<span class="badge badge-danger">Rupture</span>'}[status];
+        const perem = s.datePeremption ? fmtDate(s.datePeremption) : '—';
+        const peremCls = s.datePeremption && new Date(s.datePeremption) < new Date() ? 'color:var(--danger);font-weight:600' : '';
+        return `<tr>
+          <td style="font-weight:500">${s.designation}</td>
+          <td class="text-muted">${s.taille||'—'}</td>
+          <td><span class="badge badge-collab" style="font-size:.65rem">${s.categorie||'—'}</span></td>
+          <td>
+            <span class="${stockClass(status)}">${s.quantite??'—'}</span>
+            <div class="stock-bar"><div class="stock-fill ${stockFill(status)}" style="width:${pct}%"></div></div>
+          </td>
+          <td class="text-muted">${s.stockMini??'—'}</td>
+          <td>${statusBadge}</td>
+          <td style="${peremCls}">${perem}</td>
+          <td>
+            <div class="flex gap-8">
+              <button class="btn btn-sm btn-outline" onclick="openEditStock('${s.id}')">Modifier</button>
+              ${can('technique.manage') ? `<button class="btn btn-sm btn-blue" onclick="openDistrib('${s.id}')">Distribuer</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+      }).join('');
+    }
+
+    function setupStockActions() {
+      ['searchStock','filterStockStatus','filterStockCat'].forEach(id=>document.getElementById(id).addEventListener('input',applyStockFilters));
+      document.getElementById('btnAddStock').addEventListener('click',()=>{
+        editingStock=null;
+        document.getElementById('modalStockTitle').textContent='Ajouter un article';
+        document.getElementById('btnDeleteStock').style.display='none';
+        ['sDesig','sTaille','sQty','sMini','sNotes'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('sPerem').value='';
+        document.getElementById('sCat').value='SAL SAV';
+        document.getElementById('stockErr').style.display='none';
+        openModal('modalStock');
+      });
+      document.getElementById('btnSaveStock').addEventListener('click', saveStock);
+      document.getElementById('btnDeleteStock').addEventListener('click', deleteStock);
+    }
+
+    window.openEditStock = (id) => {
+      const s = allStock.find(x=>x.id===id); if(!s) return;
+      editingStock=id;
+      document.getElementById('modalStockTitle').textContent='Modifier l\'article';
+      document.getElementById('btnDeleteStock').style.display='inline-flex';
+      document.getElementById('sDesig').value=s.designation||'';
+      document.getElementById('sTaille').value=s.taille||'';
+      document.getElementById('sCat').value=s.categorie||'SAL SAV';
+      document.getElementById('sQty').value=s.quantite??'';
+      document.getElementById('sMini').value=s.stockMini??'';
+      document.getElementById('sPerem').value=s.datePeremption||'';
+      document.getElementById('sNotes').value=s.notes||'';
+      document.getElementById('stockErr').style.display='none';
+      openModal('modalStock');
+    };
+
+    async function saveStock() {
+      const err=document.getElementById('stockErr'); err.style.display='none';
+      const desig=document.getElementById('sDesig').value.trim();
+      const qty=parseInt(document.getElementById('sQty').value);
+      if(!desig||isNaN(qty)){err.textContent='Désignation et quantité requises.';err.style.display='block';return;}
+      const data={
+        designation:desig, taille:document.getElementById('sTaille').value.trim()||null,
+        categorie:document.getElementById('sCat').value, quantite:qty,
+        stockMini:document.getElementById('sMini').value!=='' ? parseInt(document.getElementById('sMini').value) : null,
+        datePeremption:document.getElementById('sPerem').value||null,
+        notes:document.getElementById('sNotes').value.trim(),
+        updatedAt:new Date().toISOString()
+      };
+      const btn=document.getElementById('btnSaveStock'); btn.disabled=true; btn.textContent='…';
+      try {
+        if(editingStock) await updateDoc(doc(db,'stock',editingStock),data);
+        else { data.createdAt=new Date().toISOString(); await addDoc(collection(db,'stock'),data); }
+        toast(editingStock?'Article mis à jour.':'Article ajouté.','success');
+        closeModal('modalStock'); await loadStock();
+      } catch(e){err.textContent=e.message;err.style.display='block';}
+      finally{btn.disabled=false;btn.textContent='Enregistrer';}
+    }
+
+    async function deleteStock() {
+      const s=allStock.find(x=>x.id===editingStock);
+      if(!confirm(`Supprimer "${s?.designation}" ?`)) return;
+      await deleteDoc(doc(db,'stock',editingStock));
+      toast('Article supprimé.','success'); closeModal('modalStock'); await loadStock();
+    }
+
+    // Distribution
+    window.openDistrib = async (id) => {
+      const s=allStock.find(x=>x.id===id); if(!s) return;
+      distribItem=s;
+      document.getElementById('distribDesig').textContent=s.designation+(s.taille?' ('+s.taille+')':'');
+      document.getElementById('distribStockActuel').textContent=s.quantite;
+      document.getElementById('distribQty').value=1;
+      document.getElementById('distribErr').style.display='none';
+      // Peupler la liste des agents
+      const sel=document.getElementById('distribAgent');
+      sel.innerHTML='<option value="">— Sélectionner —</option>';
+      allAgents.sort((a,b)=>a.nom.localeCompare(b.nom)).forEach(a=>{
+        sel.innerHTML+=`<option value="${a.id}">${a.nom} ${a.prenom} (${a.cis})</option>`;
+      });
+      openModal('modalDistrib');
+    };
+
+    document.getElementById('btnDoDistrib')?.addEventListener('click', async()=>{
+      if(!distribItem) return;
+      const agentId=document.getElementById('distribAgent').value;
+      const qty=parseInt(document.getElementById('distribQty').value);
+      const errD=document.getElementById('distribErr'); errD.style.display='none';
+      if(!agentId){errD.textContent='Sélectionnez un agent.';errD.style.display='block';return;}
+      if(!qty||qty<1){errD.textContent='Quantité invalide.';errD.style.display='block';return;}
+      if(qty>distribItem.quantite){errD.textContent=`Stock insuffisant (${distribItem.quantite} disponible(s)).`;errD.style.display='block';return;}
+      const btn=document.getElementById('btnDoDistrib'); btn.disabled=true; btn.textContent='…';
+      try {
+        // Déduire du stock
+        await updateDoc(doc(db,'stock',distribItem.id),{quantite:distribItem.quantite-qty, updatedAt:new Date().toISOString()});
+        // Ajouter l'EPI dans la fiche agent
+        const agentSnap=await getDoc(doc(db,'agents',agentId));
+        if(agentSnap.exists()){
+          const agentData=agentSnap.data();
+          const epiList=agentData.epi||[];
+          epiList.push({designation:distribItem.designation,taille:distribItem.taille||'',dateAttribution:new Date().toISOString().split('T')[0]});
+          await updateDoc(doc(db,'agents',agentId),{epi:epiList});
+        }
+        toast('Distribution effectuée. Stock mis à jour.','success');
+        closeModal('modalDistrib'); await loadStock();
+      } catch(e){errD.textContent=e.message;errD.style.display='block';}
+      finally{btn.disabled=false;btn.textContent='Distribuer';}
+    });
+
+    // ══════════════════════════════════
+    //  VSN / ENGINS
+    // ══════════════════════════════════
+    async function loadVsn() {
+      const snap=await getDocs(query(collection(db,'engins'),orderBy('nom')));
+      allVsn=[]; snap.forEach(d=>allVsn.push({id:d.id,...d.data()}));
+      renderVsn(allVsn);
+    }
+
+    function renderVsn(items) {
+      const grid=document.getElementById('vsnGrid');
+      if(!items.length){grid.innerHTML='<p class="text-muted text-small">Aucun engin enregistré. Cliquez sur "+ Ajouter" pour commencer.</p>';return;}
+      const STATUT_BADGE={operationnel:'badge-ok',maintenance:'badge-warn',hors_service:'badge-danger'};
+      const STATUT_LABEL={operationnel:'Opérationnel',maintenance:'En maintenance',hors_service:'Hors service'};
+      const TYPE_ICON={VSN:'⛵',Pneumatique:'🚤',Rigide:'🛥️',Hydrospeed:'🏊',Autre:'⚓'};
+      grid.innerHTML=items.map(v=>`
+        <div class="vsn-card">
+          <div class="vsn-header">
+            <div>
+              <div class="vsn-name">${TYPE_ICON[v.type]||'⚓'} ${v.nom}</div>
+              <div class="vsn-detail">${v.type||''} ${v.annee?'· '+v.annee:''}</div>
+            </div>
+            <span class="badge ${STATUT_BADGE[v.statut]||'badge-collab'}">${STATUT_LABEL[v.statut]||v.statut}</span>
+          </div>
+          ${v.immatriculation?`<div class="vsn-field"><span class="vsn-label">Immatriculation</span><span class="vsn-val">${v.immatriculation}</span></div>`:''}
+          ${v.moteur?`<div class="vsn-field"><span class="vsn-label">Moteur</span><span class="vsn-val">${v.moteur}</span></div>`:''}
+          ${v.cis?`<div class="vsn-field"><span class="vsn-label">CIS responsable</span><span class="vsn-val">${v.cis}</span></div>`:''}
+          ${v.revision?`<div class="vsn-field"><span class="vsn-label">Prochaine révision</span><span class="vsn-val" style="${new Date(v.revision)<new Date()?'color:var(--danger)':''}">${fmtDate(v.revision)}</span></div>`:''}
+          ${v.notes?`<div class="vsn-field"><span class="vsn-label">Notes</span><span class="vsn-val">${v.notes}</span></div>`:''}
+          ${can('technique.manage')?`<div style="margin-top:12px"><button class="btn btn-sm btn-outline w-full" onclick="openEditVsn('${v.id}')">Modifier</button></div>`:''}
+        </div>`).join('');
+    }
+
+    function setupVsnActions() {
+      document.getElementById('searchVsn').addEventListener('input',function(){
+        const q=this.value.toLowerCase();
+        renderVsn(allVsn.filter(v=>`${v.nom} ${v.type||''} ${v.cis||''}`.toLowerCase().includes(q)));
+      });
+      document.getElementById('btnAddVsn').addEventListener('click',()=>{
+        editingVsn=null;
+        document.getElementById('modalVsnTitle').textContent='Ajouter un engin';
+        document.getElementById('btnDeleteVsn').style.display='none';
+        ['vNom','vImmat','vAnnee','vMoteur','vCis','vNotes'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('vType').value='VSN';
+        document.getElementById('vStatut').value='operationnel';
+        document.getElementById('vRevision').value='';
+        document.getElementById('vsnErr').style.display='none';
+        openModal('modalVsn');
+      });
+      document.getElementById('btnSaveVsn').addEventListener('click',saveVsn);
+      document.getElementById('btnDeleteVsn').addEventListener('click',deleteVsn);
+    }
+
+    window.openEditVsn=(id)=>{
+      const v=allVsn.find(x=>x.id===id); if(!v)return;
+      editingVsn=id;
+      document.getElementById('modalVsnTitle').textContent='Modifier l\'engin';
+      document.getElementById('btnDeleteVsn').style.display='inline-flex';
+      document.getElementById('vNom').value=v.nom||''; document.getElementById('vType').value=v.type||'VSN';
+      document.getElementById('vImmat').value=v.immatriculation||''; document.getElementById('vAnnee').value=v.annee||'';
+      document.getElementById('vStatut').value=v.statut||'operationnel'; document.getElementById('vMoteur').value=v.moteur||'';
+      document.getElementById('vRevision').value=v.revision||''; document.getElementById('vCis').value=v.cis||'';
+      document.getElementById('vNotes').value=v.notes||''; document.getElementById('vsnErr').style.display='none';
+      openModal('modalVsn');
+    };
+
+    async function saveVsn(){
+      const err=document.getElementById('vsnErr'); err.style.display='none';
+      const nom=document.getElementById('vNom').value.trim();
+      if(!nom){err.textContent='Le nom est requis.';err.style.display='block';return;}
+      const data={nom, type:document.getElementById('vType').value, immatriculation:document.getElementById('vImmat').value.trim(),
+        annee:document.getElementById('vAnnee').value||null, statut:document.getElementById('vStatut').value,
+        moteur:document.getElementById('vMoteur').value.trim(), revision:document.getElementById('vRevision').value||null,
+        cis:document.getElementById('vCis').value.trim(), notes:document.getElementById('vNotes').value.trim(),
+        updatedAt:new Date().toISOString()};
+      const btn=document.getElementById('btnSaveVsn'); btn.disabled=true; btn.textContent='…';
+      try{
+        if(editingVsn) await updateDoc(doc(db,'engins',editingVsn),data);
+        else {data.createdAt=new Date().toISOString(); await addDoc(collection(db,'engins'),data);}
+        toast('Engin enregistré.','success'); closeModal('modalVsn'); await loadVsn();
+      }catch(e){err.textContent=e.message;err.style.display='block';}
+      finally{btn.disabled=false;btn.textContent='Enregistrer';}
+    }
+
+    async function deleteVsn(){
+      const v=allVsn.find(x=>x.id===editingVsn);
+      if(!confirm(`Supprimer ${v?.nom} ?`)) return;
+      await deleteDoc(doc(db,'engins',editingVsn));
+      toast('Engin supprimé.','success'); closeModal('modalVsn'); await loadVsn();
+    }
+
+    // ══════════════════════════════════
+    //  COMMANDES
+    // ══════════════════════════════════
+    async function loadCommandes(){
+      const snap=await getDocs(query(collection(db,'commandes'),orderBy('dateCommande','desc').catch?orderBy('dateCommande'):orderBy('createdAt','desc')));
+      allCommandes=[]; snap.forEach(d=>allCommandes.push({id:d.id,...d.data()}));
+      applyCommandeFilter();
+    }
+    // fallback tri
+    async function loadCommandes(){
+      try {
+        const snap=await getDocs(collection(db,'commandes'));
+        allCommandes=[];
+        snap.forEach(d=>allCommandes.push({id:d.id,...d.data()}));
+        allCommandes.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+        applyCommandeFilter();
+      } catch(e){ document.getElementById('commandesList').innerHTML='<p class="text-muted text-small">Erreur de chargement.</p>'; }
+    }
+
+    function applyCommandeFilter(){
+      const st=document.getElementById('filterCmdStatus').value;
+      const filtered=allCommandes.filter(c=>!st||c.statut===st);
+      renderCommandes(filtered);
+    }
+
+    function renderCommandes(items){
+      const container=document.getElementById('commandesList');
+      if(!items.length){container.innerHTML='<p class="text-muted text-small">Aucune commande.</p>';return;}
+      const DOT={en_cours:'background:var(--amber)', livree:'background:var(--success)', annulee:'background:var(--gray-200)'};
+      const LABEL={en_cours:'En cours',livree:'Livrée',annulee:'Annulée'};
+      const BADGE={en_cours:'badge-warn',livree:'badge-ok',annulee:'badge-user'};
+      container.innerHTML=items.map(c=>`
+        <div class="cmd-row">
+          <div class="cmd-dot" style="${DOT[c.statut]||DOT.en_cours}"></div>
+          <div class="cmd-info">
+            <div class="cmd-title">${c.designation} ${c.quantite?'× '+c.quantite:''}</div>
+            <div class="cmd-sub">
+              ${c.fournisseur?c.fournisseur+' · ':''}
+              Commandé : ${fmtDate(c.dateCommande)} 
+              ${c.dateLivraison?' · Livraison prévue : '+fmtDate(c.dateLivraison):''}
+              ${c.notes?' · '+c.notes:''}
+            </div>
+          </div>
+          <div class="flex gap-8 items-center">
+            <span class="badge ${BADGE[c.statut]||'badge-user'}">${LABEL[c.statut]||c.statut}</span>
+            ${can('technique.manage')?`<button class="btn btn-sm btn-outline" onclick="openEditCmd('${c.id}')">Modifier</button>`:''}
+          </div>
+        </div>`).join('');
+    }
+
+    function setupCommandeActions(){
+      document.getElementById('filterCmdStatus').addEventListener('change',applyCommandeFilter);
+      document.getElementById('btnAddCommande').addEventListener('click',()=>{
+        editingCmd=null;
+        document.getElementById('modalCmdTitle').textContent='Nouvelle commande';
+        document.getElementById('btnDeleteCmd').style.display='none';
+        ['cDesig','cFourn','cNotes'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('cQty').value=1; document.getElementById('cStatut').value='en_cours';
+        document.getElementById('cDate').value=new Date().toISOString().split('T')[0];
+        document.getElementById('cDateLiv').value=''; document.getElementById('cmdErr').style.display='none';
+        openModal('modalCommande');
+      });
+      document.getElementById('btnSaveCmd').addEventListener('click',saveCmd);
+      document.getElementById('btnDeleteCmd').addEventListener('click',deleteCmd);
+    }
+
+    window.openEditCmd=(id)=>{
+      const c=allCommandes.find(x=>x.id===id); if(!c)return;
+      editingCmd=id;
+      document.getElementById('modalCmdTitle').textContent='Modifier la commande';
+      document.getElementById('btnDeleteCmd').style.display='inline-flex';
+      document.getElementById('cDesig').value=c.designation||''; document.getElementById('cQty').value=c.quantite||1;
+      document.getElementById('cFourn').value=c.fournisseur||''; document.getElementById('cDate').value=c.dateCommande||'';
+      document.getElementById('cDateLiv').value=c.dateLivraison||''; document.getElementById('cStatut').value=c.statut||'en_cours';
+      document.getElementById('cNotes').value=c.notes||''; document.getElementById('cmdErr').style.display='none';
+      openModal('modalCommande');
+    };
+
+    async function saveCmd(){
+      const err=document.getElementById('cmdErr'); err.style.display='none';
+      const desig=document.getElementById('cDesig').value.trim();
+      if(!desig){err.textContent='La désignation est requise.';err.style.display='block';return;}
+      const data={designation:desig, quantite:parseInt(document.getElementById('cQty').value)||1,
+        fournisseur:document.getElementById('cFourn').value.trim(), dateCommande:document.getElementById('cDate').value||null,
+        dateLivraison:document.getElementById('cDateLiv').value||null, statut:document.getElementById('cStatut').value,
+        notes:document.getElementById('cNotes').value.trim(), updatedAt:new Date().toISOString()};
+      const btn=document.getElementById('btnSaveCmd'); btn.disabled=true; btn.textContent='…';
+      try{
+        if(editingCmd) await updateDoc(doc(db,'commandes',editingCmd),data);
+        else {data.createdAt=new Date().toISOString(); await addDoc(collection(db,'commandes'),data);}
+        toast('Commande enregistrée.','success'); closeModal('modalCommande'); await loadCommandes();
+      }catch(e){err.textContent=e.message;err.style.display='block';}
+      finally{btn.disabled=false;btn.textContent='Enregistrer';}
+    }
+    async function deleteCmd(){
+      if(!confirm('Supprimer cette commande ?')) return;
+      await deleteDoc(doc(db,'commandes',editingCmd));
+      toast('Commande supprimée.','success'); closeModal('modalCommande'); await loadCommandes();
+    }
+
+    // ══════════════════════════════════
+    //  FICHES DE CONTRÔLE EPI
+    // ══════════════════════════════════
+    async function loadFichesCtrl(){
+      const snap=await getDocs(collection(db,'ficheControle'));
+      allFichesCtrl=[]; snap.forEach(d=>allFichesCtrl.push({id:d.id,...d.data()}));
+      allFichesCtrl.sort((a,b)=>(b.dateControle||'').localeCompare(a.dateControle||''));
+      renderFichesCtrl(allFichesCtrl);
+    }
+
+    function renderFichesCtrl(items){
+      const container=document.getElementById('ficheCtrlList');
+      if(!items.length){container.innerHTML='<p class="text-muted text-small">Aucune fiche de contrôle.</p>';return;}
+      const RES_BADGE={conforme:'badge-ok',a_surveiller:'badge-warn',non_conforme:'badge-danger'};
+      const RES_LABEL={conforme:'Conforme',a_surveiller:'À surveiller',non_conforme:'Non conforme'};
+      container.innerHTML=items.map(f=>`
+        <div class="fiche-ctrl">
+          <div class="fiche-ctrl-info">
+            <div class="fiche-ctrl-title">${f.epi}</div>
+            <div class="fiche-ctrl-sub">
+              Contrôlé le ${fmtDate(f.dateControle)} par ${f.controleur||'—'}
+              ${f.echeance?' · Prochaine échéance : <strong>'+fmtDate(f.echeance)+'</strong>':''}
+              ${f.observations?' · '+f.observations:''}
+            </div>
+          </div>
+          <div class="flex items-center gap-8">
+            <span class="badge ${RES_BADGE[f.resultat]||'badge-user'}">${RES_LABEL[f.resultat]||f.resultat}</span>
+            ${can('technique.manage')?`<button class="btn btn-sm btn-outline" onclick="openEditFc('${f.id}')">Modifier</button>`:''}
+          </div>
+        </div>`).join('');
+    }
+
+    function setupFicheCtrlActions(){
+      document.getElementById('searchEpiCtrl').addEventListener('input',function(){
+        const q=this.value.toLowerCase();
+        renderFichesCtrl(allFichesCtrl.filter(f=>`${f.epi} ${f.controleur||''}`.toLowerCase().includes(q)));
+      });
+      document.getElementById('btnAddFicheCtrl').addEventListener('click',()=>{
+        editingFc=null;
+        document.getElementById('modalFicheCtrlTitle').textContent='Nouvelle fiche de contrôle';
+        document.getElementById('btnDeleteFc').style.display='none';
+        ['fcEpi','fcControleur','fcObs'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('fcDate').value=new Date().toISOString().split('T')[0];
+        document.getElementById('fcEcheance').value=''; document.getElementById('fcResultat').value='conforme';
+        document.getElementById('fcErr').style.display='none';
+        openModal('modalFicheCtrl');
+      });
+      document.getElementById('btnSaveFc').addEventListener('click',saveFc);
+      document.getElementById('btnDeleteFc').addEventListener('click',deleteFc);
+    }
+
+    window.openEditFc=(id)=>{
+      const f=allFichesCtrl.find(x=>x.id===id); if(!f)return;
+      editingFc=id;
+      document.getElementById('modalFicheCtrlTitle').textContent='Modifier la fiche';
+      document.getElementById('btnDeleteFc').style.display='inline-flex';
+      document.getElementById('fcEpi').value=f.epi||''; document.getElementById('fcDate').value=f.dateControle||'';
+      document.getElementById('fcControleur').value=f.controleur||''; document.getElementById('fcResultat').value=f.resultat||'conforme';
+      document.getElementById('fcEcheance').value=f.echeance||''; document.getElementById('fcObs').value=f.observations||'';
+      document.getElementById('fcErr').style.display='none';
+      openModal('modalFicheCtrl');
+    };
+
+    async function saveFc(){
+      const err=document.getElementById('fcErr'); err.style.display='none';
+      const epi=document.getElementById('fcEpi').value.trim(), date=document.getElementById('fcDate').value;
+      if(!epi||!date){err.textContent='EPI et date requis.';err.style.display='block';return;}
+      const data={epi, dateControle:date, controleur:document.getElementById('fcControleur').value.trim(),
+        resultat:document.getElementById('fcResultat').value, echeance:document.getElementById('fcEcheance').value||null,
+        observations:document.getElementById('fcObs').value.trim(), updatedAt:new Date().toISOString()};
+      const btn=document.getElementById('btnSaveFc'); btn.disabled=true; btn.textContent='…';
+      try{
+        if(editingFc) await updateDoc(doc(db,'ficheControle',editingFc),data);
+        else {data.createdAt=new Date().toISOString(); await addDoc(collection(db,'ficheControle'),data);}
+        toast('Fiche enregistrée.','success'); closeModal('modalFicheCtrl'); await loadFichesCtrl();
+      }catch(e){err.textContent=e.message;err.style.display='block';}
+      finally{btn.disabled=false;btn.textContent='Enregistrer';}
+    }
+    async function deleteFc(){
+      if(!confirm('Supprimer cette fiche de contrôle ?')) return;
+      await deleteDoc(doc(db,'ficheControle',editingFc));
+      toast('Fiche supprimée.','success'); closeModal('modalFicheCtrl'); await loadFichesCtrl();
+    }
+
+    // ══════════════════════════════════
+    //  DEMANDES EPI
+    // ══════════════════════════════════
+    async function loadDemandes(){
+      const snap=await getDocs(collection(db,'demandesEpi'));
+      allDemandes=[]; snap.forEach(d=>allDemandes.push({id:d.id,...d.data()}));
+      // Afficher uniquement en_attente + les traitées récentes
+      allDemandes.sort((a,b)=>(b.createdAt||'').localeCompare(a.createdAt||''));
+      const pending=allDemandes.filter(d=>d.statut==='en_attente');
+      const badge=document.getElementById('badgeDemandes');
+      if(pending.length){badge.textContent=pending.length;badge.style.display='inline';}
+      else badge.style.display='none';
+      document.getElementById('demandesCount').textContent=`${pending.length} demande${pending.length>1?'s':''} en attente`;
+      renderDemandes(allDemandes.filter(d=>d.statut==='en_attente'));
+    }
+
+    function renderDemandes(items){
+      const container=document.getElementById('demandesList');
+      if(!items.length){container.innerHTML='<p class="text-muted text-small">Aucune demande en attente.</p>';return;}
+      const RAISONS={usure:'Usure normale',perte:'Perte',degradation:'Dégradation',peremption:'Péremption',autre:'Autre'};
+      container.innerHTML=items.map(d=>`
+        <div class="demande-card">
+          <div style="width:38px;height:38px;background:rgba(232,160,32,.12);border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber-dark)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </div>
+          <div class="demande-info">
+            <div class="demande-materiel">${d.materiel} ${d.taille?'('+d.taille+')':''}</div>
+            <div class="demande-sub">
+              ${d.agentNom||d.userId||'Inconnu'} · ${RAISONS[d.raison]||d.raison}
+              ${d.commentaire?' · '+d.commentaire:''}
+              · <span class="text-muted">${d.createdAt?new Date(d.createdAt).toLocaleDateString('fr-FR'):''}</span>
+            </div>
+          </div>
+          <div class="demande-actions">
+            ${can('technique.approveRequest')||can('technique.manage')?`
+              <button class="btn btn-sm btn-blue" onclick="traiterDemande('${d.id}')">Traiter ✓</button>
+              <button class="btn btn-sm btn-outline" onclick="refuserDemande('${d.id}')">Refuser</button>
+            `:''}
+          </div>
+        </div>`).join('');
+    }
+
+    window.traiterDemande=async(id)=>{
+      await updateDoc(doc(db,'demandesEpi',id),{statut:'traitee',traiteLe:new Date().toISOString()});
+      toast('Demande marquée comme traitée.','success'); await loadDemandes();
+    };
+    window.refuserDemande=async(id)=>{
+      if(!confirm('Refuser et supprimer cette demande ?')) return;
+      await deleteDoc(doc(db,'demandesEpi',id));
+      toast('Demande refusée.','success'); await loadDemandes();
+    };
+
+    function setupDemandeActions(){
+      document.getElementById('btnAddDemande').addEventListener('click',()=>{
+        ['dMateriel','dTaille','dComment'].forEach(id=>document.getElementById(id).value='');
+        document.getElementById('dRaison').value='usure';
+        document.getElementById('dErr').style.display='none';
+        openModal('modalDemande');
+      });
+      document.getElementById('btnSaveDemande').addEventListener('click',async()=>{
+        const err=document.getElementById('dErr'); err.style.display='none';
+        const mat=document.getElementById('dMateriel').value.trim();
+        if(!mat){err.textContent='Le matériel est requis.';err.style.display='block';return;}
+        const btn=document.getElementById('btnSaveDemande'); btn.disabled=true; btn.textContent='…';
+        try{
+          await addDoc(collection(db,'demandesEpi'),{
+            materiel:mat, taille:document.getElementById('dTaille').value.trim(),
+            raison:document.getElementById('dRaison').value, commentaire:document.getElementById('dComment').value.trim(),
+            statut:'en_attente', userId:currentUser.uid,
+            agentNom:`${currentUser.nom||''} ${currentUser.prenom||''}`.trim()||currentUser.email,
+            createdAt:new Date().toISOString()
+          });
+          toast('Demande envoyée.','success'); closeModal('modalDemande'); await loadDemandes();
+        }catch(e){err.textContent=e.message;err.style.display='block';}
+        finally{btn.disabled=false;btn.textContent='Envoyer la demande';}
+      });
+    }
+
+    // ══════════════════════════════════
+    //  AGENTS (pour distribution)
+    // ══════════════════════════════════
+    async function loadAgents(){
+      const snap=await getDocs(collection(db,'agents'));
+      allAgents=[]; snap.forEach(d=>allAgents.push({id:d.id,...d.data()}));
+    }
+
+    // ══════════════════════════════════
+    //  IMPORT INITIAL STOCK
+    // ══════════════════════════════════
+    function setupImportStock(){
+      document.getElementById('btnImportStock').addEventListener('click',()=>openModal('modalImportStock'));
+      document.getElementById('btnDoImportStock').addEventListener('click',async()=>{
+        const btn=document.getElementById('btnDoImportStock');
+        const bar=document.getElementById('importStockBar');
+        const status=document.getElementById('importStockStatus');
+        document.getElementById('importStockProgress').style.display='block';
+        btn.disabled=true; btn.textContent='En cours…';
+        const existSnap=await getDocs(collection(db,'stock'));
+        const keys=new Set(); existSnap.forEach(d=>{const s=d.data();keys.add(`${s.designation}|${s.taille||''}`);});
+        let imported=0, skipped=0;
+        for(let i=0;i<STOCK_INITIAL.length;i++){
+          const s=STOCK_INITIAL[i];
+          const key=`${s.designation}|${s.taille||''}`;
+          if(!keys.has(key)){
+            await addDoc(collection(db,'stock'),{...s,createdAt:new Date().toISOString()});
+            imported++;
+          } else skipped++;
+          const pct=Math.round(((i+1)/STOCK_INITIAL.length)*100);
+          bar.style.width=pct+'%';
+          status.textContent=`${i+1}/${STOCK_INITIAL.length} — ${imported} importés, ${skipped} ignorés`;
+          await new Promise(r=>setTimeout(r,20));
+        }
+        toast(`Import terminé : ${imported} articles importés.`,'success');
+        closeModal('modalImportStock'); await loadStock();
+        btn.disabled=false; btn.textContent="Lancer l'import";
+        document.getElementById('importStockProgress').style.display='none';
+      });
+    }
+  </script>
+</body>
+</html>
