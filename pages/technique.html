@@ -42,86 +42,62 @@
   </div>
 
   <script type="module">
-    // --- CONNEXION DIRECTE POUR ÉVITER LES BUGS D'IMPORT ---
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+ import { db, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "./auth.js";
 
-    // REMPLACE CES INFOS PAR CELLES DE TON FICHIER AUTH.JS
-    const firebaseConfig = {
-      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-        authDomain: "secours-nautique-31.firebaseapp.com",
-        projectId: "secours-nautique-31",
-        storageBucket: "secours-nautique-31.firebasestorage.app",
-        messagingSenderId: "1013387329575",
-        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
-    };
+const tableBody = document.getElementById('stockTable');
 
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const tableBody = document.getElementById('stockTable');
+// 1. CHARGEMENT ET AFFICHAGE (Avec fonctions de modification)
+async function loadStock() {
+    const snap = await getDocs(collection(db, "stocks"));
+    tableBody.innerHTML = "";
+    
+    snap.forEach(d => {
+        const item = d.data();
+        const id = d.id;
+        const q = parseInt(item.quantite) || 0;
+        const s = parseInt(item.seuil) || 0;
+        const isAlert = q <= s && s > 0;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><input type="text" value="${item.type}" onchange="updateItem('${id}', 'type', this.value)" style="border:none; font-weight:bold; width:100%"></td>
+            <td><input type="text" value="${item.taille || ''}" onchange="updateItem('${id}', 'taille', this.value)" style="border:none; width:50px"></td>
+            <td><input type="number" value="${q}" onchange="updateItem('${id}', 'quantite', this.value)" style="width:50px; font-weight:bold; color:${isAlert ? 'red' : 'black'}"></td>
+            <td><input type="number" value="${s}" onchange="updateItem('${id}', 'seuil', this.value)" style="width:50px"></td>
+            <td><input type="text" value="${item.peremption || ''}" onchange="updateItem('${id}', 'peremption', this.value)" style="border:none; width:80px"></td>
+            <td>
+                <button onclick="supprimerItem('${id}')" style="background:none; border:none; cursor:pointer;">🗑️</button>
+            </td>
+        `;
+        tableBody.appendChild(tr);
+    });
+}
 
-    async function loadStock() {
-      try {
-        const snap = await getDocs(collection(db, "stocks"));
-        if (snap.empty) {
-          tableBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:40px;'>📦 La base est vide. Cliquez sur 'Importer' pour charger votre fichier CSV.</td></tr>";
-          return;
-        }
-
-        let html = "";
-        snap.forEach(d => {
-          const item = d.data();
-          const q = parseInt(item.quantite) || 0;
-          const s = parseInt(item.seuil) || 0;
-          const isAlert = q <= s && s > 0;
-          
-          html += `
-            <tr style="${isAlert ? 'background:#FFF5F5' : ''}">
-              <td><strong>${item.type}</strong></td>
-              <td>${item.taille || '-'}</td>
-              <td style="font-weight:bold; color:${isAlert ? 'red' : 'black'}">${q}</td>
-              <td>${s}</td>
-              <td>${item.peremption || '-'}</td>
-              <td><span class="${isAlert ? 'badge-warn' : 'badge-ok'}">${isAlert ? 'RÉAPPRO' : 'OK'}</span></td>
-            </tr>`;
-        });
-        tableBody.innerHTML = html;
-      } catch (e) {
-        tableBody.innerHTML = "<tr><td colspan='6' style='color:red'>Erreur de chargement : " + e.message + "</td></tr>";
-      }
+// 2. FONCTION DE MISE À JOUR AUTOMATIQUE
+window.updateItem = async (id, champ, valeur) => {
+    try {
+        const itemRef = doc(db, "stocks", id);
+        let valFinal = valeur;
+        // Si c'est un nombre, on le convertit pour les calculs
+        if (champ === 'quantite' || champ === 'seuil') valFinal = parseInt(valeur);
+        
+        await updateDoc(itemRef, { [champ]: valFinal });
+        console.log("Mis à jour : ", champ, valeur);
+    } catch (e) {
+        alert("Erreur de sauvegarde : " + e.message);
     }
+};
 
-    document.getElementById('csvStock').onchange = (e) => {
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        const lignes = ev.target.result.split(/\r?\n/);
-        let dernierType = "";
-        let count = 0;
-
-        for (let i = 1; i < lignes.length; i++) {
-          const col = lignes[i].split(';');
-          if (col.length < 3) continue;
-
-          let type = col[0] ? col[0].trim() : dernierType;
-          if (!type || type === "Type") continue;
-          dernierType = type;
-
-          const taille = col[2] ? col[2].trim() : "";
-          const quantite = col[3] ? col[3].trim() : "0";
-          const seuil = col[4] ? col[4].trim() : "0";
-          const peremp = col[5] ? col[5].trim() : "";
-
-          const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
-          await setDoc(doc(db, "stocks", id), { type, taille, quantite, seuil, peremption: peremp });
-          count++;
-        }
-        alert(count + " articles importés !");
+// 3. FONCTION DE SUPPRESSION
+window.supprimerItem = async (id) => {
+    if (confirm("Supprimer cet article définitivement ?")) {
+        await deleteDoc(doc(db, "stocks", id));
         loadStock();
-      };
-      reader.readAsText(e.target.files[0], 'ISO-8859-1');
-    };
+    }
+};
 
-    loadStock();
+// Lancement au démarrage
+loadStock();
   </script>
 </body>
 </html>
