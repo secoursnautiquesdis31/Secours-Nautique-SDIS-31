@@ -1,47 +1,43 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <title>Fiche Agent — SDIS 31</title>
-  <link rel="stylesheet" href="../css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
-  <style>
-    :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --green: #2A9D5C; }
-    body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
-    
-    .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .header { background: var(--navy); color: white; padding: 30px; position: relative; }
-    .content { padding: 30px; }
-    
-    .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-    
-    /* Zone Quotas Personnalisés */
-    .quota-container { background: #F0F4F8; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid var(--amber); }
-    .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-    .quota-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; display: flex; justify-content: space-between; align-items: center; }
-    .quota-item label { font-size: 0.8rem; font-weight: bold; color: #555; }
-    .quota-item input { width: 45px; padding: 5px; text-align: center; border: 1px solid #CCC; border-radius: 4px; font-weight: bold; color: var(--navy); }
-    .btn-save-quotas { width: 100%; margin-top: 15px; background: var(--navy); color: white; border: 2px solid var(--amber); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
-    .btn-save-quotas:hover { background: var(--amber); color: var(--navy); }
+    <meta charset="UTF-8">
+    <title>Fiche Agent — SDIS 31</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --green: #2A9D5C; }
+        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
+        
+        .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .header { background: var(--navy); color: white; padding: 30px; position: relative; }
+        .content { padding: 30px; }
+        
+        .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
+        
+        .quota-container { background: #F0F4F8; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid var(--amber); }
+        .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .quota-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; display: flex; justify-content: space-between; align-items: center; }
+        .quota-item label { font-size: 0.8rem; font-weight: bold; color: #555; }
+        .quota-item input { width: 45px; padding: 5px; text-align: center; border: 1px solid #CCC; border-radius: 4px; font-weight: bold; color: var(--navy); }
+        
+        .btn-save-quotas { width: 100%; margin-top: 15px; background: var(--navy); color: white; border: 2px solid var(--amber); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
+        .btn-save-quotas:hover { background: var(--amber); color: var(--navy); }
 
-    /* Spécialités */
-    .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; transition: 0.2s; }
-    .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
-    
-    /* Tableaux et Listes */
-    table { width: 100%; border-collapse: collapse; }
-    th { background: #F8F9FA; color: var(--navy); text-align: left; padding: 12px; border-bottom: 2px solid #EEE; font-size: 0.85rem; }
-    td { padding: 12px; border-bottom: 1px solid #F0F0F0; font-size: 0.95rem; }
-    .badge-date { background: #EEE; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; color: #555; font-weight: bold; }
-    
-    .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
-    
-    /* Modal */
-    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
-    .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
-    .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; transition: 0.2s; }
-    .stock-item:hover { background: #F0F4F8; color: var(--navy); }
-  </style>
+        .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; transition: 0.2s; }
+        .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
+        
+        table { width: 100%; border-collapse: collapse; }
+        th { background: #F8F9FA; color: var(--navy); text-align: left; padding: 12px; border-bottom: 2px solid #EEE; font-size: 0.85rem; }
+        td { padding: 12px; border-bottom: 1px solid #F0F0F0; font-size: 0.95rem; }
+        
+        .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
+        
+        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+        .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
+        .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
+        .stock-item:hover { background: #F0F4F8; color: var(--navy); }
+    </style>
 </head>
 <body>
 
@@ -55,46 +51,25 @@
     </div>
 
     <div class="content">
-        
         <div class="section-title">Objectifs de Formation Individuels</div>
         <div class="quota-container">
             <div class="quota-grid">
-                <div class="quota-item">
-                    <label>Recyclage SAV SEV</label>
-                    <input type="number" id="q_sav" value="1">
-                </div>
-                <div class="quota-item">
-                    <label>FMPA Mer</label>
-                    <input type="number" id="q_fmpa" value="1">
-                </div>
-                <div class="quota-item">
-                    <label>Recyclage CEN</label>
-                    <input type="number" id="q_cen" value="1">
-                </div>
-                <div class="quota-item">
-                    <label>Entrainement / MSO</label>
-                    <input type="number" id="q_mso" value="2">
-                </div>
+                <div class="quota-item"><label>Recyclage SAV SEV</label><input type="number" id="q_sav"></div>
+                <div class="quota-item"><label>FMPA Mer</label><input type="number" id="q_fmpa"></div>
+                <div class="quota-item"><label>Recyclage CEN</label><input type="number" id="q_cen"></div>
+                <div class="quota-item"><label>Entrainement / MSO</label><input type="number" id="q_mso"></div>
             </div>
-            <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS POUR CET AGENT</button>
+            <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
         </div>
 
         <div class="section-title">Spécialités Détachées</div>
         <div id="specsGrid" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;"></div>
 
         <div class="section-title">Historique des Présences</div>
-        <div style="margin-bottom: 30px; overflow-x: auto;">
+        <div style="overflow-x: auto; margin-bottom: 30px;">
             <table>
-                <thead>
-                    <tr>
-                        <th>Date</th>
-                        <th>Désignation</th>
-                        <th>Lieu</th>
-                    </tr>
-                </thead>
-                <tbody id="listeFormations">
-                    <tr><td colspan="3" style="text-align:center; padding:20px; color:#999;">Aucune donnée.</td></tr>
-                </tbody>
+                <thead><tr><th>Date</th><th>Désignation</th><th>Lieu</th></tr></thead>
+                <tbody id="listeFormations"></tbody>
             </table>
         </div>
 
@@ -116,7 +91,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove, increment } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -134,25 +109,22 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    // FONCTION PRINCIPALE : CHARGEMENT
     async function charger() {
         if(!agentId) return;
         const snap = await getDoc(doc(db, "users", agentId));
-        
         if (snap.exists()) {
             const agent = snap.data();
             document.getElementById('nomAgent').innerText = agent.nom || "Inconnu";
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
             
-            // 1. Quotas
-            if (agent.quotas) {
-                document.getElementById('q_sav').value = agent.quotas.sav ?? 1;
-                document.getElementById('q_fmpa').value = agent.quotas.fmpa ?? 1;
-                document.getElementById('q_cen').value = agent.quotas.cen ?? 1;
-                document.getElementById('q_mso').value = agent.quotas.mso ?? 2;
-            }
+            // Quotas
+            const q = agent.quotas || {};
+            document.getElementById('q_sav').value = q.sav ?? 1;
+            document.getElementById('q_fmpa').value = q.fmpa ?? 1;
+            document.getElementById('q_cen').value = q.cen ?? 1;
+            document.getElementById('q_mso').value = q.mso ?? 2;
 
-            // 2. Spécialités
+            // Spécialités
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             listeSpecs.forEach(s => {
@@ -164,23 +136,7 @@
                 grid.appendChild(btn);
             });
 
-            // 3. Formations
-            const formTable = document.getElementById('listeFormations');
-            formTable.innerHTML = "";
-            const forms = agent.historiqueFormations || [];
-            if (forms.length > 0) {
-                forms.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(f => {
-                    formTable.innerHTML += `<tr>
-                        <td><span class="badge-date">${new Date(f.date).toLocaleDateString('fr-FR')}</span></td>
-                        <td><strong>${f.nom}</strong></td>
-                        <td>📍 ${f.lieu || '-'}</td>
-                    </tr>`;
-                });
-            } else {
-                formTable.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px; color:#999;'>Aucune activité enregistrée.</td></tr>";
-            }
-
-            // 4. EPI
+            // EPI
             const epiList = document.getElementById('epiList');
             epiList.innerHTML = "";
             if (agent.epi && agent.epi.length > 0) {
@@ -188,8 +144,8 @@
                     const div = document.createElement('div');
                     div.className = "epi-row";
                     div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille})</small></div>
-                                     <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                                     onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️ RETIRER</button>`;
+                        <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
+                        onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️ RETIRER</button>`;
                     epiList.appendChild(div);
                 });
             } else {
@@ -198,32 +154,27 @@
         }
     }
 
-    // SAUVEGARDE DES QUOTAS
-    document.getElementById('btnSaveQuotas').onclick = async () => {
-        try {
-            const nouveauxQuotas = {
-                sav: parseInt(document.getElementById('q_sav').value),
-                fmpa: parseInt(document.getElementById('q_fmpa').value),
-                cen: parseInt(document.getElementById('q_cen').value),
-                mso: parseInt(document.getElementById('q_mso').value)
-            };
-            await updateDoc(doc(db, "users", agentId), { quotas: nouveauxQuotas });
-            alert("✅ Objectifs mis à jour !");
-        } catch (e) { alert("Erreur lors de la sauvegarde."); }
-    };
-
-    // GESTION SPECS
     async function toggleSpec(spec, current) {
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
         charger();
     }
 
-    // GESTION STOCK / EPI
+    document.getElementById('btnSaveQuotas').onclick = async () => {
+        const nouveauxQuotas = {
+            sav: parseInt(document.getElementById('q_sav').value),
+            fmpa: parseInt(document.getElementById('q_fmpa').value),
+            cen: parseInt(document.getElementById('q_cen').value),
+            mso: parseInt(document.getElementById('q_mso').value)
+        };
+        await updateDoc(doc(db, "users", agentId), { quotas: nouveauxQuotas });
+        alert("✅ Objectifs mis à jour !");
+    };
+
     document.getElementById('btnOpenStock').onclick = async () => {
         document.getElementById('modalStock').style.display = 'block';
         const list = document.getElementById('listeChoixStock');
-        list.innerHTML = "Chargement du stock...";
+        list.innerHTML = "Chargement...";
         const snap = await getDocs(collection(db, "stocks"));
         list.innerHTML = "";
         snap.forEach(d => {
@@ -233,8 +184,10 @@
                 div.className = "stock-item";
                 div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Dispo: ${s.quantite}</strong>`;
                 div.onclick = async () => {
-                    await updateDoc(doc(db, "users", agentId), { epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) });
-                    await updateDoc(doc(db, "stocks", d.id), { quantite: s.quantite - 1 });
+                    await updateDoc(doc(db, "users", agentId), { 
+                        epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) 
+                    });
+                    await updateDoc(doc(db, "stocks", d.id), { quantite: increment(-1) });
                     document.getElementById('modalStock').style.display = 'none';
                     charger();
                 };
@@ -243,22 +196,21 @@
         });
     };
 
-window.retirerEPI = async (stockId, type, taille) => {
-    if(confirm(`Supprimer l'affectation de ${type} (${taille}) sur cette fiche ?`)) {
-        try {
-            // On cible le document de l'agent
+    window.retirerEPI = async (stockId, type, taille) => {
+        if(confirm(`Retirer ${type} ?`)) {
             const agentRef = doc(db, "users", agentId);
-            
-            // IMPORTANT : L'objet dans arrayRemove doit être le clone exact 
-            // de celui créé lors de l'affectation (dans btnOpenStock)
             await updateDoc(agentRef, {
-                epi: arrayRemove({ 
-                    id: stockId, 
-                    type: type, 
-                    taille: taille 
-                })
+                epi: arrayRemove({ id: stockId, type: type, taille: taille })
             });
-charger();
+            // On rend l'objet au stock
+            await updateDoc(doc(db, "stocks", stockId), { quantite: increment(1) });
+            charger();
+        }
+    };
+
+    // IMPORTANT : Lancer le chargement au démarrage
+    charger();
+
 </script>
 </body>
 </html>
