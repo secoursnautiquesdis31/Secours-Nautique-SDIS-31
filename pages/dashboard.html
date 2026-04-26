@@ -27,77 +27,33 @@
 
   <main class="main-content">
     <h1>Bienvenue sur le Tableau de bord</h1>
-    <button id="btnImport" style="background: red; color: white; padding: 15px; margin: 20px; cursor: pointer; border-radius: 8px; font-weight: bold;">
-   Étape 2 : Sélectionner mon fichier CSV
-</button>
-    <div class="card" style="background:white; padding:20px; border-radius:10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-      <p>Sélectionnez un menu à gauche pour commencer.</p>
+    
+    <div class="card" style="background:white; padding:30px; border-radius:12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;">
+      <h3 style="color: #0B1F3A; margin-top: 0;">Plateforme de gestion Nautique</h3>
+      <p style="color: #555; line-height: 1.6;">
+        Utilisez le menu latéral pour accéder aux différentes sections :
+      </p>
+      <ul style="color: #555; line-height: 1.8;">
+        <li><strong>Formation :</strong> Calendrier et suivi des aptitudes.</li>
+        <li><strong>RH :</strong> Annuaire des agents et fiches individuelles.</li>
+        <li><strong>Technique :</strong> Gestion du stock et des EPI.</li>
+      </ul>
     </div>
   </main>
 
   <script type="module">
-import { db, auth, doc, setDoc, signOut } from "./auth.js";
+    import { auth, signOut } from "./auth.js";
 
-// --- CETTE FONCTION SE LANCE AUTOMATIQUEMENT AU CHARGEMENT ---
-(function() {
-    console.log("Script d'importation prêt.");
-    
-    // Création d'une bannière visuelle en haut de page
-    const banner = document.createElement('div');
-    banner.innerHTML = `
-        <div style="position:fixed; top:0; left:0; width:100%; background:#D94040; color:white; padding:15px; z-index:10000; text-align:center; font-family:sans-serif;">
-            <strong>IMPORTATION SDIS 31 :</strong> Cliquez ici pour sélectionner le fichier CSV des agents 
-            <input type="file" id="autoInput" accept=".csv" style="margin-left:20px;">
-        </div>
-    `;
-    document.body.prepend(banner);
-
-    const input = document.getElementById('autoInput');
-    input.onchange = async (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = async (event) => {
-            const lignes = event.target.result.split(/\r?\n/);
-            let count = 0;
-            
-            // On affiche un message de chargement
-            banner.innerHTML = "Chargement des 86 agents en cours... Patientez...";
-
-            for (let i = 1; i < lignes.length; i++) {
-                const ligne = lignes[i].trim();
-                if (!ligne) continue;
-                const col = ligne.split(';');
-                const nom = col[0] ? col[0].trim() : "";
-                const cis = col[1] ? col[1].trim() : "";
-                const tel = col[2] ? col[2].trim() : "";
-
-                if (nom) {
-                    const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
-                    await setDoc(doc(db, "users", id), {
-                        nom: nom,
-                        cis: cis,
-                        tel: tel,
-                        role: "Agent",
-                        specialites: [],
-                        epi: {},
-                        aptitude: "A vérifier"
-                    });
-                    count++;
-                }
-            }
-            alert("✅ Succès ! " + count + " agents ont été intégrés à la base Nautique.");
-            banner.remove(); // On enlève la bannière rouge
-            window.location.reload();
-        };
-        reader.readAsText(file, 'ISO-8859-1');
-    };
-})();
-
-document.getElementById("logoutBtn")?.addEventListener("click", () => {
-    signOut(auth).then(() => { window.location.href = "../index.html"; });
-});
+    // Gestion de la déconnexion
+    document.getElementById("logoutBtn")?.addEventListener("click", () => {
+        if(confirm("Voulez-vous vous déconnecter ?")) {
+            signOut(auth).then(() => { 
+                window.location.href = "../index.html"; 
+            }).catch((error) => {
+                console.error("Erreur lors de la déconnexion:", error);
+            });
+        }
+    });
   </script>
 </body>
 </html>
