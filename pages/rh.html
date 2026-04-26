@@ -2,526 +2,67 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>RH — SDIS 31 Nautique</title>
-  <link rel="stylesheet" href="../main.css">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <title>RH — Secours Nautique SDIS 31</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    .tabs{display:flex;gap:4px;margin-bottom:20px;background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:6px;width:fit-content}
-    .tab-btn{padding:8px 20px;border:none;border-radius:var(--radius-md);font-family:var(--font-body);font-size:.88rem;font-weight:500;cursor:pointer;background:none;color:var(--gray-600);transition:all .15s}
-    .tab-btn.active{background:var(--navy);color:white}
-    .agents-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
-    .agent-card{background:white;border:1px solid var(--gray-100);border-radius:var(--radius-lg);padding:18px;cursor:pointer;transition:box-shadow .15s,border-color .15s;display:flex;align-items:center;gap:14px}
-    .agent-card:hover{box-shadow:var(--shadow-md);border-color:var(--blue-light)}
-    .agent-avatar{width:42px;height:42px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1rem;font-weight:700;color:white;flex-shrink:0}
-    .agent-info{flex:1;min-width:0}
-    .agent-name{font-weight:600;font-size:.92rem;color:var(--navy);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .agent-sub{font-size:.78rem;color:var(--gray-400);margin-top:2px}
-    .agent-specs{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px}
-    .fiche-header{display:flex;align-items:center;gap:20px;margin-bottom:24px}
-    .fiche-avatar{width:64px;height:64px;border-radius:50%;background:var(--navy);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:1.6rem;font-weight:700;color:white;flex-shrink:0}
-    .fiche-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    .fiche-section{margin-bottom:20px}
-    .fiche-section h4{font-family:var(--font-display);font-size:.95rem;font-weight:700;color:var(--navy);margin-bottom:12px;padding-bottom:6px;border-bottom:2px solid var(--gray-100)}
-    .aptitude-bar{height:10px;background:var(--gray-100);border-radius:5px;overflow:hidden;margin-top:6px}
-    .aptitude-fill{height:100%;border-radius:5px;transition:width .4s ease}
-    .aptitude-ok{background:var(--success)}
-    .aptitude-warn{background:var(--amber)}
-    .aptitude-bad{background:var(--danger)}
-    .presence-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);font-size:.86rem}
-    .presence-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-    .dot-ok{background:var(--success)}
-    .dot-abs{background:var(--danger)}
-    .epi-row{display:flex;align-items:center;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--gray-100);font-size:.86rem}
-    .filter-bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:18px}
-    .filter-bar input,.filter-bar select{border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:8px 12px;font-size:.85rem;outline:none;transition:border-color .15s}
-    .filter-bar input:focus,.filter-bar select:focus{border-color:var(--blue)}
-    .spec-check{text-align:center}
-    @media(max-width:640px){.fiche-grid{grid-template-columns:1fr}.agents-grid{grid-template-columns:1fr}}
+    .agent-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #E8A020; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
+    .agent-info h3 { margin: 0; color: #0B1F3A; text-transform: uppercase; font-size: 1.1rem; }
+    .agent-info p { margin: 2px 0; font-size: 0.9rem; color: #526070; }
+    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: #E8ECF0; }
+    .search-bar { margin-bottom: 20px; padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #C8D2DC; }
   </style>
 </head>
 <body class="app-layout">
-  <div id="pageLoader" class="page-loader">
-    <div class="loader-dots"><span></span><span></span><span></span></div>
-    <div class="loader-text">Chargement RH…</div>
-  </div>
-  <div class="sidebar-overlay"></div>
-
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <div class="sidebar-logo">
-        <div class="logo-badge"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E8A020" stroke-width="2" stroke-linecap="round"><path d="M12 2C12 2 7 8 7 13a5 5 0 0010 0c0-5-5-11-5-11z"/><path d="M6 18c2-1.5 4-1 6-1s4 .5 6 1"/></svg></div>
-        <div class="sidebar-brand"><h2>SDIS 31</h2><span>Secours Nautique</span></div>
-      </div>
+  <div class="page-content">
+    <div class="page-header">
+      <h1>Annuaire RH - Secours Nautique</h1>
     </div>
-    <nav class="sidebar-nav">
-      <div class="nav-section">
-        <div class="nav-section-label">Principal</div>
-        <a class="nav-item" href="dashboard.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>Tableau de bord</a>
-      </div>
-      <div class="nav-section">
-        <div class="nav-section-label">Dossiers</div>
-        <a class="nav-item" href="formation.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>Formation</a>
-        <a class="nav-item active" href="rh.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>RH</a>
-        <a class="nav-item" href="technique.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>Technique</a>
-        <a class="nav-item" href="operationnel.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 11 22 2 13 21 11 13 3 11"/></svg>Opérationnel</a>
-        <a class="nav-item" href="ressources.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>Ressources</a>
-      </div>
-      <div class="nav-section" id="adminNavSection">
-        <div class="nav-section-label">Administration</div>
-        <a class="nav-item" href="admin-users.html"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/><line x1="18" y1="8" x2="22" y2="8"/><line x1="20" y1="6" x2="20" y2="10"/></svg>Gestion des accès</a>
-      </div>
-    </nav>
-    <div class="sidebar-user">
-      <div class="user-avatar" id="userAvatar">--</div>
-      <div class="user-info"><div class="user-name" id="userName">…</div><div class="user-role" id="userRole">…</div></div>
-      <button class="btn-logout" id="logoutBtn" title="Déconnexion"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></button>
-    </div>
-  </aside>
 
-  <div class="main-content">
-    <header class="topbar">
-      <div class="flex items-center gap-12">
-        <button class="hamburger btn-icon" id="hamburger"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></button>
-        <span class="topbar-title">RH — Personnel Nautique</span>
-      </div>
-      <div class="topbar-actions" id="rhActions">
-        <button class="btn btn-outline" id="btnImport" style="font-size:.82rem"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="8 17 12 21 16 17"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.88 18.09A5 5 0 0018 9h-1.26A8 8 0 103 16.29"/></svg>Import initial</button>
-        <button class="btn btn-amber" id="btnAddAgent"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter un agent</button>
-      </div>
-    </header>
+    <input type="text" id="search" class="search-bar" placeholder="Rechercher un nom, un CIS...">
 
-    <main class="page-content">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="liste"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>Fiches agents</button>
-        <button class="tab-btn" data-tab="recap"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:5px;vertical-align:middle"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>Tableau récapitulatif</button>
-      </div>
-
-      <!-- ONGLET LISTE -->
-      <div id="tabListe">
-        <div class="filter-bar">
-          <input type="search" id="searchAgent" placeholder="🔍  Rechercher un agent…" style="min-width:220px">
-          <select id="filterCis"><option value="">Tous les CIS</option></select>
-          <select id="filterSpec"><option value="">Toutes les spécialités</option><option>SAL</option><option>SAV</option><option>SEV</option><option>CEN</option></select>
-          <select id="filterAptitude"><option value="">Toute aptitude</option><option value="operationnel">Opérationnel</option><option value="vigilance">Vigilance</option><option value="non_operationnel">Non opérationnel</option></select>
-          <span id="agentCount" class="text-muted text-small" style="margin-left:auto"></span>
-        </div>
-        <div class="agents-grid" id="agentsGrid"><p class="text-muted text-small">Chargement…</p></div>
-      </div>
-
-      <!-- ONGLET RECAP -->
-      <div id="tabRecap" style="display:none">
-        <div class="filter-bar">
-          <select id="recapFilterCis"><option value="">Tous les CIS</option></select>
-          <select id="recapFilterSpec"><option value="">Toutes les spécialités</option><option>SAL</option><option>SAV</option><option>SEV</option><option>CEN</option></select>
-        </div>
-        <div class="card" style="padding:0">
-          <div class="table-wrapper">
-            <table id="recapTable">
-              <thead><tr>
-                <th style="min-width:160px;position:sticky;left:0;background:white;z-index:2">Nom Prénom</th>
-                <th>CIS</th><th style="text-align:center">SAL</th><th style="text-align:center">SAV</th><th style="text-align:center">SEV</th><th style="text-align:center">CEN</th>
-                <th>Aptitude</th><th>Formations<br><span style="font-weight:400;text-transform:none;letter-spacing:0">présences</span></th>
-              </tr></thead>
-              <tbody id="recapBody"><tr><td colspan="8" class="text-muted" style="padding:20px;text-align:center">Chargement…</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-
-  <!-- MODAL FICHE -->
-  <div class="modal-overlay" id="modalFiche">
-    <div class="modal" style="max-width:720px">
-      <div class="modal-header">
-        <span class="modal-title" id="ficheTitle">Fiche agent</span>
-        <div class="flex gap-8">
-          <button class="btn btn-sm btn-outline" id="ficheEditBtn">Modifier</button>
-          <button class="modal-close" onclick="closeModal('modalFiche')">×</button>
-        </div>
-      </div>
-      <div class="modal-body" id="ficheBody"></div>
-    </div>
-  </div>
-
-  <!-- MODAL AJOUT/EDITION -->
-  <div class="modal-overlay" id="modalAgent">
-    <div class="modal" style="max-width:600px">
-      <div class="modal-header">
-        <span class="modal-title" id="modalAgentTitle">Ajouter un agent</span>
-        <button class="modal-close" onclick="closeModal('modalAgent')">×</button>
-      </div>
-      <div class="modal-body">
-        <div class="fiche-section">
-          <h4>Identité</h4>
-          <div class="form-row">
-            <div class="field"><label>Nom *</label><input type="text" id="aNom" placeholder="DUPONT"></div>
-            <div class="field"><label>Prénom *</label><input type="text" id="aPrenom" placeholder="Jean"></div>
-          </div>
-          <div class="form-row mt-16">
-            <div class="field"><label>CIS / Affectation *</label>
-              <select id="aCis"><option value="">— Sélectionner —</option>
-                <option>ATLANTA</option><option>AUSSONNE</option><option>BOULOGNE</option><option>BUCHENS</option><option>CARSALADE</option><option>COLOMIERS</option><option>DELRIEU</option><option>GEDEC</option><option>LOUGNON</option><option>MASSAT</option><option>MONTGISCARD</option><option>PIBRAC</option><option>POOL</option><option>POOL SUD</option><option>REVEL</option><option>SAINT GAUDENS</option><option>SAINT LYS</option><option>SDIS</option><option>Salies du Salat</option><option>VILLEMUR</option>
-              </select>
-            </div>
-            <div class="field"><label>Téléphone</label><input type="tel" id="aTel" placeholder="06 XX XX XX XX"></div>
-          </div>
-          <div class="form-row mt-16">
-            <div class="field"><label>E-mail</label><input type="email" id="aEmail" placeholder="prenom.nom@sdis31.fr"></div>
-            <div class="field"><label>Grade</label><input type="text" id="aGrade" placeholder="Sapeur, Caporal…"></div>
-          </div>
-        </div>
-        <div class="fiche-section">
-          <h4>Spécialités</h4>
-          <div style="display:flex;gap:16px;flex-wrap:wrap">
-            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="specSAL"> SAL</label>
-            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="specSAV"> SAV</label>
-            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="specSEV"> SEV</label>
-            <label style="display:flex;align-items:center;gap:7px;cursor:pointer;font-size:.9rem"><input type="checkbox" id="specCEN"> CEN</label>
-          </div>
-        </div>
-        <div class="fiche-section">
-          <h4>EPI détenus</h4>
-          <div id="epiEditList"></div>
-          <button type="button" class="btn btn-sm btn-outline mt-16" id="btnAddEpiLine"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Ajouter un EPI</button>
-        </div>
-        <div id="agentError" class="error-msg" style="display:none"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('modalAgent')">Annuler</button>
-        <button class="btn btn-danger btn-sm" id="btnDeleteAgent" style="margin-right:auto;display:none">Supprimer</button>
-        <button class="btn btn-navy" id="btnSaveAgent">Enregistrer</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- MODAL IMPORT -->
-  <div class="modal-overlay" id="modalImport">
-    <div class="modal" style="max-width:480px">
-      <div class="modal-header">
-        <span class="modal-title">Import initial — 86 agents</span>
-        <button class="modal-close" onclick="closeModal('modalImport')">×</button>
-      </div>
-      <div class="modal-body">
-        <p style="font-size:.9rem;color:var(--gray-600);line-height:1.7;margin-bottom:16px">Importe les <strong>86 agents</strong> de votre Excel dans Firestore.<br>Les doublons (même nom + prénom) sont ignorés automatiquement.</p>
-        <div id="importProgress" style="display:none">
-          <div style="background:var(--gray-100);border-radius:4px;height:8px;overflow:hidden;margin-bottom:8px"><div id="importBar" style="height:100%;background:var(--blue);width:0%;transition:width .2s"></div></div>
-          <p id="importStatus" class="text-muted text-small"></p>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-outline" onclick="closeModal('modalImport')">Annuler</button>
-        <button class="btn btn-navy" id="btnDoImport">Lancer l'import</button>
-      </div>
+    <div id="agentsList">
+      <p>Chargement des agents...</p>
     </div>
   </div>
 
   <script type="module">
-    import {
-      requireAuth, can, toast, openModal, closeModal,
-      db, collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc,
-      query, orderBy
-    } from "../js/auth.js";
-    import { setDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { db, collection, getDocs } from "./auth.js";
 
-    window.closeModal = closeModal;
-
-    const AGENTS_INITIAL = [{"nom":"ARIGNAC","prenom":"Julien","cis":"LOUGNON","telephone":"617854420"},{"nom":"ALLIAUD","prenom":"Livio","cis":"DELRIEU","telephone":"647600521"},{"nom":"BARRIET","prenom":"Pierre Alexandre","cis":"LOUGNON","telephone":"621091040"},{"nom":"BARUTAUT","prenom":"Geoffrey","cis":"SAINT GAUDENS","telephone":"652040331"},{"nom":"BENNE","prenom":"Fabrice","cis":"DELRIEU","telephone":"675208496"},{"nom":"BESANCON","prenom":"Nicolas","cis":"DELRIEU","telephone":"638670285"},{"nom":"BEUILLE","prenom":"Pierre","cis":"LOUGNON","telephone":"665669910"},{"nom":"BILHERE","prenom":"Remi","cis":"DELRIEU","telephone":"689731730"},{"nom":"BONNEAULT","prenom":"Yoann","cis":"LOUGNON","telephone":"670662305"},{"nom":"BORGATTI","prenom":"Fabien","cis":"POOL SUD","telephone":"760947468"},{"nom":"BREVART","prenom":"Jean Philippe","cis":"DELRIEU","telephone":"615531453"},{"nom":"BUSQUE","prenom":"Mathieu","cis":"VILLEMUR","telephone":"777809237"},{"nom":"CANONICO","prenom":"Florian","cis":"LOUGNON","telephone":"615798520"},{"nom":"CARCY","prenom":"Tristan","cis":"POOL","telephone":"06-64-44-39-75"},{"nom":"CAREL","prenom":"Julien","cis":"SDIS","telephone":"637145670"},{"nom":"CASTEL","prenom":"Jerome","cis":"LOUGNON","telephone":"650124454"},{"nom":"CAU","prenom":"Jean Michel","cis":"SAINT GAUDENS","telephone":"615295298"},{"nom":"CAVERT","prenom":"William","cis":"CARSALADE","telephone":"617555255"},{"nom":"CAZALS","prenom":"Yannick","cis":"MASSAT","telephone":"621228130"},{"nom":"CAZASSUS","prenom":"Joel","cis":"SAINT GAUDENS","telephone":"682467792"},{"nom":"CHAUMIN","prenom":"Julien","cis":"COLOMIERS","telephone":"630402694"},{"nom":"COLLIN","prenom":"Gilles","cis":"POOL","telephone":"647396581"},{"nom":"CONTIGIANI","prenom":"Louis","cis":"COLOMIERS","telephone":"607761312"},{"nom":"CROS","prenom":"Cyril","cis":"MASSAT","telephone":"783941892"},{"nom":"CUARTERO","prenom":"Damien","cis":"ATLANTA","telephone":"677308484"},{"nom":"DE MASSIAS","prenom":"Martin","cis":"SAINT LYS","telephone":"622871075"},{"nom":"DELPECH","prenom":"Guy","cis":"DELRIEU","telephone":"677636990"},{"nom":"DERVOGNE","prenom":"Olivier","cis":"POOL","telephone":"677160720"},{"nom":"DESMARAIS","prenom":"Sebastien","cis":"LOUGNON","telephone":"629749471"},{"nom":"DEVAUX","prenom":"Jordan","cis":"GEDEC","telephone":"620777354"},{"nom":"DUCHIER","prenom":"Frederic","cis":"SDIS","telephone":"786471805"},{"nom":"DUCOUSSET","prenom":"Julien","cis":"LOUGNON","telephone":"625093448"},{"nom":"DUMONT","prenom":"Nicolas","cis":"LOUGNON","telephone":"637293698"},{"nom":"DURANT","prenom":"Grégory","cis":"LOUGNON","telephone":"624299483"},{"nom":"DUSSAC","prenom":"Florent","cis":"COLOMIERS","telephone":"06-63-48-20-39"},{"nom":"ESCUDIER","prenom":"Nicolas","cis":"LOUGNON","telephone":"612429706"},{"nom":"ESTEBAN","prenom":"Lucia","cis":"Salies du Salat","telephone":"625282395"},{"nom":"FIOL","prenom":"Frederic","cis":"BUCHENS","telephone":"616665686"},{"nom":"GARDET","prenom":"Eric","cis":"LOUGNON","telephone":"615914699"},{"nom":"GARCIA","prenom":"Guillaume","cis":"DELRIEU","telephone":"786883483"},{"nom":"GAREIL","prenom":"Christian","cis":"SAINT GAUDENS","telephone":"610568593"},{"nom":"GUINARD","prenom":"Roger","cis":"REVEL","telephone":""},{"nom":"HEROGUER","prenom":"Loick","cis":"DELRIEU","telephone":"624296725"},{"nom":"LABORDE","prenom":"Damien","cis":"POOL SUD","telephone":"645235779"},{"nom":"LACROIX","prenom":"Romain","cis":"MASSAT","telephone":"619709506"},{"nom":"LARRIBEAU","prenom":"Laura","cis":"AUSSONNE","telephone":"645064567"},{"nom":"LECIRE","prenom":"Rodolphe","cis":"SAINT GAUDENS","telephone":"623794768"},{"nom":"LECOEUR","prenom":"Clement","cis":"BUCHENS","telephone":"612110429"},{"nom":"LEFEVRE","prenom":"Romain","cis":"BOULOGNE","telephone":"608172224"},{"nom":"LIMOUZY","prenom":"Elian","cis":"COLOMIERS","telephone":"668957254"},{"nom":"LORENZELLI","prenom":"Marco","cis":"ATLANTA","telephone":"06-34-02-28-40"},{"nom":"LOURENCO","prenom":"Jordan","cis":"CARSALADE","telephone":"670648657"},{"nom":"MARQUEZY","prenom":"Benjamin","cis":"LOUGNON","telephone":"637081588"},{"nom":"MARTINEZ","prenom":"Alexandre","cis":"LOUGNON","telephone":"06-48-55-35-66"},{"nom":"MERY","prenom":"Melvin","cis":"COLOMIERS","telephone":"601832426"},{"nom":"MILHORAT","prenom":"Frantz","cis":"MASSAT","telephone":"609011985"},{"nom":"NOEL","prenom":"Raphael","cis":"POOL","telephone":"629944424"},{"nom":"PATRICE","prenom":"Cedric","cis":"CARSALADE","telephone":"633806472"},{"nom":"PERUCH","prenom":"Cyril","cis":"MONTGISCARD","telephone":"623706206"},{"nom":"PESQUET","prenom":"Sebastien","cis":"ATLANTA","telephone":"688547860"},{"nom":"PIROTAIS","prenom":"Damien","cis":"POOL","telephone":"678008048"},{"nom":"POURCEL","prenom":"Mathias","cis":"LOUGNON","telephone":"683144902"},{"nom":"PYRKA","prenom":"Guillaume","cis":"ATLANTA","telephone":"603367575"},{"nom":"REDANT","prenom":"Maxime","cis":"LOUGNON","telephone":"607367880"},{"nom":"RIEU","prenom":"Olivier","cis":"CARSALADE","telephone":"06-79-42-68-14"},{"nom":"RIVIERE","prenom":"Kevin","cis":"COLOMIERS","telephone":"611201425"},{"nom":"ROGA","prenom":"Hugo","cis":"DELRIEU","telephone":"06-40-98-08-11"},{"nom":"ROQUES","prenom":"Alexandre","cis":"PIBRAC","telephone":"06-68-63-40-52"},{"nom":"ROUBAUD","prenom":"Fabrice","cis":"CARSALADE","telephone":"689839690"},{"nom":"ROUTABOUL","prenom":"Fabrice","cis":"CARSALADE","telephone":"683461814"},{"nom":"SABATHIER","prenom":"Thomas","cis":"ATLANTA","telephone":"670037740"},{"nom":"SANCHIS","prenom":"Fabien","cis":"LOUGNON","telephone":"07-68-15-13-12"},{"nom":"SCARPELLINI","prenom":"Olivier","cis":"COLOMIERS","telephone":"611736057"},{"nom":"SERRAR","prenom":"Teddy","cis":"SAINT GAUDENS","telephone":"681598505"},{"nom":"SFILIO","prenom":"Gabriel","cis":"MASSAT","telephone":"620445734"},{"nom":"SIMON","prenom":"Lionel","cis":"SAINT GAUDENS","telephone":"608630838"},{"nom":"SOLANA","prenom":"Mathieu","cis":"DELRIEU","telephone":"670620654"},{"nom":"TEMPLIER","prenom":"Gwenais","cis":"MASSAT","telephone":"673031090"},{"nom":"TOMEO","prenom":"Yohan","cis":"MASSAT","telephone":"646717344"},{"nom":"TOSI","prenom":"Clément","cis":"DELRIEU","telephone":"673950989"},{"nom":"TROY","prenom":"Arthur","cis":"LOUGNON","telephone":"06-13-58-78-37"},{"nom":"VECCHIATO","prenom":"Mathieu","cis":"DELRIEU","telephone":"648297836"},{"nom":"VEDEL","prenom":"Nicolas","cis":"DELRIEU","telephone":"645321137"},{"nom":"VERGNES","prenom":"Antoine","cis":"LOUGNON","telephone":"06-33-09-11-54"},{"nom":"VOUILLAT","prenom":"Nathan","cis":"POOL","telephone":"675175108"},{"nom":"WENZEL","prenom":"Damien","cis":"COLOMIERS","telephone":"780040103"}];
-
-    const SPECS = ['SAL','SAV','SEV','CEN'];
-    const CIS_COLORS = {LOUGNON:'#0B1F3A',DELRIEU:'#2472B8',COLOMIERS:'#1D9E75','SAINT GAUDENS':'#8B2FC9',CARSALADE:'#C47C10',MASSAT:'#D94040',POOL:'#526070','POOL SUD':'#378ADD',ATLANTA:'#E8A020',SDIS:'#3A6B35',GEDEC:'#7B4F2E',BUCHENS:'#2D6A4F'};
-
-    let allAgents = [], editingId = null, epiLines = [];
-
-    function avatarColor(cis) { return CIS_COLORS[cis] || '#526070'; }
-    function initials(nom, prenom) { return ((prenom?.[0]||'')+(nom?.[0]||'')).toUpperCase(); }
-    function formatTel(tel) {
-      if (!tel) return '';
-      const t = String(tel).replace(/\D/g,'');
-      if (t.length === 9)  return '0'+t.replace(/(\d)(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5');
-      if (t.length === 10) return t.replace(/(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})/,'$1 $2 $3 $4 $5');
-      return tel;
-    }
-    function aptitudeInfo(agent) {
-      const f = agent.formations || [];
-      const total = f.length, presents = f.filter(x=>x.present).length;
-      if (!total) return {label:'—',pct:0,cls:''};
-      const pct = presents/total;
-      if (pct>=.75) return {label:'Opérationnel',pct,cls:'aptitude-ok'};
-      if (pct>=.50) return {label:'Vigilance',pct,cls:'aptitude-warn'};
-      return {label:'Non opérationnel',pct,cls:'aptitude-bad'};
-    }
-    function aptBadgeHtml(apt) {
-      if (!apt.cls) return '<span class="text-muted">—</span>';
-      const bc = apt.cls==='aptitude-ok'?'badge-ok':apt.cls==='aptitude-warn'?'badge-warn':'badge-danger';
-      return `<span class="badge ${bc}">${apt.label}</span>`;
-    }
-
-    requireAuth(async (profile) => {
-      if (!can('rh.read') && !can('rh.readOwn')) { window.location.href='dashboard.html'; return; }
-      if (!can('rh.write')) document.getElementById('rhActions').style.display='none';
-      if (!can('users.manage')) document.getElementById('adminNavSection').style.display='none';
-      await loadAgents();
-      setupTabs(); setupFilters(); setupImport(); setupAddAgent();
-    });
-
-    async function loadAgents() {
-      const snap = await getDocs(query(collection(db,'agents'), orderBy('nom')));
-      allAgents = [];
-      snap.forEach(d => allAgents.push({id:d.id,...d.data()}));
-      const cisSet = [...new Set(allAgents.map(a=>a.cis).filter(Boolean))].sort();
-      const opts = cisSet.map(c=>`<option value="${c}">${c}</option>`).join('');
-      document.getElementById('filterCis').innerHTML = '<option value="">Tous les CIS</option>'+opts;
-      document.getElementById('recapFilterCis').innerHTML = '<option value="">Tous les CIS</option>'+opts;
-      renderAgents(allAgents);
-      renderRecap(allAgents);
-    }
-
-    function renderAgents(agents) {
-      document.getElementById('agentCount').textContent = `${agents.length} agent${agents.length>1?'s':''}`;
-      const grid = document.getElementById('agentsGrid');
-      if (!agents.length) {
-        grid.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px"><p class="text-muted">Aucun agent trouvé.</p>${allAgents.length===0?'<p class="text-muted text-small mt-8">Utilisez "Import initial" pour charger les 86 agents.</p>':''}</div>`;
-        return;
-      }
-      grid.innerHTML = agents.map(a => {
-        const apt = aptitudeInfo(a);
-        const specs = (a.specialites||[]).map(s=>`<span class="badge badge-collab" style="font-size:.63rem">${s}</span>`).join('');
-        const bc = apt.cls==='aptitude-ok'?'badge-ok':apt.cls==='aptitude-warn'?'badge-warn':'badge-danger';
-        const aptSpan = apt.cls ? `<span class="badge ${bc}" style="font-size:.63rem">${apt.label}</span>` : '';
-        return `<div class="agent-card" onclick="window._openFiche('${a.id}')">
-          <div class="agent-avatar" style="background:${avatarColor(a.cis)}">${initials(a.nom,a.prenom)}</div>
-          <div class="agent-info">
-            <div class="agent-name">${a.nom} ${a.prenom}</div>
-            <div class="agent-sub">${a.cis||'—'}${formatTel(a.telephone)?' · '+formatTel(a.telephone):''}</div>
-            <div class="agent-specs">${specs}${aptSpan}</div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-
-    function renderRecap(agents) {
-      const tbody = document.getElementById('recapBody');
-      if (!agents.length) { tbody.innerHTML=`<tr><td colspan="8" class="text-muted" style="padding:20px;text-align:center">Aucun agent</td></tr>`; return; }
-      tbody.innerHTML = agents.map(a => {
-        const apt = aptitudeInfo(a);
-        const specs = a.specialites||[];
-        const f = a.formations||[];
-        const presents = f.filter(x=>x.present).length;
-        return `<tr onclick="window._openFiche('${a.id}')" style="cursor:pointer">
-          <td style="font-weight:500;position:sticky;left:0;background:white">${a.nom} ${a.prenom}</td>
-          <td class="text-muted">${a.cis||'—'}</td>
-          ${SPECS.map(s=>`<td class="spec-check">${specs.includes(s)?'✅':'<span style="color:var(--gray-200)">·</span>'}</td>`).join('')}
-          <td>${aptBadgeHtml(apt)}</td>
-          <td class="text-muted">${f.length?`${presents}/${f.length}`:'—'}</td>
-        </tr>`;
-      }).join('');
-    }
-
-    window._openFiche = async (id) => {
-      const snap = await getDoc(doc(db,'agents',id));
-      if (!snap.exists()) return;
-      const a = {id:snap.id,...snap.data()};
-      const apt = aptitudeInfo(a);
-      const pctStr = apt.pct ? Math.round(apt.pct*100)+'%' : '0%';
-      const epi = a.epi||[], formations = a.formations||[];
-
-      document.getElementById('ficheTitle').textContent = `${a.nom} ${a.prenom}`;
-      document.getElementById('ficheEditBtn').onclick = () => { closeModal('modalFiche'); openEditAgent(a); };
-      if (!can('rh.write')) document.getElementById('ficheEditBtn').style.display='none';
-
-      document.getElementById('ficheBody').innerHTML = `
-        <div class="fiche-header">
-          <div class="fiche-avatar" style="background:${avatarColor(a.cis)}">${initials(a.nom,a.prenom)}</div>
-          <div>
-            <h2 style="font-size:1.5rem">${a.nom} ${a.prenom}</h2>
-            <p class="text-muted">${a.grade||'Sapeur'} · ${a.cis||'—'}</p>
-            <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">${(a.specialites||[]).map(s=>`<span class="badge badge-collab">${s}</span>`).join('')}</div>
-          </div>
-        </div>
-        <div class="fiche-grid">
-          <div>
-            <div class="fiche-section">
-              <h4>Coordonnées</h4>
-              <p style="font-size:.88rem;line-height:2.2">
-                📞 ${formatTel(a.telephone)||'Non renseigné'}<br>
-                ✉️ ${a.email||'Non renseigné'}
-              </p>
-            </div>
-            <div class="fiche-section">
-              <h4>Aptitude opérationnelle</h4>
-              ${apt.cls ? `
-                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
-                  ${aptBadgeHtml(apt)}
-                  <span class="text-muted text-small">${pctStr} de présence</span>
-                </div>
-                <div class="aptitude-bar"><div class="aptitude-fill ${apt.cls}" style="width:${pctStr}"></div></div>
-              ` : '<p class="text-muted text-small">Aucune formation enregistrée.</p>'}
-            </div>
-            <div class="fiche-section">
-              <h4>EPI détenus</h4>
-              ${epi.length ? epi.map(e=>`<div class="epi-row"><span>${e.designation}</span><span class="text-muted text-small">${e.taille||''}</span></div>`).join('') : '<p class="text-muted text-small">Aucun EPI enregistré.</p>'}
-            </div>
-          </div>
-          <div>
-            <div class="fiche-section">
-              <h4>Suivi de présence (dernières formations)</h4>
-              ${formations.length ? formations.slice(-10).reverse().map(f=>`
-                <div class="presence-row">
-                  <div class="flex items-center gap-8">
-                    <div class="presence-dot ${f.present?'dot-ok':'dot-abs'}"></div>
-                    <span>${f.titre||'Formation'}</span>
-                  </div>
-                  <span class="text-muted text-small">${f.date?new Date(f.date+'T00:00:00').toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'}):''}</span>
-                </div>`).join('')
-              : '<p class="text-muted text-small">Aucune formation enregistrée.</p>'}
-            </div>
-          </div>
-        </div>`;
-      openModal('modalFiche');
-    };
-
-    function setupAddAgent() {
-      document.getElementById('btnAddAgent').addEventListener('click', () => {
-        editingId = null;
-        document.getElementById('modalAgentTitle').textContent = 'Ajouter un agent';
-        document.getElementById('btnDeleteAgent').style.display = 'none';
-        ['aNom','aPrenom','aTel','aEmail','aGrade'].forEach(id=>document.getElementById(id).value='');
-        document.getElementById('aCis').value='';
-        SPECS.forEach(s=>document.getElementById('spec'+s).checked=false);
-        epiLines=[]; renderEpiEditor();
-        openModal('modalAgent');
-      });
-      document.getElementById('btnSaveAgent').addEventListener('click', saveAgent);
-      document.getElementById('btnAddEpiLine').addEventListener('click',()=>{ epiLines.push({designation:'',taille:''}); renderEpiEditor(); });
-      document.getElementById('btnDeleteAgent').addEventListener('click', deleteAgent);
-    }
-
-    function openEditAgent(a) {
-      editingId = a.id;
-      document.getElementById('modalAgentTitle').textContent = 'Modifier l\'agent';
-      document.getElementById('btnDeleteAgent').style.display = 'inline-flex';
-      document.getElementById('aNom').value = a.nom||'';
-      document.getElementById('aPrenom').value = a.prenom||'';
-      document.getElementById('aTel').value = formatTel(a.telephone)||'';
-      document.getElementById('aEmail').value = a.email||'';
-      document.getElementById('aGrade').value = a.grade||'';
-      document.getElementById('aCis').value = a.cis||'';
-      SPECS.forEach(s=>document.getElementById('spec'+s).checked=(a.specialites||[]).includes(s));
-      epiLines = JSON.parse(JSON.stringify(a.epi||[])); renderEpiEditor();
-      openModal('modalAgent');
-    }
-
-    function renderEpiEditor() {
-      const c = document.getElementById('epiEditList');
-      if (!epiLines.length) { c.innerHTML='<p class="text-muted text-small">Aucun EPI.</p>'; return; }
-      c.innerHTML = epiLines.map((e,i)=>`
-        <div style="display:flex;gap:8px;align-items:center;margin-bottom:8px">
-          <input type="text" placeholder="Désignation EPI" value="${e.designation||''}" style="flex:2;border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:8px 10px;font-size:.85rem" oninput="epiLines[${i}].designation=this.value">
-          <input type="text" placeholder="Taille" value="${e.taille||''}" style="flex:.8;border:1px solid var(--gray-200);border-radius:var(--radius-md);padding:8px 10px;font-size:.85rem" oninput="epiLines[${i}].taille=this.value">
-          <button onclick="epiLines.splice(${i},1);renderEpiEditor()" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;padding:4px">✕</button>
-        </div>`).join('');
-    }
-    window.renderEpiEditor = renderEpiEditor;
-    window.epiLines = epiLines;
-
-    async function saveAgent() {
-      const errDiv = document.getElementById('agentError'); errDiv.style.display='none';
-      const nom = document.getElementById('aNom').value.trim().toUpperCase();
-      const prenom = document.getElementById('aPrenom').value.trim();
-      const cis = document.getElementById('aCis').value;
-      if (!nom||!prenom||!cis) { errDiv.textContent='Nom, prénom et CIS sont requis.'; errDiv.style.display='block'; return; }
-      const specialites = SPECS.filter(s=>document.getElementById('spec'+s).checked);
-      const data = { nom, prenom, cis,
-        telephone: document.getElementById('aTel').value.trim(),
-        email:     document.getElementById('aEmail').value.trim(),
-        grade:     document.getElementById('aGrade').value.trim(),
-        specialites, epi: epiLines.filter(e=>e.designation),
-        updatedAt: new Date().toISOString()
-      };
-      const btn = document.getElementById('btnSaveAgent');
-      btn.disabled=true; btn.textContent='…';
+    async function loadRH() {
+      const container = document.getElementById('agentsList');
       try {
-        if (editingId) { await updateDoc(doc(db,'agents',editingId), data); toast('Agent mis à jour.','success'); }
-        else { data.createdAt=new Date().toISOString(); data.formations=[]; await addDoc(collection(db,'agents'),data); toast('Agent ajouté.','success'); }
-        closeModal('modalAgent'); await loadAgents();
-      } catch(err) { errDiv.textContent=err.message; errDiv.style.display='block'; }
-      finally { btn.disabled=false; btn.textContent='Enregistrer'; }
-    }
-
-    async function deleteAgent() {
-      const a = allAgents.find(x=>x.id===editingId);
-      if (!confirm(`Supprimer définitivement la fiche de ${a?.nom} ${a?.prenom} ?`)) return;
-      await deleteDoc(doc(db,'agents',editingId));
-      toast('Agent supprimé.','success'); closeModal('modalAgent'); await loadAgents();
-    }
-
-    function setupImport() {
-      document.getElementById('btnImport').addEventListener('click',()=>openModal('modalImport'));
-      document.getElementById('btnDoImport').addEventListener('click', async () => {
-        const btn=document.getElementById('btnDoImport');
-        const bar=document.getElementById('importBar');
-        const status=document.getElementById('importStatus');
-        document.getElementById('importProgress').style.display='block';
-        btn.disabled=true; btn.textContent='En cours…';
-        const existSnap = await getDocs(collection(db,'agents'));
-        const keys=new Set(); existSnap.forEach(d=>{ const a=d.data(); keys.add(`${a.nom}|${a.prenom}`); });
-        let imported=0, skipped=0;
-        for (let i=0;i<AGENTS_INITIAL.length;i++) {
-          const a=AGENTS_INITIAL[i];
-          if (!keys.has(`${a.nom}|${a.prenom}`)) {
-            await addDoc(collection(db,'agents'),{...a,specialites:[],epi:[],formations:[],grade:'',email:'',createdAt:new Date().toISOString()});
-            imported++;
-          } else skipped++;
-          const pct=Math.round(((i+1)/AGENTS_INITIAL.length)*100);
-          bar.style.width=pct+'%';
-          status.textContent=`${i+1}/${AGENTS_INITIAL.length} — ${imported} importés, ${skipped} ignorés`;
-          await new Promise(r=>setTimeout(r,25));
+        const querySnapshot = await getDocs(collection(db, "users"));
+        container.innerHTML = "";
+        
+        if (querySnapshot.empty) {
+          container.innerHTML = "<p>Aucun agent trouvé dans la base.</p>";
+          return;
         }
-        toast(`Import terminé : ${imported} agents importés.`,'success');
-        closeModal('modalImport'); await loadAgents();
-        btn.disabled=false; btn.textContent="Lancer l'import";
-        document.getElementById('importProgress').style.display='none';
-      });
-    }
 
-    function setupFilters() {
-      const apply = () => {
-        const q = document.getElementById('searchAgent').value.toLowerCase();
-        const cis = document.getElementById('filterCis').value;
-        const spec = document.getElementById('filterSpec').value;
-        const aptF = document.getElementById('filterAptitude').value;
-        const aptMap = {operationnel:'Opérationnel',vigilance:'Vigilance',non_operationnel:'Non opérationnel'};
-        renderAgents(allAgents.filter(a => {
-          if (q && !`${a.nom} ${a.prenom}`.toLowerCase().includes(q) && !(a.cis||'').toLowerCase().includes(q)) return false;
-          if (cis && a.cis!==cis) return false;
-          if (spec && !(a.specialites||[]).includes(spec)) return false;
-          if (aptF && aptitudeInfo(a).label!==aptMap[aptF]) return false;
-          return true;
-        }));
-      };
-      ['searchAgent','filterCis','filterSpec','filterAptitude'].forEach(id=>document.getElementById(id).addEventListener('input',apply));
-      const applyR = () => {
-        const cis=document.getElementById('recapFilterCis').value;
-        const spec=document.getElementById('recapFilterSpec').value;
-        renderRecap(allAgents.filter(a=>(!cis||a.cis===cis)&&(!spec||(a.specialites||[]).includes(spec))));
-      };
-      ['recapFilterCis','recapFilterSpec'].forEach(id=>document.getElementById(id).addEventListener('change',applyR));
-    }
-
-    function setupTabs() {
-      document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.addEventListener('click',()=>{
-          document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
-          btn.classList.add('active');
-          const tab=btn.dataset.tab;
-          document.getElementById('tabListe').style.display=tab==='liste'?'':'none';
-          document.getElementById('tabRecap').style.display=tab==='recap'?'':'none';
+        querySnapshot.forEach((doc) => {
+          const agent = doc.data();
+          const card = document.createElement('div');
+          card.className = 'agent-card';
+          card.innerHTML = `
+            <div class="agent-info">
+              <h3>${agent.nom || "Nom inconnu"}</h3>
+              <p><strong>Affectation :</strong> ${agent.cis || "Non renseigné"}</p>
+              <p><strong>Contact :</strong> ${agent.tel || "NC"}</p>
+            </div>
+            <div class="agent-status">
+              <span class="badge">${agent.role || "Agent"}</span>
+            </div>
+          `;
+          container.appendChild(card);
         });
-      });
+      } catch (error) {
+        console.error("Erreur RH:", error);
+        container.innerHTML = "<p>Erreur lors du chargement des données.</p>";
+      }
     }
+
+    loadRH();
   </script>
 </body>
 </html>
