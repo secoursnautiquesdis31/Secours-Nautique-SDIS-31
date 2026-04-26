@@ -101,7 +101,7 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-  async function charger() {
+ async function charger() {
         if(!agentId) return;
         try {
             const snap = await getDoc(doc(db, "users", agentId));
@@ -176,8 +176,7 @@
             document.getElementById('q_mso').value = compteurs.mso;
 
         } catch (e) { console.error("Erreur chargement:", e); }
-    }
-    
+    }    
     async function toggleSpec(spec, current) {
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
