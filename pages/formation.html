@@ -16,26 +16,27 @@
     /* Style du calendrier */
     .fc-header-toolbar { padding: 10px; }
     .fc-event { cursor: pointer; padding: 3px; border: none !important; }
-    .event-sal { background-color: var(--navy) !important; }
-    .event-sav { background-color: var(--amber) !important; color: var(--navy) !important; }
+    .event-sal { background-color: var(--navy) !important; color: white !important; }
+    .event-sav { background-color: var(--amber) !important; color: var(--navy) !important; font-weight: bold; }
     
     /* Sélecteur d'agent en haut */
-    .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
+    .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     
     /* Modal */
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
     .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; }
-    input, select { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
+    label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: block; margin-top: 10px; }
+    input, select { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-  <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020;">🏠 MENU</a>
+  <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">🏠 MENU</a>
 
   <div class="user-session">
-      <span style="font-size: 0.8rem; font-weight: bold;">Agent :</span>
-      <select id="selectAgentSession" style="width: 150px; margin:0; padding:5px; border:none;"></select>
+      <span style="font-size: 0.7rem; font-weight: bold; color: #888; text-transform: uppercase;">Agent :</span>
+      <select id="selectAgentSession" style="width: 150px; margin:0; padding:5px; border:none; font-weight: bold; color: var(--navy);"></select>
   </div>
 
   <div class="container">
@@ -44,42 +45,51 @@
 
   <div id="modalEvent" class="modal">
     <div class="modal-content">
-      <h2 id="modalTitle">Nouvelle Session</h2>
+      <h2 id="modalTitle" style="margin-top:0; color: var(--navy);">Session</h2>
+      
       <div id="formSection">
           <input type="hidden" id="selectedDate">
-          <label>Type de formation :</label>
+          
+          <label>Nom de la formation :</label>
+          <input type="text" id="formNom" placeholder="ex: Manœuvre Garonne Blagnac">
+          
+          <label>Type (Couleur) :</label>
           <select id="formType">
-              <option value="Entraînement SAL">Entraînement SAL</option>
-              <option value="SAV-SEV">SAV-SEV</option>
-              <option value="CEN">CEN</option>
-              <option value="Recyclage">Recyclage</option>
+              <option value="Entraînement SAL">Entraînement SAL (Bleu)</option>
+              <option value="SAV-SEV">SAV-SEV (Ambre)</option>
+              <option value="CEN">CEN (Ambre)</option>
+              <option value="Recyclage">Recyclage (Ambre)</option>
           </select>
+          
           <label>Lieu :</label>
-          <input type="text" id="formLieu" placeholder="ex: Garonne / Pont Neuf">
-          <button class="btn-main" id="btnSave">ENREGISTRER</button>
+          <input type="text" id="formLieu" placeholder="ex: Cale de mise à l'eau">
+          
+          <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">ENREGISTRER</button>
       </div>
       
       <div id="detailSection" style="display:none;">
-          <p id="detLieu"></p>
-          <hr>
+          <p id="detLieu" style="margin-bottom: 5px;"></p>
+          <p id="detType" style="font-size: 0.9rem; color: #666;"></p>
+          <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
           <strong>Inscrits :</strong>
-          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem;"></div>
+          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; line-height: 1.5; color: #444; background: #F8F9FA; padding: 10px; border-radius: 6px;"></div>
+          
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
-          <button class="btn-main" id="btnSuppr" style="background: #666; margin-top: 20px;">Supprimer la session</button>
+          <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.8rem;">Supprimer la session</button>
       </div>
       
-      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
+      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px; font-size: 0.9rem;">Annuler / Fermer</button>
     </div>
   </div>
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
-    // 🔴 RECOPIE TES CLÉS ICI
+    // 🔴 REMPLACER PAR TES CLÉS FIREBASE
     const firebaseConfig = {
-     apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
         projectId: "secours-nautique-31",
         storageBucket: "secours-nautique-31.firebasestorage.app",
@@ -92,21 +102,27 @@
     let agentConnecte = "";
     let calendar;
 
-    // INITIALISATION
     async function init() {
-        // Charger agents
+        // 1. Charger les agents pour le sélecteur
         const uSnap = await getDocs(collection(db, "users"));
         const sel = document.getElementById('selectAgentSession');
-        sel.innerHTML = '<option value="">-- Choisir --</option>';
-        uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
-        sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
+        sel.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
+        uSnap.forEach(d => { 
+            const name = d.data().nom;
+            sel.innerHTML += `<option value="${name}">${name}</option>`; 
+        });
+        sel.onchange = (e) => { 
+            agentConnecte = e.target.value; 
+            calendar.refetchEvents(); // Rafraîchit les chiffres sur le calendrier
+        };
 
-        // Charger Calendrier
+        // 2. Initialiser FullCalendar
         const calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'fr',
             firstDay: 1,
+            buttonText: { today: "Aujourd'hui", month: "Mois", week: "Semaine" },
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
             events: async (info, success, failure) => {
                 const snap = await getDocs(collection(db, "formations"));
@@ -115,10 +131,10 @@
                     const data = d.data();
                     evts.push({
                         id: d.id,
-                        title: `${data.type} (${data.inscrits.length})`,
+                        title: `${data.nom || data.type} (${data.inscrits ? data.inscrits.length : 0})`,
                         start: data.date,
                         extendedProps: { ...data },
-                        className: data.type.includes('SAL') ? 'event-sal' : 'event-sav'
+                        className: data.type && data.type.includes('SAL') ? 'event-sal' : 'event-sav'
                     });
                 });
                 success(evts);
@@ -129,66 +145,33 @@
         calendar.render();
     }
 
-    // ACTIONS MODAL
     window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
 
     function ouvrirAjout(date) {
-        document.getElementById('modalTitle').innerText = "Ajouter une session";
+        document.getElementById('modalTitle').innerText = "Planifier une session";
         document.getElementById('formSection').style.display = "block";
         document.getElementById('detailSection').style.display = "none";
         document.getElementById('selectedDate').value = date;
         document.getElementById('modalEvent').style.display = 'block';
     }
 
-    async function ouvrirDetails(event) {
+    function ouvrirDetails(event) {
         const data = event.extendedProps;
         const id = event.id;
-        document.getElementById('modalTitle').innerText = data.type;
+        const inscrits = data.inscrits || [];
+
+        document.getElementById('modalTitle').innerText = data.nom || data.type;
         document.getElementById('formSection').style.display = "none";
         document.getElementById('detailSection').style.display = "block";
-        document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
-        document.getElementById('detInscrits').innerText = data.inscrits.length > 0 ? data.inscrits.join(', ') : "Aucun inscrit";
+        document.getElementById('detLieu').innerText = "📍 " + data.lieu;
+        document.getElementById('detType').innerText = "Type : " + data.type;
+        document.getElementById('detInscrits').innerText = inscrits.length > 0 ? inscrits.join(', ') : "Aucun inscrit pour le moment.";
         
-        const estInscrit = data.inscrits.includes(agentConnecte);
+        const estInscrit = agentConnecte && inscrits.includes(agentConnecte);
         document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
         document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
 
-        document.getElementById('btnInscrire').onclick = () => inscrire(id, data.inscrits);
-        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id, data.inscrits);
+        document.getElementById('btnInscrire').onclick = () => inscrire(id);
+        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
         document.getElementById('btnSuppr').onclick = () => supprimer(id);
-        document.getElementById('modalEvent').style.display = 'block';
-    }
-
-    // FIREBASE ACTIONS
-    document.getElementById('btnSave').onclick = async () => {
-        const type = document.getElementById('formType').value;
-        const lieu = document.getElementById('formLieu').value;
-        const date = document.getElementById('selectedDate').value;
-        if(!lieu) return alert("Indiquez un lieu");
-        await addDoc(collection(db, "formations"), { type, lieu, date, inscrits: [] });
-        fermerModal();
-        calendar.refetchEvents();
-    };
-
-    async function inscrire(id, list) {
-        if(!agentConnecte) return alert("Sélectionnez votre nom en haut à droite");
-        await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion(agentConnecte) });
-        fermerModal(); calendar.refetchEvents();
-    }
-
-    async function desinscrire(id, list) {
-        await updateDoc(doc(db, "formations", id), { inscrits: arrayRemove(agentConnecte) });
-        fermerModal(); calendar.refetchEvents();
-    }
-
-    async function supprimer(id) {
-        if(confirm("Supprimer cette session ?")) {
-            await deleteDoc(doc(db, "formations", id));
-            fermerModal(); calendar.refetchEvents();
-        }
-    }
-
-    init();
-  </script>
-</body>
-</html>
+        document.getElementById('modalEvent').style.display = 'block
