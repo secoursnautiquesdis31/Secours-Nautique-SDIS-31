@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Technique — SDIS 31</title>
-  <link rel="stylesheet" href="../main.css">
+  <link rel="stylesheet" href="../css/main.css">
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   <style>
     :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; }
@@ -24,7 +24,7 @@
     th { background: #f4f6f8; color: var(--navy); padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
     td { padding: 12px; border-bottom: 1px solid #eee; }
     
-    .stock-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-bottom: 5px; }
+    .stock-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; display: inline-block; }
     .bg-red { background: #fee2e2; color: var(--red); }
     .bg-orange { background: #ffedd5; color: #d97706; }
     .bg-green { background: #dcfce7; color: var(--green); }
@@ -87,125 +87,4 @@
 </div>
 
 <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-        authDomain: "secours-nautique-31.firebaseapp.com",
-        projectId: "secours-nautique-31",
-        storageBucket: "secours-nautique-31.firebasestorage.app",
-        messagingSenderId: "1013387329575",
-        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-    const stockBody = document.getElementById('stockBody');
-
-    let allItems = [];
-
-    async function charger() {
-        try {
-            const snap = await getDocs(collection(db, "stocks"));
-            allItems = [];
-            snap.forEach(d => {
-                allItems.push({ id: d.id, ...d.data() });
-            });
-            appliquerFiltres(); // On lance l'affichage via les filtres
-        } catch (e) {
-            console.error("Erreur de chargement:", e);
-            stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:red;'>Erreur de connexion Firebase.</td></tr>";
-        }
-    }
-
-    function afficher(items) {
-        stockBody.innerHTML = "";
-        
-        if (items.length === 0) {
-            stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:40px; color:#999;'>Aucun matériel trouvé avec ces critères.</td></tr>";
-        }
-
-        let countRupture = 0;
-        let countAlerte = 0;
-
-        items.forEach(item => {
-            const q = parseInt(item.quantite) || 0;
-            const s = parseInt(item.seuil) || 0;
-            
-            let statusClass = "bg-green";
-            if (q === 0) { statusClass = "bg-red"; countRupture++; }
-            else if (q <= s) { statusClass = "bg-orange"; countAlerte++; }
-
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><input type="text" class="cell-edit" value="${item.type || ''}" onchange="updateItem('${item.id}','type',this.value)"></td>
-                <td><input type="text" class="cell-edit" value="${item.taille || ''}" onchange="updateItem('${item.id}','taille',this.value)"></td>
-                <td>
-                    <span class="stock-badge ${statusClass}">${q}</span>
-                    <input type="number" class="cell-edit" style="width:50px; margin-left:5px;" value="${q}" onchange="updateItem('${item.id}','quantite',this.value)">
-                </td>
-                <td><input type="number" class="cell-edit" value="${s}" onchange="updateItem('${item.id}','seuil',this.value)"></td>
-                <td><input type="text" class="cell-edit" value="${item.peremption || ''}" onchange="updateItem('${item.id}','peremption',this.value)"></td>
-                <td><button class="btn-suppr" onclick="supprimer('${item.id}')">🗑️</button></td>
-            `;
-            stockBody.appendChild(tr);
-        });
-
-        // Stats globales sur la base complète (pas seulement filtrée)
-        document.getElementById('statTotal').innerText = allItems.length;
-        // On recalcule les ruptures/alertes sur l'ensemble pour les compteurs hauts
-        document.getElementById('statRupture').innerText = allItems.filter(i => (parseInt(i.quantite)||0) === 0).length;
-        document.getElementById('statAlerte').innerText = allItems.filter(i => {
-            const q = parseInt(i.quantite)||0;
-            return q > 0 && q <= (parseInt(i.seuil)||0);
-        }).length;
-    }
-
-    function appliquerFiltres() {
-        const search = document.getElementById('searchInput').value.toLowerCase();
-        const status = document.getElementById('statusFilter').value;
-
-        const filtered = allItems.filter(item => {
-            const q = parseInt(item.quantite) || 0;
-            const s = parseInt(item.seuil) || 0;
-            const nom = (item.type || "").toLowerCase();
-            const taille = (item.taille || "").toLowerCase();
-            
-            const matchSearch = nom.includes(search) || taille.includes(search);
-            
-            let matchStatus = true;
-            if (status === "rupture") matchStatus = (q === 0);
-            if (status === "alerte") matchStatus = (q > 0 && q <= s);
-            if (status === "ok") matchStatus = (q > s);
-
-            return matchSearch && matchStatus;
-        });
-        afficher(filtered);
-    }
-
-    document.getElementById('searchInput').oninput = appliquerFiltres;
-    document.getElementById('statusFilter').onchange = appliquerFiltres;
-
-    window.updateItem = async (id, field, value) => {
-        const val = (field==='quantite'||field==='seuil') ? parseInt(value) : value;
-        await updateDoc(doc(db, "stocks", id), {[field]: val});
-        // On recharge les données locales sans tout rafraîchir pour la fluidité
-        const index = allItems.findIndex(i => i.id === id);
-        if(index !== -1) allItems[index][field] = val;
-        appliquerFiltres();
-    };
-
-    window.supprimer = async (id) => {
-        if(confirm("Confirmer la suppression de cet article ?")) { 
-            await deleteDoc(doc(db, "stocks", id)); 
-            charger(); 
-        }
-    };
-
-    document.getElementById('csvInput').onchange = (e) => {
-        const file = e.target.files[0];
-        if(!file) return;
-        const reader = new FileReader();
-        reader.onload = async (ev) => {
-            const lignes = ev.target.result.split
+    import { initializeApp }
