@@ -33,26 +33,75 @@
   </main>
 
   <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+    import { db, auth, doc, setDoc, signOut } from "./auth.js";
 
-    const firebaseConfig = {
-        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
-        authDomain: "secours-nautique-31.firebaseapp.com",
-        projectId: "secours-nautique-31",
-        storageBucket: "secours-nautique-31.firebasestorage.app",
-        messagingSenderId: "1013387329575",
-        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+// FONCTION D'IMPORTATION DE SECOURS
+async function importerFichierCSV(event) {
+    const file = event.target.files[0];
+    const reader = new FileReader();
+
+    reader.onload = async (e) => {
+        const contenu = e.target.result;
+        const lignes = contenu.split(/\r?\n/);
+        let compteur = 0;
+
+        console.log("Analyse du fichier...");
+
+        for (let i = 1; i < lignes.length; i++) {
+            const ligne = lignes[i].trim();
+            if (!ligne) continue;
+
+            // Découpage par point-virgule
+            const colonnes = ligne.split(';');
+            const nomBrut = colonnes[0] ? colonnes[0].trim() : "";
+            const cisBrut = colonnes[1] ? colonnes[1].trim() : "";
+            const telBrut = colonnes[2] ? colonnes[2].trim() : "";
+
+            if (nomBrut) {
+                // On crée un ID sans caractères spéciaux pour la base de données
+                const docId = nomBrut.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+                
+                try {
+                    await setDoc(doc(db, "users", docId), {
+                        nom: nomBrut, // ICI : On garde le nom EXACT du fichier
+                        prenom: "",
+                        cis: cisBrut,
+                        tel: telBrut,
+                        role: "Agent",
+                        statut: "Actif",
+                        importDate: new Date().toISOString()
+                    });
+                    compteur++;
+                } catch (err) {
+                    console.error("Erreur pour " + nomBrut, err);
+                }
+            }
+        }
+        alert("Bravo ! " + compteur + " agents ont été importés avec les noms exacts.");
+        window.location.reload(); 
     };
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
+    // Lecture avec encodage Windows-1252 (celui d'Excel en France) pour éviter les bugs d'accents
+    reader.readAsText(file, 'windows-1252');
+}
 
-    document.getElementById("logoutBtn").addEventListener("click", () => {
-        signOut(auth).then(() => {
-            window.location.href = "../index.html";
-        });
-    });
+// Création du bouton invisible
+const input = document.createElement('input');
+input.type = 'file';
+input.id = 'importateurCache';
+input.accept = '.csv';
+input.style.display = 'none';
+input.addEventListener('change', importerFichierCSV);
+document.body.appendChild(input);
+
+// Fonction pour déclencher l'ouverture du fichier
+window.lancerImportationFichier = () => {
+    document.getElementById('importateurCache').click();
+};
+
+document.getElementById("logoutBtn")?.addEventListener("click", () => {
+    signOut(auth).then(() => { window.location.href = "../index.html"; });
+});
   </script>
 </body>
 </html>
