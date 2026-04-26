@@ -35,10 +35,10 @@
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
     .btn-export { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #DDD; cursor: pointer; font-weight: bold; font-size: 0.75rem; background: #f8f9fa; display: flex; align-items: center; justify-content: center; gap: 5px; }
-
-    /* Ajout du style pour la liste de validation */
-    .ligne-inscrit { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
-    .btn-valider-admin { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
+    
+    /* Styles pour la validation */
+    .admin-validation-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; padding: 5px; border-bottom: 1px solid #eee; }
+    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
   </style>
 </head>
 <body>
@@ -106,6 +106,28 @@
     let agentConnecte = "";
     let calendar;
 
+    // Rendre la fonction accessible globalement pour les boutons onclick
+    window.validerParAdmin = async (fId, nomAgent) => {
+        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+        try {
+            const ref = doc(db, "formations", fId);
+            const snap = await getDoc(ref);
+            let liste = snap.data().inscrits || [];
+            
+            // Mise à jour du statut dans le tableau
+            liste = liste.map(i => {
+                let n = (typeof i === 'object') ? i.nom : i;
+                if(n === nomAgent) return { nom: n, statut: "présent" };
+                return i;
+            });
+            
+            await updateDoc(ref, { inscrits: liste });
+            alert("Présence validée !");
+            calendar.refetchEvents();
+            fermerModal();
+        } catch(e) { alert("Erreur"); }
+    };
+
     async function init() {
         try {
             const uSnap = await getDocs(collection(db, "users"));
@@ -124,11 +146,7 @@
                     center: 'title', 
                     right: 'dayGridMonth,multiMonthYear' 
                 },
-                buttonText: {
-                    today: "Aujourd'hui",
-                    month: "Mois",
-                    year: "Année"
-                },
+                buttonText: { today: "Aujourd'hui", month: "Mois", year: "Année" },
                 events: async (info, success, failure) => {
                     const snap = await getDocs(collection(db, "formations"));
                     const evts = [];
@@ -147,4 +165,92 @@
                     document.getElementById('modalTitle').innerText = "Nouvelle session";
                     document.getElementById('formSection').style.display = "block";
                     document.getElementById('detailSection').style.display = "none";
-                    document.getElementById('selectedDate').value = info.
+                    document.getElementById('selectedDate').value = info.dateStr;
+                    document.getElementById('modalEvent').style.display = 'block';
+                },
+                eventClick: (info) => { ouvrirDetails(info.event); }
+            });
+            calendar.render();
+        } catch (e) { console.error(e); }
+    }
+
+    function ouvrirDetails(event) {
+        const data = event.extendedProps;
+        const id = event.id;
+        const dateStr = event.startStr;
+        const inscrits = data.inscrits || [];
+
+        document.getElementById('modalTitle').innerText = data.nom;
+        document.getElementById('formSection').style.display = "none";
+        document.getElementById('detailSection').style.display = "block";
+        document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
+        
+        // Construction de la liste des inscrits avec boutons
+        let htmlInscrits = "";
+        if(inscrits.length === 0) {
+            htmlInscrits = "Aucun inscrit.";
+        } else {
+            inscrits.forEach(i => {
+                let nom = (typeof i === 'object') ? i.nom : i;
+                let statut = (typeof i === 'object') ? i.statut : "inscrit";
+                let estP = (statut === "présent");
+                
+                htmlInscrits += `<div class="admin-validation-row">
+                    <span>${nom} ${estP ? '✅' : ''}</span>
+                    ${!estP ? `<button class="btn-valider" onclick="validerParAdmin('${id}', '${nom}')">Valider</button>` : '<span style="color:green;font-size:0.7rem;">PRÉSENT</span>'}
+                </div>`;
+            });
+        }
+        document.getElementById('detInscrits').innerHTML = htmlInscrits;
+
+        // Inscription agent session
+        const nomsSeuls = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
+        const estInscrit = agentConnecte && nomsSeuls.includes(agentConnecte);
+        document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
+        document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+
+        document.getElementById('btnPDF').onclick = () => genererPDF(data, inscrits, dateStr);
+        document.getElementById('btnExcel').onclick = () => genererExcel(data, inscrits, dateStr);
+        document.getElementById('btnInscrire').onclick = () => inscrire(id);
+        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
+        document.getElementById('btnSuppr').onclick = async () => {
+            if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
+        };
+        document.getElementById('modalEvent').style.display = 'block';
+    }
+
+    async function inscrire(formationId) {
+        if(!agentConnecte) return alert("Sélectionnez votre nom");
+        try {
+            const ref = doc(db, "formations", formationId);
+            await updateDoc(ref, { inscrits: arrayUnion({ nom: agentConnecte, statut: "en attente" }) });
+            alert("Inscrit !");
+            fermerModal(); calendar.refetchEvents();
+        } catch (e) { alert("Erreur"); }
+    }
+
+    async function desinscrire(formationId) {
+        try {
+            const ref = doc(db, "formations", formationId);
+            const snap = await getDoc(ref);
+            const list = snap.data().inscrits || [];
+            const obj = list.find(i => (typeof i === 'object' ? i.nom : i) === agentConnecte);
+            await updateDoc(ref, { inscrits: arrayRemove(obj) });
+            fermerModal(); calendar.refetchEvents();
+        } catch (e) { console.error(e); }
+    }
+
+    function genererPDF(data, inscrits, dateStr) {
+        const { jsPDF } = window.jspdf;
+        const docPDF = new jsPDF();
+        docPDF.text("EMARGEMENT : " + data.nom, 14, 20);
+        const lignes = inscrits.map((i, idx) => [idx + 1, (typeof i === 'object' ? i.nom : i), ""]);
+        docPDF.autoTable({ startY: 30, head: [['#', 'Nom', 'Signature']], body: lignes });
+        docPDF.save("Emargement.pdf");
+    }
+
+    function genererExcel(data, inscrits, dateStr) {
+        const wb = XLSX.utils.book_new();
+        const wsData = [["NOM", "STATUT"]];
+        inscrits.forEach(i => wsData.push([(typeof i === 'object' ? i.nom : i), (typeof i === 'object' ? i.statut : "inscrit")]));
+        XLSX.utils.book_append_sheet(wb, XLSX.
