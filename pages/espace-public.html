@@ -108,27 +108,27 @@
         }
 
         // 2. Charger la liste du MATÉRIEL (Stock technique)
-        async function chargerListeMateriel() {
-            try {
-                // Remplace "materiel" par le nom exact de ta collection de stock si besoin
-                const snap = await getDocs(collection(db, "stocks")); 
-                selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
-                
-                snap.forEach(doc => {
-                    const item = doc.data();
-                    if(item.nom) {
-                        let opt = document.createElement('option');
-                        opt.value = item.nom;
-                        opt.text = item.nom;
-                        selectMat.appendChild(opt);
-                    }
-                });
-            } catch (e) {
-                console.error("Erreur chargement stock:", e);
-                selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
+       async function chargerListeMateriel() {
+    try {
+        // 1. On cible la bonne collection "stocks"
+        const snap = await getDocs(collection(db, "stocks")); 
+        selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
+        
+        snap.forEach(doc => {
+            const item = doc.data();
+            // 2. CORRECTION : On utilise item.type au lieu de item.nom
+            if(item.type) { 
+                let opt = document.createElement('option');
+                opt.value = item.type; // On stocke le nom de l'article
+                opt.text = item.type;  // On affiche le nom de l'article
+                selectMat.appendChild(opt);
             }
-        }
-
+        });
+    } catch (e) {
+        console.error("Erreur chargement stock:", e);
+        selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
+    }
+}
         // Gérer le choix de l'agent
         selectAgent.onchange = () => {
             const nom = selectAgent.options[selectAgent.selectedIndex].text;
