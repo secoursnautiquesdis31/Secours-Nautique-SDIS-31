@@ -12,12 +12,10 @@
     .tech-container { max-width: 1200px; margin: 40px auto; }
     .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
     
-    /* Barre d'outils et filtres */
     .toolbar { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
     .search-input { flex: 2; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 1rem; }
     .filter-select { flex: 1; padding: 12px; border-radius: 8px; border: 1px solid #ddd; cursor: pointer; font-weight: bold; }
 
-    /* Statistiques rapides */
     .stats-bar { display: flex; gap: 20px; margin-bottom: 20px; }
     .stat-card { background: white; padding: 15px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); border-bottom: 4px solid var(--navy); }
     .stat-card.alert { border-color: var(--red); }
@@ -26,8 +24,7 @@
     th { background: #f4f6f8; color: var(--navy); padding: 15px; text-align: left; text-transform: uppercase; font-size: 0.8rem; letter-spacing: 1px; }
     td { padding: 12px; border-bottom: 1px solid #eee; }
     
-    /* Statuts Stock */
-    .stock-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; }
+    .stock-badge { padding: 5px 10px; border-radius: 4px; font-weight: bold; font-size: 0.85rem; display: inline-block; margin-bottom: 5px; }
     .bg-red { background: #fee2e2; color: var(--red); }
     .bg-orange { background: #ffedd5; color: #d97706; }
     .bg-green { background: #dcfce7; color: var(--green); }
@@ -35,7 +32,7 @@
     .btn-import { background: var(--amber); color: var(--navy); border: none; padding: 12px 25px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.3s; }
     .btn-import:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(232, 160, 32, 0.4); }
     
-    input.cell-edit { border: 1px solid transparent; padding: 6px; border-radius: 4px; width: 90%; transition: 0.2s; font-family: inherit; }
+    input.cell-edit { border: 1px solid transparent; padding: 6px; border-radius: 4px; width: 90%; transition: 0.2s; font-family: inherit; font-size: 0.95rem; }
     input.cell-edit:hover { border-color: #ddd; background: #fafafa; }
     input.cell-edit:focus { border-color: var(--amber); outline: none; background: white; }
     
@@ -70,3 +67,145 @@
             <option value="alerte">🟠 Alertes seuil</option>
             <option value="ok">🟢 Stock suffisant</option>
         </select>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Désignation Matériel</th>
+          <th style="width: 120px;">Taille</th>
+          <th style="width: 120px;">Stock</th>
+          <th style="width: 100px;">Seuil</th>
+          <th>Péremption</th>
+          <th style="width: 50px;">Action</th>
+        </tr>
+      </thead>
+      <tbody id="stockBody">
+        <tr><td colspan="6" style="text-align:center; padding:40px;">Chargement de la base de données...</td></tr>
+      </tbody>
+    </table>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const stockBody = document.getElementById('stockBody');
+
+    let allItems = [];
+
+    async function charger() {
+        try {
+            const snap = await getDocs(collection(db, "stocks"));
+            allItems = [];
+            snap.forEach(d => {
+                allItems.push({ id: d.id, ...d.data() });
+            });
+            appliquerFiltres(); // On lance l'affichage via les filtres
+        } catch (e) {
+            console.error("Erreur de chargement:", e);
+            stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; color:red;'>Erreur de connexion Firebase.</td></tr>";
+        }
+    }
+
+    function afficher(items) {
+        stockBody.innerHTML = "";
+        
+        if (items.length === 0) {
+            stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:40px; color:#999;'>Aucun matériel trouvé avec ces critères.</td></tr>";
+        }
+
+        let countRupture = 0;
+        let countAlerte = 0;
+
+        items.forEach(item => {
+            const q = parseInt(item.quantite) || 0;
+            const s = parseInt(item.seuil) || 0;
+            
+            let statusClass = "bg-green";
+            if (q === 0) { statusClass = "bg-red"; countRupture++; }
+            else if (q <= s) { statusClass = "bg-orange"; countAlerte++; }
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><input type="text" class="cell-edit" value="${item.type || ''}" onchange="updateItem('${item.id}','type',this.value)"></td>
+                <td><input type="text" class="cell-edit" value="${item.taille || ''}" onchange="updateItem('${item.id}','taille',this.value)"></td>
+                <td>
+                    <span class="stock-badge ${statusClass}">${q}</span>
+                    <input type="number" class="cell-edit" style="width:50px; margin-left:5px;" value="${q}" onchange="updateItem('${item.id}','quantite',this.value)">
+                </td>
+                <td><input type="number" class="cell-edit" value="${s}" onchange="updateItem('${item.id}','seuil',this.value)"></td>
+                <td><input type="text" class="cell-edit" value="${item.peremption || ''}" onchange="updateItem('${item.id}','peremption',this.value)"></td>
+                <td><button class="btn-suppr" onclick="supprimer('${item.id}')">🗑️</button></td>
+            `;
+            stockBody.appendChild(tr);
+        });
+
+        // Stats globales sur la base complète (pas seulement filtrée)
+        document.getElementById('statTotal').innerText = allItems.length;
+        // On recalcule les ruptures/alertes sur l'ensemble pour les compteurs hauts
+        document.getElementById('statRupture').innerText = allItems.filter(i => (parseInt(i.quantite)||0) === 0).length;
+        document.getElementById('statAlerte').innerText = allItems.filter(i => {
+            const q = parseInt(i.quantite)||0;
+            return q > 0 && q <= (parseInt(i.seuil)||0);
+        }).length;
+    }
+
+    function appliquerFiltres() {
+        const search = document.getElementById('searchInput').value.toLowerCase();
+        const status = document.getElementById('statusFilter').value;
+
+        const filtered = allItems.filter(item => {
+            const q = parseInt(item.quantite) || 0;
+            const s = parseInt(item.seuil) || 0;
+            const nom = (item.type || "").toLowerCase();
+            const taille = (item.taille || "").toLowerCase();
+            
+            const matchSearch = nom.includes(search) || taille.includes(search);
+            
+            let matchStatus = true;
+            if (status === "rupture") matchStatus = (q === 0);
+            if (status === "alerte") matchStatus = (q > 0 && q <= s);
+            if (status === "ok") matchStatus = (q > s);
+
+            return matchSearch && matchStatus;
+        });
+        afficher(filtered);
+    }
+
+    document.getElementById('searchInput').oninput = appliquerFiltres;
+    document.getElementById('statusFilter').onchange = appliquerFiltres;
+
+    window.updateItem = async (id, field, value) => {
+        const val = (field==='quantite'||field==='seuil') ? parseInt(value) : value;
+        await updateDoc(doc(db, "stocks", id), {[field]: val});
+        // On recharge les données locales sans tout rafraîchir pour la fluidité
+        const index = allItems.findIndex(i => i.id === id);
+        if(index !== -1) allItems[index][field] = val;
+        appliquerFiltres();
+    };
+
+    window.supprimer = async (id) => {
+        if(confirm("Confirmer la suppression de cet article ?")) { 
+            await deleteDoc(doc(db, "stocks", id)); 
+            charger(); 
+        }
+    };
+
+    document.getElementById('csvInput').onchange = (e) => {
+        const file = e.target.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const lignes = ev.target.result.split
