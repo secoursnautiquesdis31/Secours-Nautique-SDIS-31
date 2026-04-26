@@ -199,28 +199,42 @@
     };
 
     window.retirerEPI = async (stockId, type, taille) => {
-        if(confirm(`Supprimer l'affectation de ${type} ?`)) {
-            try {
-                const agentRef = doc(db, "users", agentId);
-                let objetASupprimer = { id: stockId, type: type };
-                
-                // Si la taille existe et n'est pas vide, on l'ajoute à l'objet de recherche
-                if (taille && taille !== "" && taille !== "undefined") {
-                    objetASupprimer.taille = taille;
-                }
+    if(confirm(`Supprimer l'affectation de ${type} ?`)) {
+        try {
+            const agentRef = doc(db, "users", agentId);
+            
+            // 1. On récupère d'abord les données actuelles de l'agent pour être sûr de l'objet
+            const agentSnap = await getDoc(agentRef);
+            if (!agentSnap.exists()) return;
+            
+            const currentEpi = agentSnap.data().epi || [];
+            
+            // 2. On cherche l'objet précis dans le tableau de l'agent
+            // On compare l'ID et le Type pour être certain de trouver le bon
+            const objetATrouver = currentEpi.find(item => 
+                item.id === stockId && item.type === type
+            );
 
+            if (objetATrouver) {
+                // 3. Si on le trouve, on demande à Firebase de retirer CET objet précis
                 await updateDoc(agentRef, {
-                    epi: arrayRemove(objetASupprimer)
+                    epi: arrayRemove(objetATrouver)
                 });
-
-                charger();
-            } catch (error) {
-                console.error(error);
-                alert("Erreur lors de la suppression.");
+                console.log("Objet trouvé et supprimé :", objetATrouver);
+            } else {
+                console.error("Impossible de trouver l'objet exact dans la base de l'agent");
+                alert("Erreur de correspondance : l'objet n'a pas été trouvé dans la base.");
             }
-        }
-    };
 
+            // 4. On rafraîchit l'affichage
+            charger();
+
+        } catch (error) {
+            console.error("Erreur Firebase :", error);
+            alert("Erreur technique lors de la suppression.");
+        }
+    }
+};
     // Lancer le chargement
     charger();
 
