@@ -101,7 +101,7 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    async function charger() {
+  async function charger() {
         if(!agentId) return;
         try {
             const snap = await getDoc(doc(db, "users", agentId));
@@ -142,7 +142,7 @@
                 epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
             }
 
-            // 3. HISTORIQUE ET APTITUDES
+            // 3. CALCUL DES APTITUDES (BASÉ UNIQUEMENT SUR LES PRÉSENCES CALENDRIER)
             let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
             const histTbody = document.getElementById('listeFormations');
             histTbody.innerHTML = "";
@@ -151,12 +151,16 @@
             fSnap.forEach(fDoc => {
                 const f = fDoc.data();
                 const inscrits = f.inscrits || [];
+                
+                // On cherche si l'agent est marqué "présent"
                 const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
 
                 if (presence) {
+                    // Ajout à l'historique
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
                     histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
 
+                    // Incrémentation automatique des compteurs
                     const titre = f.nom.toUpperCase();
                     if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
                     if (titre.includes("FMPA") || titre.includes("MER")) compteurs.fmpa++;
@@ -165,14 +169,15 @@
                 }
             });
 
+            // MISE À JOUR DU TABLEAU DES APTITUDES (En haut de la fiche)
             document.getElementById('q_sav').value = compteurs.sav;
             document.getElementById('q_fmpa').value = compteurs.fmpa;
             document.getElementById('q_cen').value = compteurs.cen;
             document.getElementById('q_mso').value = compteurs.mso;
 
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error("Erreur chargement:", e); }
     }
-
+    
     async function toggleSpec(spec, current) {
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
