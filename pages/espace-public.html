@@ -106,6 +106,8 @@
         select.onchange = () => {
             const nom = select.options[select.selectedIndex].text;
             if(select.value !== "") {
+                localStorage.setItem('agentIdSelected', select.value);
+                localStorage.setItem('agentNomSelected', nom)
                 document.getElementById('msgBienvenue').innerText = "Salut " + nom + " !";
                 document.getElementById('msgBienvenue').style.display = "block";
             } else {
