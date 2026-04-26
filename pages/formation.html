@@ -87,22 +87,24 @@
 
     // FONCTION VALIDER (ADMIN)
     window.validerAgent = async (formationId, nomAgent) => {
-        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
-        const ref = doc(db, "formations", formationId);
-        const snap = await getDoc(ref);
-        let inscrits = snap.data().inscrits || [];
-        
-        inscrits = inscrits.map(i => {
-            let n = (typeof i === 'object') ? i.nom : i;
-            return (n === nomAgent) ? { nom: n, statut: "présent" } : i;
-        });
+    if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+    
+    const ref = doc(db, "formations", formationId);
+    const snap = await getDoc(ref);
+    const fData = snap.data();
+    let inscrits = fData.inscrits || [];
+    
+    // On met à jour l'inscrit en gardant son nom et en passant son statut à présent
+    inscrits = inscrits.map(i => {
+        let n = (typeof i === 'object') ? i.nom : i;
+        return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
+    });
 
-        await updateDoc(ref, { inscrits: inscrits });
-        alert("Validé !");
-        calendar.refetchEvents();
-        fermerModal();
-    };
-
+    await updateDoc(ref, { inscrits: inscrits });
+    alert("Validé !");
+    calendar.refetchEvents();
+    fermerModal();
+};
     async function init() {
         // Charger agents
         const uSnap = await getDocs(collection(db, "users"));
