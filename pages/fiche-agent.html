@@ -59,8 +59,7 @@
     const agentId = params.get('id');
     
     // Liste des spécialités nautiques du SDIS 31
-    const listeSpecs = ["SAL 1", "SAL 2", "COD 1", "COD 2", "PILOTE", "SCAPH"];
-
+ const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
     async function chargerAgent() {
         if(!agentId) return;
         const snap = await getDoc(doc(db, "users", agentId));
