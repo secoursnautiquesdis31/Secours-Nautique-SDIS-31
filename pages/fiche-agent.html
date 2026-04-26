@@ -243,29 +243,26 @@
         });
     };
 
-   window.retirerEPI = async (stockId, type, taille) => {
-    // Message plus explicite pour l'utilisateur
-    if(confirm(`Supprimer l'affectation de : ${type} (${taille}) ?\n\nNote : Cela ne modifiera pas le stock général.`)) {
-        try {
-            const agentRef = doc(db, "users", agentId);
+  window.retirerEPI = async (stockId, type, taille) => {
+        // Changement du message pour être cohérent avec l'action
+        if(confirm(`Supprimer l'affectation de ${type} (${taille}) sur cette fiche ?\n(Le stock technique ne sera pas impacté)`)) {
+            try {
+                // 1. On retire l'objet du tableau 'epi' de l'utilisateur
+                await updateDoc(doc(db, "users", agentId), { 
+                    epi: arrayRemove({ id: stockId, type, taille }) 
+                });
 
-            // 1. On retire uniquement l'élément de la liste de l'agent
-            await updateDoc(agentRef, { 
-                epi: arrayRemove({ id: stockId, type, taille }) 
-            });
-
-            // LOGIQUE DE STOCK SUPPRIMÉE ICI : 
-            // On ne touche plus à la collection "stocks"
-            
-            alert("Affectation supprimée.");
-            charger(); // On rafraîchit l'affichage de la fiche
-        } catch (e) {
-            console.error("Erreur lors de la suppression :", e);
-            alert("Erreur lors de la suppression de l'affectation.");
+                // --- LA PARTIE SUR LE STOCK A ÉTÉ SUPPRIMÉE ICI ---
+                
+                alert("L'affectation a été supprimée de la fiche.");
+                charger(); // Rafraîchissement de l'affichage
+            } catch (e) {
+                console.error("Erreur lors du retrait :", e);
+                alert("Une erreur est survenue lors de la suppression.");
+            }
         }
-    }
-};
-    charger();
+    };
+  charger();
 </script>
 </body>
 </html>
