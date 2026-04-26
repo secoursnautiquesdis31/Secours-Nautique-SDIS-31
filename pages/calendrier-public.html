@@ -1,28 +1,59 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Formations — SDIS 31</title>
-    <link rel="stylesheet" href="../css/main.css">
-    <style>
-        :root { --navy: #0B1F3A; --amber: #E8A020; --green: #2A9D5C; }
-        body { font-family: sans-serif; background: #f4f6f8; padding: 20px; }
-        .container { max-width: 800px; margin: 0 auto; }
-        .event-card { background: white; padding: 20px; border-radius: 10px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        .btn-inscrire { background: var(--green); color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Calendrier Agent — SDIS 31</title>
+  
+  <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F4F6F8; }
+    body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    
+    .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    
+    .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
+    .fc-event { cursor: pointer; padding: 2px 5px; border: none !important; background-color: var(--navy) !important; color: white !important; font-size: 0.75rem !important; }
+    
+    .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; font-weight: bold; color: var(--navy); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
+
+    .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
+    .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; text-align: center; }
+    
+    .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 1rem; }
+  </style>
 </head>
 <body>
 
-<div class="container">
-    <a href="espace-public.html" style="text-decoration: none;">⬅ Retour</a>
-    <h1 style="color: var(--navy);">Prochaines Formations</h1>
-    <div id="listeFormations">Chargement...</div>
-</div>
+  <a href="espace-public.html" class="btn-back">⬅ RETOUR</a>
 
-<script type="module">
+  <div class="user-session" id="sessionDisplay">Agent : ...</div>
+
+  <div class="container">
+    <div id='calendar'></div>
+  </div>
+
+  <div id="modalEvent" class="modal">
+    <div class="modal-content">
+      <h2 id="modalTitle" style="margin-top:0; color: var(--navy);">Formation</h2>
+      <p id="detLieu" style="font-weight: bold; color: #555;"></p>
+      
+      <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
+      
+      <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; color: #666;"></div>
+      
+      <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
+      <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
+      
+      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
+    </div>
+  </div>
+
+  <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -36,60 +67,85 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // 1. FONCTION D'INSCRIPTION (Celle qui s'affichait mal)
-    window.inscriptionFormation = async function(formationId) {
-        const agentId = localStorage.getItem('agentIdSelected');
-        const agentNom = localStorage.getItem('agentNomSelected');
+    // RÉCUPÉRATION DE L'AGENT DEPUIS LE LOCALSTORAGE
+    const agentConnecte = localStorage.getItem('agentNomSelected');
+    if(!agentConnecte) {
+        alert("Veuillez d'abord choisir votre nom sur la page d'accueil.");
+        window.location.href = "espace-public.html";
+    }
+    document.getElementById('sessionDisplay').innerText = "Agent : " + agentConnecte;
 
-        if(!agentId) {
-            alert("Retourne sur l'accueil pour sélectionner ton nom !");
-            return;
-        }
+    let calendar;
 
+    async function init() {
+        const calendarEl = document.getElementById('calendar');
+        calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            locale: 'fr',
+            firstDay: 1,
+            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
+            buttonText: { today: "Aujourd'hui", month: "Mois", year: "Année" },
+            events: async (info, success, failure) => {
+                const snap = await getDocs(collection(db, "formations"));
+                const evts = [];
+                snap.forEach(d => {
+                    const data = d.data();
+                    evts.push({
+                        id: d.id,
+                        title: `${data.nom}`,
+                        start: data.date,
+                        extendedProps: { ...data }
+                    });
+                });
+                success(evts);
+            },
+            // DÉSCRIPTION : Pas de création possible pour l'agent au clic sur une date
+            dateClick: null, 
+            eventClick: (info) => ouvrirDetails(info.event)
+        });
+        calendar.render();
+    }
+
+    function ouvrirDetails(event) {
+        const data = event.extendedProps;
+        const id = event.id;
+        const inscrits = data.inscrits || [];
+
+        document.getElementById('modalTitle').innerText = data.nom;
+        document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
+        document.getElementById('detInscrits').innerText = inscrits.length + " inscrit(s).";
+        
+        const estInscrit = inscrits.includes(agentConnecte);
+        document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
+        document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+
+        document.getElementById('btnInscrire').onclick = () => inscrire(id);
+        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
+        
+        document.getElementById('modalEvent').style.display = 'block';
+    }
+
+    async function inscrire(formationId) {
         try {
             const formationRef = doc(db, "formations", formationId);
-            await updateDoc(formationRef, {
-                participants: arrayUnion({ 
-                    id: agentId, 
-                    nom: agentNom, 
-                    dateInscription: new Date().toISOString() 
-                })
-            });
-            alert("Inscription validée pour " + agentNom);
-            chargerFormations(); // Rafraîchir la liste
-        } catch (e) {
-            console.error(e);
-            alert("Erreur lors de l'inscription.");
-        }
+            await updateDoc(formationRef, { inscrits: arrayUnion(agentConnecte) });
+            alert("Inscription validée !");
+            fermerModal(); calendar.refetchEvents();
+        } catch (e) { alert("Erreur"); }
     }
 
-    // 2. CHARGEMENT DES FORMATIONS
-    async function chargerFormations() {
-        const container = document.getElementById('listeFormations');
-        const snap = await getDocs(collection(db, "formations"));
-        
-        if (snap.empty) {
-            container.innerHTML = "Aucune formation prévue.";
-            return;
-        }
-
-        container.innerHTML = "";
-        snap.forEach(d => {
-            const form = d.data();
-            const div = document.createElement('div');
-            div.className = "event-card";
-            div.innerHTML = `
-                <div>
-                    <strong>${form.titre || "Formation"}</strong><br>
-                    <small>📅 ${form.date || 'À venir'}</small>
-                </div>
-                <button class="btn-inscrire" onclick="inscriptionFormation('${d.id}')">S'INSCRIRE</button>
-            `;
-            container.appendChild(div);
-        });
+    async function desinscrire(formationId) {
+        try {
+            const formationRef = doc(db, "formations", formationId);
+            await updateDoc(formationRef, { inscrits: arrayRemove(agentConnecte) });
+            alert("Désinscription prise en compte.");
+            fermerModal(); calendar.refetchEvents();
+        } catch (e) { alert("Erreur"); }
     }
 
-    chargerFormations();
-</script>
+    window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
+
+    init();
+  </script>
 </body>
 </html>
