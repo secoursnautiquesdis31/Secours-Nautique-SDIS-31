@@ -1,0 +1,25 @@
+// Dans ton calendrier-public.html, la fonction d'inscription ressemblerait à ceci :
+
+async function inscriptionFormation(formationId) {
+    // 1. On récupère l'ID de l'agent stocké (on peut utiliser le localStorage)
+    const agentId = localStorage.getItem('agentIdSelected');
+    const agentNom = localStorage.getItem('agentNomSelected');
+
+    if(!agentId) {
+        alert("Retourne sur l'accueil pour sélectionner ton nom !");
+        return;
+    }
+
+    // 2. On met à jour le document de la formation dans Firestore
+    const formationRef = doc(db, "formations", formationId);
+    
+    await updateDoc(formationRef, {
+        participants: arrayUnion({
+            id: agentId,
+            nom: agentNom,
+            dateInscription: new Date().toISOString()
+        })
+    });
+
+    alert("Inscription validée !");
+}
