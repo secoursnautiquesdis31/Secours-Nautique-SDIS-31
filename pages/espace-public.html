@@ -12,33 +12,63 @@
         .header-agent { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
         .container { max-width: 600px; margin: 20px auto; padding: 10px; }
 
-        /* Design identique à tes boutons de base */
-        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .id-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; margin-top: 10px; background-color: white; }
+
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent; cursor: pointer; }
         .menu-btn:active { transform: scale(0.95); background: var(--amber); }
 
-        /* Bouton Retour distinct en haut */
-        .btn-retour { background: white; padding: 15px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); margin-bottom: 20px; border: 2px solid var(--amber); display: block; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; position:relative; }
+        textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing: border-box; }
+        .btn-send { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div class="header-agent">
-        <h1 style="margin:0;">DOCUMENTS OPÉRATIONNELS</h1>
-        <p style="margin:5px 0 0 0; opacity:0.8;">Consultation des référentiels</p>
+        <h1 style="margin:0;">SÉCURITÉ NAUTIQUE 31</h1>
+        <p style="margin:5px 0 0 0; opacity:0.8;">Espace Opérationnel & Logistique</p>
     </div>
 
     <div class="container">
-        <a href="javascript:history.back()" class="btn-retour">⬅️ RETOUR À L'ACCUEIL</a>
+        <div class="id-card">
+            <label style="font-weight: bold; color: var(--navy);">QUI ÊTES-VOUS ?</label>
+            <select id="selectAgent">
+                <option value="">-- Sélectionner mon nom --</option>
+            </select>
+            <p id="msgBienvenue" style="margin-top:10px; font-weight:bold; color:var(--amber); display:none;"></p>
+        </div>
 
-        <div id="listeDocs" class="menu-grid">
-            <p style="text-align:center;">Chargement des fichiers...</p>
+        <div class="menu-grid">
+            <a href="calendrier-public.html" class="menu-btn">
+                📅<br>FORMATION<br><small style="font-weight:normal; opacity:0.7;">Calendrier / Inscriptions</small>
+            </a>
+            <button class="menu-btn" onclick="ouvrirDemande()">
+                📦<br>LOGISTIQUE<br><small style="font-weight:normal; opacity:0.7;">Besoin de matériel</small>
+            </button>
+            <a href="operationnel.html" class="menu-btn" style="grid-column: span 2;">
+                🌊<br>OPÉRATIONNEL<br><small style="font-weight:normal; opacity:0.7;">Niveaux d'eau, Crues, Alertes</small>
+            </a>
+        </div>
+    </div>
+
+    <div id="modalMatos" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0; color:var(--navy);">Besoin de matériel</h2>
+            <label>Matériel disponible :</label>
+            <select id="matType"><option value="">-- Chargement... --</option></select>
+            <label>Raison :</label>
+            <textarea id="matRaison" rows="4"></textarea>
+            <button onclick="envoyerDemande()" class="btn-send">ENVOYER</button>
+            <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:10px; color:#666; cursor:pointer;">Annuler</button>
         </div>
     </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-        import { getFirestore, collection, getDocs, query, orderBy } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -52,36 +82,65 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function chargerDocs() {
-            const liste = document.getElementById('listeDocs');
-            try {
-                // On récupère uniquement les documents existants
-                const q = query(collection(db, "bibliotheque_ops"), orderBy("date", "desc"));
-                const snap = await getDocs(q);
-                liste.innerHTML = "";
+        const selectAgent = document.getElementById('selectAgent');
+        const selectMat = document.getElementById('matType');
 
-                if (snap.empty) {
-                    liste.innerHTML = "<p style='text-align:center;'>Aucun document disponible.</p>";
-                    return;
-                }
-
-                snap.forEach(doc => {
-                    const data = doc.data();
-                    // On crée un bouton pour chaque PDF
-                    const btn = document.createElement('a');
-                    btn.href = data.url;
-                    btn.target = "_blank";
-                    btn.className = "menu-btn";
-                    btn.innerHTML = `📄 <span>${data.titre}</span>`;
-                    liste.appendChild(btn);
-                });
-            } catch (e) {
-                console.error(e);
-                liste.innerHTML = "<p style='text-align:center;'>Erreur de connexion.</p>";
-            }
+        async function chargerAgents() {
+            const snap = await getDocs(collection(db, "users"));
+            snap.forEach(doc => {
+                let opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.text = doc.data().nom;
+                selectAgent.appendChild(opt);
+            });
         }
 
-        chargerDocs();
+        async function chargerListeMateriel() {
+            const snap = await getDocs(collection(db, "stocks")); 
+            selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
+            snap.forEach(doc => {
+                const item = doc.data();
+                if(item.type) {
+                    let opt = document.createElement('option');
+                    const t = item.taille ? ` (${item.taille})` : "";
+                    opt.value = item.type + t;
+                    opt.text = item.type + t; 
+                    selectMat.appendChild(opt);
+                }
+            });
+        }
+
+        selectAgent.onchange = () => {
+            const nom = selectAgent.options[selectAgent.selectedIndex].text;
+            if(selectAgent.value !== "") {
+                localStorage.setItem('agentNomSelected', nom);
+                document.getElementById('msgBienvenue').innerText = "Salut " + nom + " !";
+                document.getElementById('msgBienvenue').style.display = "block";
+            }
+        };
+
+        window.ouvrirDemande = () => {
+            if(!selectAgent.value) return alert("Choisis ton nom d'abord !");
+            document.getElementById('modalMatos').style.display = 'flex';
+            chargerListeMateriel();
+        };
+
+        window.envoyerDemande = async () => {
+            if(!selectMat.value) return alert("Sélectionne un article.");
+            try {
+                await addDoc(collection(db, "demandes_materiel"), {
+                    agentNom: selectAgent.options[selectAgent.selectedIndex].text,
+                    type: selectMat.value,
+                    raison: document.getElementById('matRaison').value,
+                    date: new Date().toISOString(),
+                    statut: "en_attente"
+                });
+                alert("Demande envoyée !");
+                document.getElementById('modalMatos').style.display = 'none';
+            } catch (e) { alert("Erreur d'envoi."); }
+        };
+
+        chargerAgents();
     </script>
 </body>
 </html>
