@@ -157,46 +157,70 @@
         });
     }
 
-    window.validerDemande = async (demandeId, agentId, type, taille) => {
+   window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
         if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
 
         try {
-            // 1. Trouver l'item en stock (correspondance type et taille)
+            // 1. NETTOYAGE DU NOM 
+            // On sépare "Nom de l'article" et "Taille" si l'agent a utilisé le menu déroulant
+            let nomPropre = typeFusionne;
+            let tailleReelle = tailleAncienne;
+
+            if (typeFusionne.includes(" (Taille:")) {
+                const parties = typeFusionne.split(" (Taille:");
+                nomPropre = parties[0].trim();
+                tailleReelle = parties[1].replace(")", "").trim();
+            }
+
+            // 2. Trouver l'item en stock
             let stockId = null;
             let currentQty = 0;
             
             allItems.forEach(item => {
-                if(item.type.toLowerCase() === type.toLowerCase() && item.taille === taille) {
+                // On compare le nom propre et la taille extraite
+                if(item.type.toLowerCase() === nomPropre.toLowerCase() && item.taille === tailleReelle) {
                     stockId = item.id;
                     currentQty = parseInt(item.quantite || 0);
                 }
             });
 
-            if(!stockId || currentQty <= 0) {
-                alert("Erreur : Ce matériel n'est pas disponible en stock avec cette taille.");
+            if(!stockId) {
+                alert("Erreur : Impossible de trouver '" + nomPropre + "' en taille '" + tailleReelle + "' dans l'inventaire.");
                 return;
             }
 
-            // 2. Ajouter l'EPI à l'agent
+            if(currentQty <= 0) {
+                alert("Erreur : Stock épuisé (0 restant).");
+                return;
+            }
+
+            // 3. Ajouter l'EPI à l'agent (Fiche Agent)
             await updateDoc(doc(db, "users", agentId), {
-                epi: arrayUnion({ id: stockId, type: type, taille: taille, date: new Date().toISOString() })
+                epi: arrayUnion({ 
+                    id: stockId, 
+                    type: nomPropre, 
+                    taille: tailleReelle, 
+                    date: new Date().toISOString() 
+                })
             });
 
-            // 3. Déduire du stock
-            await updateDoc(doc(db, "stocks", stockId), { quantite: currentQty - 1 });
+            // 4. Déduire du stock (-1)
+            await updateDoc(doc(db, "stocks", stockId), { 
+                quantite: currentQty - 1 
+            });
 
-            // 4. Supprimer la demande
+            // 5. Supprimer la demande traitée
             await deleteDoc(doc(db, "demandes_materiel", demandeId));
 
-            alert("Opération réussie !");
+            alert("Validation réussie : Stock mis à jour et fiche agent complétée.");
             chargerDemandes();
-            charger(); // Rafraîchir le tableau des stocks
+            charger(); 
         } catch (e) {
             alert("Erreur lors de la validation.");
             console.error(e);
         }
     };
-
+  
     window.refuserDemande = async (id) => {
         if(confirm("Supprimer cette demande ?")) {
             await deleteDoc(doc(db, "demandes_materiel", id));
