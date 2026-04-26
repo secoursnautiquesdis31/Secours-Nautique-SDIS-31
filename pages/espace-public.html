@@ -24,7 +24,7 @@
         /* Modal */
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; position:relative; }
-        input, textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing: border-box; }
+        textarea, select { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing: border-box; }
         .btn-send { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
@@ -61,16 +61,13 @@
         <div class="modal-content">
             <h2 style="margin-top:0; color:var(--navy);">Besoin de matériel</h2>
             
-            <label>Matériel souhaité :</label>
+            <label>Matériel disponible en stock :</label>
             <select id="matType">
                 <option value="">-- Chargement du stock... --</option>
             </select>
 
-            <label>Taille / Pointure :</label>
-            <input type="text" id="matTaille" placeholder="ex: XL, 43, L...">
-            
-            <label>Raison de la demande :</label>
-            <textarea id="matRaison" rows="3" placeholder="ex: Échange matériel usagé, nouvelle dotation..."></textarea>
+            <label>Raison de la demande / Commentaire :</label>
+            <textarea id="matRaison" rows="4" placeholder="ex: Échange suite déchirure, nouveau matériel requis..."></textarea>
             
             <button onclick="envoyerDemande()" class="btn-send">ENVOYER LA DEMANDE</button>
             <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:10px; color:#666; cursor:pointer;">Annuler</button>
@@ -96,7 +93,6 @@
         const selectAgent = document.getElementById('selectAgent');
         const selectMat = document.getElementById('matType');
 
-        // 1. Charger la liste des AGENTS
         async function chargerAgents() {
             const snap = await getDocs(collection(db, "users"));
             snap.forEach(doc => {
@@ -107,33 +103,27 @@
             });
         }
 
-        // 2. Charger la liste du MATÉRIEL (Stock technique)
         async function chargerListeMateriel() {
-    try {
-        const snap = await getDocs(collection(db, "stocks")); 
-        selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
-        
-        snap.forEach(doc => {
-            const item = doc.data();
-            if(item.type) { 
-                let opt = document.createElement('option');
+            try {
+                const snap = await getDocs(collection(db, "stocks")); 
+                selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
                 
-                // On récupère la taille si elle existe, sinon on met "N/A" ou rien
-                const affichageTaille = item.taille ? ` (Taille: ${item.taille})` : "";
-                
-                // La valeur envoyée à la base reste le type, mais le texte affiché inclut la taille
-                opt.value = item.type; 
-                opt.text = item.type + affichageTaille; 
-                
-                selectMat.appendChild(opt);
+                snap.forEach(doc => {
+                    const item = doc.data();
+                    if(item.type) {
+                        let opt = document.createElement('option');
+                        const affichageTaille = item.taille ? ` (Taille: ${item.taille})` : "";
+                        opt.value = item.type + affichageTaille; // On envoie le type + taille combinés
+                        opt.text = item.type + affichageTaille; 
+                        selectMat.appendChild(opt);
+                    }
+                });
+            } catch (e) {
+                console.error("Erreur chargement stock:", e);
+                selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
             }
-        });
-    } catch (e) {
-        console.error("Erreur chargement stock:", e);
-        selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
-    }
-}        
-        // Gérer le choix de l'agent
+        }
+
         selectAgent.onchange = () => {
             const nom = selectAgent.options[selectAgent.selectedIndex].text;
             if(selectAgent.value !== "") {
@@ -146,32 +136,29 @@
             }
         };
 
-        // Ouvrir la modal
         window.ouvrirDemande = () => {
             if(!selectAgent.value) return alert("Choisis ton nom d'abord !");
             document.getElementById('modalMatos').style.display = 'flex';
-            chargerListeMateriel(); // On rafraîchit la liste du stock à chaque ouverture
+            chargerListeMateriel();
         };
 
-        // Envoyer la demande
         window.envoyerDemande = async () => {
-            const type = selectMat.value;
-            const taille = document.getElementById('matTaille').value;
+            const articleChoisi = selectMat.value;
             const raison = document.getElementById('matRaison').value;
 
-            if(!type) return alert("Choisis un article dans la liste.");
+            if(!articleChoisi) return alert("Sélectionne un article.");
 
             try {
                 await addDoc(collection(db, "demandes_materiel"), {
                     agentId: selectAgent.value,
                     agentNom: selectAgent.options[selectAgent.selectedIndex].text,
-                    type: type,
-                    taille: taille,
+                    type: articleChoisi, // Contient maintenant "Nom + Taille"
                     raison: raison,
                     date: new Date().toISOString(),
                     statut: "en_attente"
                 });
                 alert("Demande envoyée !");
+                document.getElementById('matRaison').value = ""; // Vider le texte pour la prochaine fois
                 document.getElementById('modalMatos').style.display = 'none';
             } catch (e) { alert("Erreur d'envoi."); }
         };
