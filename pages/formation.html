@@ -28,7 +28,7 @@
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
 
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-    .modal-content { background: white; margin: 8% auto; padding: 30px; width: 420px; border-radius: 12px; }
+    .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; }
     label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: block; margin-top: 10px; }
     input { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
     
@@ -73,7 +73,7 @@
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
           
           <div class="btn-group">
-            <button class="btn-export" id="btnPDF">📄 PDF</button>
+            <button class="btn-export" id="btnPDF">📄 PDF ÉMARGEMENT</button>
             <button class="btn-export" id="btnExcel">📊 EXCEL</button>
           </div>
 
@@ -86,10 +86,11 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // 🔴 TES CLÉS FIREBASE ICI
     const firebaseConfig = {
-     apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
         projectId: "secours-nautique-31",
         storageBucket: "secours-nautique-31.firebasestorage.app",
@@ -153,7 +154,7 @@
                     document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
                     document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
 
-                    // LOGIQUE EXPORT PDF
+                    // EXPORTS
                     document.getElementById('btnPDF').onclick = () => {
                         const { jsPDF } = window.jspdf;
                         const docPDF = new jsPDF();
@@ -166,31 +167,18 @@
                         docPDF.save(`Emargement_${data.nom}.pdf`);
                     };
 
-                    // LOGIQUE EXPORT EXCEL
                     document.getElementById('btnExcel').onclick = () => {
                         const wb = XLSX.utils.book_new();
-                        const wsData = [
-                            ["FORMATION", data.nom],
-                            ["DATE", dateStr],
-                            ["LIEU", data.lieu],
-                            [],
-                            ["N°", "NOM DE L'AGENT"]
-                        ];
+                        const wsData = [["FORMATION", data.nom], ["DATE", dateStr], ["LIEU", data.lieu], [], ["N°", "NOM DE L'AGENT"]];
                         inscrits.forEach((nom, i) => wsData.push([i + 1, nom]));
                         const ws = XLSX.utils.aoa_to_sheet(wsData);
                         XLSX.utils.book_append_sheet(wb, ws, "Inscrits");
                         XLSX.writeFile(wb, `Formation_${data.nom}.xlsx`);
                     };
 
-                    document.getElementById('btnInscrire').onclick = async () => {
-                        if(!agentConnecte) return alert("Sélectionnez votre nom");
-                        await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion(agentConnecte) });
-                        fermerModal(); calendar.refetchEvents();
-                    };
-                    document.getElementById('btnDesinscrire').onclick = async () => {
-                        await updateDoc(doc(db, "formations", id), { inscrits: arrayRemove(agentConnecte) });
-                        fermerModal(); calendar.refetchEvents();
-                    };
+                    // ACTIONS
+                    document.getElementById('btnInscrire').onclick = () => inscrire(id);
+                    document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
                     document.getElementById('btnSuppr').onclick = async () => {
                         if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
                     };
@@ -198,6 +186,60 @@
                 }
             });
             calendar.render();
+        } catch (e) { console.error(e); }
+    }
+
+    async function inscrire(formationId) {
+        if(!agentConnecte) return alert("Sélectionnez votre nom en haut à droite");
+        try {
+            const formationRef = doc(db, "formations", formationId);
+            const formationSnap = await getDoc(formationRef);
+            const formationData = formationSnap.data();
+
+            // 1. Ajouter à la liste des inscrits de la formation
+            await updateDoc(formationRef, { inscrits: arrayUnion(agentConnecte) });
+
+            // 2. Ajouter à l'historique de l'agent dans 'users'
+            const q = query(collection(db, "users"), where("nom", "==", agentConnecte));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                const agentDocRef = querySnapshot.docs[0].ref;
+                await updateDoc(agentDocRef, {
+                    historiqueFormations: arrayUnion({
+                        nom: formationData.nom,
+                        date: formationData.date,
+                        lieu: formationData.lieu
+                    })
+                });
+            }
+            alert("Inscription validée !");
+            fermerModal(); calendar.refetchEvents();
+        } catch (e) { console.error(e); alert("Erreur d'inscription"); }
+    }
+
+    async function desinscrire(formationId) {
+        try {
+            const formationRef = doc(db, "formations", formationId);
+            const formationSnap = await getDoc(formationRef);
+            const formationData = formationSnap.data();
+
+            // 1. Retirer de la formation
+            await updateDoc(formationRef, { inscrits: arrayRemove(agentConnecte) });
+
+            // 2. Retirer de la fiche agent
+            const q = query(collection(db, "users"), where("nom", "==", agentConnecte));
+            const querySnapshot = await getDocs(q);
+            if (!querySnapshot.empty) {
+                const agentDocRef = querySnapshot.docs[0].ref;
+                await updateDoc(agentDocRef, {
+                    historiqueFormations: arrayRemove({
+                        nom: formationData.nom,
+                        date: formationData.date,
+                        lieu: formationData.lieu
+                    })
+                });
+            }
+            fermerModal(); calendar.refetchEvents();
         } catch (e) { console.error(e); }
     }
 
