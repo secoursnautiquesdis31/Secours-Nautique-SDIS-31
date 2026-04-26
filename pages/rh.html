@@ -2,69 +2,116 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>RH — Secours Nautique SDIS 31</title>
+  <title>Annuaire RH — SDIS 31</title>
   <link rel="stylesheet" href="../css/main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600;700&display=swap" rel="stylesheet">
   <style>
-    .agent-card { background: white; padding: 15px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); border-left: 5px solid #E8A020; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-    .agent-info h3 { margin: 0; color: #0B1F3A; text-transform: uppercase; font-size: 1.1rem; }
-    .agent-info p { margin: 2px 0; font-size: 0.9rem; color: #526070; }
-    .badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; background: #E8ECF0; }
-    .search-bar { margin-bottom: 20px; padding: 10px; width: 100%; border-radius: 8px; border: 1px solid #C8D2DC; }
+    :root { --navy: #0B1F3A; --amber: #E8A020; --light-bg: #F4F7F9; }
+    body { font-family: 'Barlow', sans-serif; background: var(--light-bg); margin: 0; padding: 0; color: #333; }
+    
+    .container { max-width: 1100px; margin: 40px auto; padding: 0 20px; }
+    
+    /* Header & Recherche */
+    .rh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    .search-box { position: relative; width: 350px; }
+    .search-box input { 
+        width: 100%; padding: 12px 20px; border-radius: 30px; border: 1px solid #DDD;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); outline: none; font-size: 1rem;
+    }
+
+    /* Tableau Dashboard */
+    .data-card { background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); overflow: hidden; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { background: #F8FAFB; padding: 15px 20px; color: #888; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 1px; border-bottom: 1px solid #EEE; }
+    td { padding: 15px 20px; border-bottom: 1px solid #F8FAFB; font-size: 0.95rem; }
+    tr:hover { background: #FBFCFD; cursor: pointer; }
+    
+    .name-cell { font-weight: 700; color: var(--navy); text-transform: uppercase; }
+    .cis-badge { background: #E9EEF5; color: var(--navy); padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; font-weight: 600; }
+    
+    /* Tags Spécialités dans le tableau */
+    .spec-pill { 
+        font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; 
+        background: #EEE; color: #777; margin-right: 3px; font-weight: bold;
+    }
+    .spec-pill.active { background: var(--amber); color: var(--navy); }
   </style>
 </head>
-<body class="app-layout">
-  <div class="page-content">
-    <div class="page-header">
-      <h1>Annuaire RH - Secours Nautique</h1>
-    </div>
+<body>
 
-    <input type="text" id="search" class="search-bar" placeholder="Rechercher un nom, un CIS...">
-
-    <div id="agentsList">
-      <p>Chargement des agents...</p>
+<div class="container">
+  <div class="rh-header">
+    <h1 style="font-size: 2rem; color: var(--navy); margin: 0;">Annuaire Nautique</h1>
+    <div class="search-box">
+      <input type="text" id="searchInput" placeholder="Rechercher un nom ou un CIS..." onkeyup="filtrerTableau()">
     </div>
   </div>
 
-  <script type="module">
-    import { db, collection, getDocs } from "./auth.js";
+  <div class="data-card">
+    <table id="rhTable">
+      <thead>
+        <tr>
+          <th>Nom de l'Agent</th>
+          <th>CIS / Unité</th>
+          <th>Spécialités</th>
+          <th>Contact</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        </tbody>
+    </table>
+  </div>
+</div>
 
-    async function loadRH() {
-      const container = document.getElementById('agentsList');
-      try {
-        const querySnapshot = await getDocs(collection(db, "users"));
-        container.innerHTML = "";
-        
-        if (querySnapshot.empty) {
-          container.innerHTML = "<p>Aucun agent trouvé dans la base.</p>";
-          return;
-        }
+<script type="module">
+  import { db, collection, getDocs } from "./auth.js";
 
-       querySnapshot.forEach((doc) => {
-    const data = doc.data();
-    const div = document.createElement('div');
-    div.className = 'test-card';
+  let tousLesAgents = [];
+
+  async function chargerRH() {
+    const querySnapshot = await getDocs(collection(db, "users"));
+    const container = document.getElementById('tableBody');
+    container.innerHTML = "";
     
-    // C'est ici qu'on ajoute le lien vers la fiche
-    div.style.cursor = "pointer";
-    div.onclick = () => {
-        window.location.href = `fiche-agent.html?id=${doc.id}`;
-    };
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      const id = doc.id;
+      const agent = { id, ...data };
+      tousLesAgents.push(agent);
+      afficherLigne(agent);
+    });
+  }
 
-    div.innerHTML = `
-        <strong>NOM : ${data.nom || 'Inconnu'}</strong><br>
-        <span class="debug-info">CIS : ${data.cis || 'NC'} | TPH : ${data.tel || 'NC'}</span>
-        <div style="margin-top:10px; color:var(--amber); font-size:0.8em;">→ Voir la fiche individuelle</div>
+  function afficherLigne(agent) {
+    const container = document.getElementById('tableBody');
+    const tr = document.createElement('tr');
+    tr.onclick = () => window.location.href = `fiche-agent.html?id=${agent.id}`;
+    
+    // Génération des petits badges de spécialités
+    const specsHTML = (agent.specialites || []).map(s => `<span class="spec-pill active">${s}</span>`).join('');
+
+    tr.innerHTML = `
+      <td class="name-cell">${agent.nom || 'Inconnu'}</td>
+      <td><span class="cis-badge">${agent.cis || 'Non renseigné'}</span></td>
+      <td>${specsHTML || '<span class="spec-pill">Aucune</span>'}</td>
+      <td style="color:#666; font-size:0.9em;">${agent.tel || '-'}</td>
     `;
-    container.appendChild(div);
-});
-      } catch (error) {
-        console.error("Erreur RH:", error);
-        container.innerHTML = "<p>Erreur lors du chargement des données.</p>";
-      }
-    }
+    container.appendChild(tr);
+  }
 
-    loadRH();
-  </script>
+  // Fonction de recherche dynamique
+  window.filtrerTableau = () => {
+    const search = document.getElementById('searchInput').value.toLowerCase();
+    const container = document.getElementById('tableBody');
+    container.innerHTML = "";
+    
+    tousLesAgents
+      .filter(a => a.nom.toLowerCase().includes(search) || (a.cis && a.cis.toLowerCase().includes(search)))
+      .forEach(a => afficherLigne(a));
+  };
+
+  chargerRH();
+</script>
+
 </body>
 </html>
