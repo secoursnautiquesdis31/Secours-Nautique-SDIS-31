@@ -8,107 +8,160 @@
   <style>
     :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --success: #2A9D5C; }
     body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
-    .fiche-card { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    .header { background: var(--navy); color: white; padding: 30px; position: relative; }
-    .back-btn { color: white; text-decoration: none; font-size: 0.9em; opacity: 0.7; }
-    .back-btn:hover { opacity: 1; }
-    
+    .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    .header { background: var(--navy); color: white; padding: 30px; }
     .content { padding: 30px; }
-    .section-title { border-bottom: 2px solid #EEE; padding-bottom: 10px; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+    .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
     
-    /* Système de Spécialités */
-    .specs-grid { display: flex; flex-wrap: wrap; gap: 10px; }
-    .spec-tag { 
-        padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; 
-        cursor: pointer; font-weight: bold; transition: 0.2s; color: #888;
-    }
+    /* Spécialités */
+    .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; }
     .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
-    .spec-tag:hover { transform: scale(1.05); }
 
-    .info-row { display: flex; margin-bottom: 15px; border-bottom: 1px solid #F0F0F0; padding-bottom: 10px; }
-    .info-label { width: 150px; font-weight: bold; color: #666; }
+    /* Liste EPI */
+    .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
+    .btn-delete { background: none; border: none; color: var(--danger); cursor: pointer; font-size: 1.2rem; }
+
+    /* Modal */
+    .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
+    .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
+    .stock-item-select { padding: 10px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
+    .stock-item-select:hover { background: #F8F9FA; }
   </style>
 </head>
 <body>
 
   <div class="fiche-card">
-    <div class="header" id="agentHeader">
-        <a href="rh.html" class="back-btn">← Retour à la liste</a>
-        <h1 id="nomAgent" style="margin: 15px 0 5px 0;">CHARGEMENT...</h1>
-        <div id="cisAgent">CIS ...</div>
+    <div class="header">
+        <a href="rh.html" style="color:white; text-decoration:none; opacity:0.7;">← Retour à l'annuaire</a>
+        <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase;">Chargement...</h1>
+        <div id="cisAgent" style="color: var(--amber); font-weight: bold;">CIS ...</div>
     </div>
 
     <div class="content">
-      <div class="section-title">Informations Générales</div>
-      <div class="info-row"><div class="info-label">Téléphone</div><div id="telAgent">-</div></div>
-      <div class="info-row"><div class="info-label">Statut</div><div id="statutAgent">Opérationnel</div></div>
-
       <div class="section-title">Spécialités (Cliquer pour modifier)</div>
-      <div class="specs-grid" id="specsGrid">
-          </div>
+      <div id="specsGrid" style="display: flex; flex-wrap: wrap; gap: 10px;"></div>
 
-      <div style="margin-top:40px;" class="section-title">Équipements affectés</div>
-      <div id="epiList" style="color:#999; font-style:italic;">Aucun équipement lié pour le moment.</div>
+      <div class="section-title">
+        <span>Paquetage Individuel (EPI)</span>
+        <button onclick="ouvrirModalStock()" style="background:var(--navy); color:white; border:none; padding:8px 15px; border-radius:6px; cursor:pointer;">+ Affecter Matériel</button>
+      </div>
+      <div id="epiList">
+          <p style="color:#999; font-style:italic;">Aucun équipement affecté.</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modalStock" class="modal">
+    <div class="modal-content">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+        <h2 style="margin:0;">Choisir dans le stock</h2>
+        <button onclick="fermerModal()" style="border:none; background:none; font-size:1.5rem; cursor:pointer;">&times;</button>
+      </div>
+      <input type="text" id="searchStock" placeholder="Filtrer le matériel..." style="width:100%; padding:10px; margin-bottom:15px; border:1px solid #DDD; border-radius:6px;">
+      <div id="listeChoixStock"></div>
     </div>
   </div>
 
   <script type="module">
-    import { db, doc, getDoc, updateDoc } from "./auth.js";
+    import { db, doc, getDoc, getDocs, collection, updateDoc, arrayUnion, arrayRemove } from "./auth.js";
 
     const params = new URLSearchParams(window.location.search);
     const agentId = params.get('id');
-    
-    // Liste des spécialités nautiques du SDIS 31
- const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
-    async function chargerAgent() {
-        if(!agentId) return;
-        const snap = await getDoc(doc(db, "users", agentId));
-        
-        if (snap.exists()) {
-            const agent = snap.data();
-            document.getElementById('nomAgent').innerText = agent.nom;
-            document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
-            document.getElementById('telAgent').innerText = agent.tel || "Non renseigné";
-            
-            const agentSpecs = agent.specialites || [];
-            genererSpecs(agentSpecs);
-        }
-    }
+    const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    function genererSpecs(agentSpecs) {
+    async function chargerDonnees() {
+      if(!agentId) return;
+      const snap = await getDoc(doc(db, "users", agentId));
+      if (snap.exists()) {
+        const agent = snap.data();
+        document.getElementById('nomAgent').innerText = agent.nom;
+        document.getElementById('cisAgent').innerText = agent.cis || "CIS INCONNU";
+        
+        // Affichage Spécialités
         const grid = document.getElementById('specsGrid');
         grid.innerHTML = "";
-        
-        listeSpecs.forEach(spec => {
-            const isActive = agentSpecs.includes(spec);
-            const tag = document.createElement('div');
-            tag.className = `spec-tag ${isActive ? 'active' : ''}`;
-            tag.innerText = spec;
-            tag.onclick = () => toggleSpec(spec, agentSpecs);
-            grid.appendChild(tag);
+        listeSpecs.forEach(s => {
+          const active = (agent.specialites || []).includes(s);
+          const btn = document.createElement('div');
+          btn.className = `spec-tag ${active ? 'active' : ''}`;
+          btn.innerText = s;
+          btn.onclick = () => toggleSpec(s, agent.specialites || []);
+          grid.appendChild(btn);
         });
-    }
 
-    async function toggleSpec(spec, currentSpecs) {
-        let nouvellesSpecs = [...currentSpecs];
-        if (nouvellesSpecs.includes(spec)) {
-            nouvellesSpecs = nouvellesSpecs.filter(s => s !== spec);
+        // Affichage EPI
+        const epiList = document.getElementById('epiList');
+        epiList.innerHTML = "";
+        if (agent.epi && agent.epi.length > 0) {
+          agent.epi.forEach(item => {
+            const div = document.createElement('div');
+            div.className = "epi-row";
+            div.innerHTML = `
+                <div><strong>${item.type}</strong> <span style="color:#666; font-size:0.8em;">(Taille: ${item.taille || '-'})</span></div>
+                <button class="btn-delete" onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️</button>
+            `;
+            epiList.appendChild(div);
+          });
         } else {
-            nouvellesSpecs.push(spec);
+          epiList.innerHTML = "<p style='color:#999;'>Aucun équipement affecté.</p>";
         }
-        
-        // Mise à jour immédiate dans Firebase
-        try {
-            await updateDoc(doc(db, "users", agentId), {
-                specialites: nouvellesSpecs
-            });
-            genererSpecs(nouvellesSpecs); // Rafraîchir l'affichage
-        } catch (e) {
-            alert("Erreur de sauvegarde : " + e.message);
-        }
+      }
     }
 
-    chargerAgent();
+    // TOGGLE SPECIALITES
+    async function toggleSpec(spec, current) {
+      const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
+      await updateDoc(doc(db, "users", agentId), { specialites: news });
+      chargerDonnees();
+    }
+
+    // GESTION STOCK / EPI
+    window.ouvrirModalStock = async () => {
+      document.getElementById('modalStock').style.display = 'block';
+      const snap = await getDocs(collection(db, "stocks"));
+      const list = document.getElementById('listeChoixStock');
+      list.innerHTML = "";
+      snap.forEach(d => {
+        const s = d.data();
+        if(s.quantite > 0) {
+            const div = document.createElement('div');
+            div.className = "stock-item-select";
+            div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Stock: ${s.quantite}</strong>`;
+            div.onclick = () => attribuerEPI(d.id, s.type, s.taille, s.quantite);
+            list.appendChild(div);
+        }
+      });
+    };
+
+    window.fermerModal = () => document.getElementById('modalStock').style.display = 'none';
+
+    async function attribuerEPI(stockId, type, taille, qte) {
+      // 1. Ajouter à l'agent
+      await updateDoc(doc(db, "users", agentId), {
+        epi: arrayUnion({ id: stockId, type, taille })
+      });
+      // 2. Baisser le stock
+      await updateDoc(doc(db, "stocks", stockId), { quantite: qte - 1 });
+      fermerModal();
+      chargerDonnees();
+    }
+
+    window.retirerEPI = async (stockId, type, taille) => {
+      if(confirm("Confirmer le retour en stock de ce matériel ?")) {
+        // 1. Retirer de l'agent
+        await updateDoc(doc(db, "users", agentId), {
+          epi: arrayRemove({ id: stockId, type, taille })
+        });
+        // 2. Augmenter le stock
+        const sSnap = await getDoc(doc(db, "stocks", stockId));
+        if(sSnap.exists()) {
+            await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
+        }
+        chargerDonnees();
+      }
+    };
+
+    chargerDonnees();
   </script>
 </body>
 </html>
