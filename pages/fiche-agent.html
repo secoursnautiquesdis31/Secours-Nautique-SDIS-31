@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Fiche Agent — SDIS 31</title>
+  <link rel="stylesheet" href="../css/main.css">
+  <style>
+    .fiche-container { max-width: 900px; margin: 20px auto; padding: 20px; font-family: 'Barlow', sans-serif; }
+    .header-agent { background: var(--navy); color: white; padding: 30px; border-radius: var(--radius-lg); display: flex; justify-content: space-between; align-items: center; }
+    .section-fiche { background: white; padding: 20px; border-radius: var(--radius-md); margin-top: 20px; box-shadow: var(--shadow-sm); }
+    .tag-spec { background: var(--amber); color: var(--navy); padding: 5px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; margin-right: 5px; }
+    .epi-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--gray-100); }
+    .btn-attrib { background: var(--navy); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; }
+  </style>
+</head>
+<body style="background: var(--white);">
+
+  <div class="fiche-container">
+    <a href="rh.html" style="text-decoration:none; color:var(--gray-600);">← Retour à la liste</a>
+    
+    <div id="ficheContent">
+      <p>Chargement du profil agent...</p>
+    </div>
+  </div>
+
+  <script type="module">
+    import { db, doc, getDoc, collection, getDocs } from "./auth.js";
+
+    // 1. Récupérer l'ID dans l'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const agentId = urlParams.get('id');
+
+    async function chargerFiche() {
+      if(!agentId) return;
+      const docSnap = await getDoc(doc(db, "users", agentId));
+      
+      if (docSnap.exists()) {
+        const agent = docSnap.data();
+        const container = document.getElementById('ficheContent');
+        
+        container.innerHTML = `
+          <div class="header-agent">
+            <div>
+              <h1 style="margin:0; text-transform:uppercase;">${agent.nom} ${agent.prenom || ''}</h1>
+              <p style="opacity:0.8; margin-top:5px;">${agent.cis || 'CIS non renseigné'}</p>
+            </div>
+            <div style="text-align:right">
+              <div style="font-size:1.2rem; font-weight:bold;">${agent.tel || '-'}</div>
+              <div class="text-small">CONTACT</div>
+            </div>
+          </div>
+
+          <div class="section-fiche">
+            <h3>Spécialités & Aptitudes</h3>
+            <div id="specs">
+                <span class="tag-spec">SAL 1</span>
+                <span class="tag-spec">COD 1</span>
+                <span style="color:var(--gray-400)">+ Ajouter une spécialité</span>
+            </div>
+          </div>
+
+          <div class="section-fiche">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3>Équipements (EPI) affectés</h3>
+                <button class="btn-attrib">+ Affecter un matériel</button>
+            </div>
+            <div id="epiListe" style="margin-top:15px;">
+                <p class="text-muted">Aucun équipement enregistré pour cet agent.</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    chargerFiche();
+  </script>
+</body>
+</html>
