@@ -167,4 +167,92 @@
             // 3. Formations
             const formTable = document.getElementById('listeFormations');
             formTable.innerHTML = "";
-            const forms = agent.historiqueForm
+            const forms = agent.historiqueFormations || [];
+            if (forms.length > 0) {
+                forms.sort((a,b) => new Date(b.date) - new Date(a.date)).forEach(f => {
+                    formTable.innerHTML += `<tr>
+                        <td><span class="badge-date">${new Date(f.date).toLocaleDateString('fr-FR')}</span></td>
+                        <td><strong>${f.nom}</strong></td>
+                        <td>📍 ${f.lieu || '-'}</td>
+                    </tr>`;
+                });
+            } else {
+                formTable.innerHTML = "<tr><td colspan='3' style='text-align:center; padding:20px; color:#999;'>Aucune activité enregistrée.</td></tr>";
+            }
+
+            // 4. EPI
+            const epiList = document.getElementById('epiList');
+            epiList.innerHTML = "";
+            if (agent.epi && agent.epi.length > 0) {
+                agent.epi.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "epi-row";
+                    div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille})</small></div>
+                                     <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
+                                     onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille}')">🗑️ RETIRER</button>`;
+                    epiList.appendChild(div);
+                });
+            } else {
+                epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
+            }
+        }
+    }
+
+    // SAUVEGARDE DES QUOTAS
+    document.getElementById('btnSaveQuotas').onclick = async () => {
+        try {
+            const nouveauxQuotas = {
+                sav: parseInt(document.getElementById('q_sav').value),
+                fmpa: parseInt(document.getElementById('q_fmpa').value),
+                cen: parseInt(document.getElementById('q_cen').value),
+                mso: parseInt(document.getElementById('q_mso').value)
+            };
+            await updateDoc(doc(db, "users", agentId), { quotas: nouveauxQuotas });
+            alert("✅ Objectifs mis à jour !");
+        } catch (e) { alert("Erreur lors de la sauvegarde."); }
+    };
+
+    // GESTION SPECS
+    async function toggleSpec(spec, current) {
+        const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
+        await updateDoc(doc(db, "users", agentId), { specialites: news });
+        charger();
+    }
+
+    // GESTION STOCK / EPI
+    document.getElementById('btnOpenStock').onclick = async () => {
+        document.getElementById('modalStock').style.display = 'block';
+        const list = document.getElementById('listeChoixStock');
+        list.innerHTML = "Chargement du stock...";
+        const snap = await getDocs(collection(db, "stocks"));
+        list.innerHTML = "";
+        snap.forEach(d => {
+            const s = d.data();
+            if(s.quantite > 0) {
+                const div = document.createElement('div');
+                div.className = "stock-item";
+                div.innerHTML = `<span>${s.type} (${s.taille})</span> <strong>Dispo: ${s.quantite}</strong>`;
+                div.onclick = async () => {
+                    await updateDoc(doc(db, "users", agentId), { epi: arrayUnion({ id: d.id, type: s.type, taille: s.taille }) });
+                    await updateDoc(doc(db, "stocks", d.id), { quantite: s.quantite - 1 });
+                    document.getElementById('modalStock').style.display = 'none';
+                    charger();
+                };
+                list.appendChild(div);
+            }
+        });
+    };
+
+    window.retirerEPI = async (stockId, type, taille) => {
+        if(confirm("Réintégrer ce matériel au stock ?")) {
+            await updateDoc(doc(db, "users", agentId), { epi: arrayRemove({ id: stockId, type, taille }) });
+            const sSnap = await getDoc(doc(db, "stocks", stockId));
+            if(sSnap.exists()) await updateDoc(doc(db, "stocks", stockId), { quantite: sSnap.data().quantite + 1 });
+            charger();
+        }
+    };
+
+    charger();
+</script>
+</body>
+</html>
