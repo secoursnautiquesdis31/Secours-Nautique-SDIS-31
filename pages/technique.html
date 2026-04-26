@@ -45,99 +45,90 @@
   <script type="module">
     import { db, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "./auth.js";
 
-    const stockBody = document.getElementById('stockBody');
+const stockBody = document.getElementById('stockBody');
 
-    // --- CHARGEMENT ---
-    async function chargerStock() {
-      try {
-        const querySnapshot = await getDocs(collection(db, "stocks"));
-        stockBody.innerHTML = "";
-        
-        if (querySnapshot.empty) {
-          stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>La base est vide. Utilisez le bouton 'Importer'.</td></tr>";
-          return;
-        }
-
-        querySnapshot.forEach((d) => {
-          const item = d.data();
-          const id = d.id;
-          const enAlerte = parseInt(item.quantite) <= parseInt(item.seuil);
-
-          const tr = document.createElement('tr');
-          if(enAlerte) tr.className = "alert-qty";
-          
-          tr.innerHTML = `
-            <td><input type="text" value="${item.type || ''}" onchange="updateValue('${id}', 'type', this.value)"></td>
-            <td><input type="text" value="${item.taille || ''}" onchange="updateValue('${id}', 'taille', this.value)"></td>
-            <td><input type="number" value="${item.quantite || 0}" onchange="updateValue('${id}', 'quantite', this.value)"></td>
-            <td><input type="number" value="${item.seuil || 0}" onchange="updateValue('${id}', 'seuil', this.value)"></td>
-            <td><input type="text" value="${item.peremption || ''}" onchange="updateValue('${id}', 'peremption', this.value)"></td>
-            <td><button onclick="supprimer('${id}')">🗑️</button></td>
-          `;
-          stockBody.appendChild(tr);
-        });
-      } catch (e) {
-        alert("Erreur de connexion base : " + e.message);
-      }
+async function chargerStock() {
+  try {
+    const querySnapshot = await getDocs(collection(db, "stocks"));
+    stockBody.innerHTML = "";
+    if (querySnapshot.empty) {
+      stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>La base est vide. Cliquez sur Importer.</td></tr>";
+      return;
     }
+    querySnapshot.forEach((d) => {
+      const item = d.data();
+      const id = d.id;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><input type="text" value="${item.type || ''}" onchange="updateValue('${id}', 'type', this.value)"></td>
+        <td><input type="text" value="${item.taille || ''}" onchange="updateValue('${id}', 'taille', this.value)"></td>
+        <td><input type="number" value="${item.quantite || 0}" onchange="updateValue('${id}', 'quantite', this.value)"></td>
+        <td><input type="number" value="${item.seuil || 0}" onchange="updateValue('${id}', 'seuil', this.value)"></td>
+        <td><input type="text" value="${item.peremption || ''}" onchange="updateValue('${id}', 'peremption', this.value)"></td>
+        <td><button onclick="supprimer('${id}')">🗑️</button></td>
+      `;
+      stockBody.appendChild(tr);
+    });
+  } catch (e) { console.error(e); }
+}
 
-    // --- MISE À JOUR MANUELLE ---
-    window.updateValue = async (id, champ, valeur) => {
-      try {
-        const v = (champ === 'quantite' || champ === 'seuil') ? parseInt(valeur) : valeur;
-        await updateDoc(doc(db, "stocks", id), { [champ]: v });
-      } catch (e) { alert("Erreur sauvegarde : " + e.message); }
-    };
+// --- LE NOUVEL IMPORTATEUR ROBUSTE ---
+document.getElementById('csvInput').onchange = (e) => {
+  const file = e.target.files[0];
+  const reader = new FileReader();
+  reader.onload = async (ev) => {
+    const lignes = ev.target.result.split(/\r?\n/);
+    let dernierType = "";
+    let count = 0;
 
-    window.supprimer = async (id) => {
-      if(confirm("Supprimer ?")) {
-        await deleteDoc(doc(db, "stocks", id));
-        chargerStock();
-      }
-    };
+    for (let i = 1; i < lignes.length; i++) {
+      const col = lignes[i].split(';'); // On coupe par point-virgule
+      if (col.length < 3) continue;
 
-    // --- IMPORTATION ---
-    document.getElementById('csvInput').onchange = (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      
-      const reader = new FileReader();
-      reader.onload = async (ev) => {
-        try {
-          const lignes = ev.target.result.split(/\r?\n/);
-          let dernierType = "";
-          let imports = 0;
+      // Logique spécifique pour votre fichier :
+      // Type est col[0], Taille est col[2], Quantité est col[3], Seuil est col[4]
+      let typeBrut = col[0] ? col[0].trim() : "";
+      let type = typeBrut || dernierType;
+      if (!type || type.toLowerCase().includes("type")) continue;
+      dernierType = type;
 
-          for (let i = 1; i < lignes.length; i++) {
-            const col = lignes[i].split(';');
-            if (col.length < 3) continue;
+      let taille = col[2] ? col[2].trim() : "";
+      let qte = col[3] ? col[3].trim() : "0";
+      let seuil = col[4] ? col[4].trim() : "0";
+      let peremp = col[5] ? col[5].trim() : "";
 
-            let type = col[0].trim() || dernierType;
-            if (!type || type === "Type") continue;
-            dernierType = type;
+      // ID unique sans caractères spéciaux
+      const id = (type + "_" + taille).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
 
-            const taille = col[2] ? col[2].trim() : "";
-            const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-            await setDoc(doc(db, "stocks", id), {
-              type: type,
-              taille: taille,
-              quantite: parseInt(col[3]) || 0,
-              seuil: parseInt(col[4]) || 0,
-              peremption: col[5] || ""
-            });
-            imports++;
-          }
-          alert(imports + " articles importés avec succès !");
-          chargerStock();
-        } catch (err) {
-          alert("Erreur lors de la lecture du fichier : " + err.message);
-        }
-      };
-      reader.readAsText(file, 'ISO-8859-1');
-    };
-
+      await setDoc(doc(db, "stocks", id), {
+        type: type,
+        taille: taille,
+        quantite: parseInt(qte) || 0,
+        seuil: parseInt(seuil) || 0,
+        peremption: peremp
+      });
+      count++;
+    }
+    alert(count + " articles importés !");
     chargerStock();
+  };
+  // Utilisation de l'encodage spécifique Windows/Mac Excel
+  reader.readAsText(file, 'ISO-8859-1');
+};
+
+window.updateValue = async (id, champ, valeur) => {
+  const v = (champ === 'quantite' || champ === 'seuil') ? parseInt(valeur) : valeur;
+  await updateDoc(doc(db, "stocks", id), { [champ]: v });
+};
+
+window.supprimer = async (id) => {
+  if(confirm("Supprimer ?")) {
+    await deleteDoc(doc(db, "stocks", id));
+    chargerStock();
+  }
+};
+
+chargerStock();
   </script>
 </body>
 </html>
