@@ -142,22 +142,24 @@
             const dem = d.data();
             const div = document.createElement('div');
             div.className = "demande-card";
+            
+            // On s'assure que taille est soit le texte, soit une chaîne vide
+            const tailleDemande = dem.taille || ""; 
+            
             div.innerHTML = `
                 <div>
                     <strong style="color:var(--navy);">${dem.agentNom}</strong> demande : 
-                    <strong>${dem.type}</strong> ${dem.taille ? '(Taille: '+dem.taille+')' : ''}<br>
+                    <strong>${dem.type}</strong> ${tailleDemande ? '(Taille: '+tailleDemande+')' : ''}<br>
                     <small style="color:#666;">Motif : ${dem.raison || 'Non précisé'}</small>
                 </div>
                 <div>
-                    <button onclick="validerDemande('${d.id}', '${dem.agentId}', '${dem.type}', '${dem.taille}')" class="btn-valider">✅ VALIDER</button>
+                    <button onclick="validerDemande('${d.id}', '${dem.agentId}', '${dem.type}', '${tailleDemande}')" class="btn-valider">✅ VALIDER</button>
                     <button onclick="refuserDemande('${d.id}')" class="btn-refuser">🗑️</button>
                 </div>
             `;
             container.appendChild(div);
         });
-    }
-
-   window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
+      window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
         if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
 
         try {
