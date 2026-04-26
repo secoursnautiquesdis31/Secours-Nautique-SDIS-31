@@ -28,6 +28,11 @@
     .bg-green { background: #dcfce7; color: var(--green); }
     input.cell-edit { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 85%; }
     .btn-suppr { border: none; background: none; cursor: pointer; font-size: 1.1rem; }
+
+    /* Styles pour la zone de demandes */
+    .demande-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--amber); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn-valider { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-refuser { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
   </style>
 </head>
 <body>
@@ -35,6 +40,16 @@
 <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber);">🏠 MENU</a>
 
 <div class="tech-container">
+
+    <div style="max-width: 800px; margin: 0 auto 30px auto;">
+        <div style="background: var(--navy); color: white; padding: 12px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid var(--amber);">
+            <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 1.2rem;">📦 Demandes de matériel en attente</h2>
+        </div>
+        <div id="listeDemandes" style="background: #fff; padding: 15px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 50px;">
+            <p style="text-align: center; color: #666; font-style: italic;">Chargement des demandes...</p>
+        </div>
+    </div>
+
     <div class="header-flex">
       <h1>LOGISTIQUE TECHNIQUE</h1>
       <button style="background: var(--amber); border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
@@ -95,7 +110,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -110,6 +125,86 @@
     const db = getFirestore(app);
     const stockBody = document.getElementById('stockBody');
     let allItems = [];
+
+    // --- GESTION DES DEMANDES MATÉRIEL ---
+
+    async function chargerDemandes() {
+        const snap = await getDocs(collection(db, "demandes_materiel"));
+        const container = document.getElementById('listeDemandes');
+        
+        if (snap.empty) {
+            container.innerHTML = "<p style='text-align:center; color:#999; margin:0;'>Aucune demande de matériel en attente.</p>";
+            return;
+        }
+
+        container.innerHTML = "";
+        snap.forEach(d => {
+            const dem = d.data();
+            const div = document.createElement('div');
+            div.className = "demande-card";
+            div.innerHTML = `
+                <div>
+                    <strong style="color:var(--navy);">${dem.agentNom}</strong> demande : 
+                    <strong>${dem.type}</strong> ${dem.taille ? '(Taille: '+dem.taille+')' : ''}<br>
+                    <small style="color:#666;">Motif : ${dem.raison || 'Non précisé'}</small>
+                </div>
+                <div>
+                    <button onclick="validerDemande('${d.id}', '${dem.agentId}', '${dem.type}', '${dem.taille}')" class="btn-valider">✅ VALIDER</button>
+                    <button onclick="refuserDemande('${d.id}')" class="btn-refuser">🗑️</button>
+                </div>
+            `;
+            container.appendChild(div);
+        });
+    }
+
+    window.validerDemande = async (demandeId, agentId, type, taille) => {
+        if(!confirm("Valider cette distribution ? Le stock sera déduit et la fiche agent mise à jour.")) return;
+
+        try {
+            // 1. Trouver l'item en stock (correspondance type et taille)
+            let stockId = null;
+            let currentQty = 0;
+            
+            allItems.forEach(item => {
+                if(item.type.toLowerCase() === type.toLowerCase() && item.taille === taille) {
+                    stockId = item.id;
+                    currentQty = parseInt(item.quantite || 0);
+                }
+            });
+
+            if(!stockId || currentQty <= 0) {
+                alert("Erreur : Ce matériel n'est pas disponible en stock avec cette taille.");
+                return;
+            }
+
+            // 2. Ajouter l'EPI à l'agent
+            await updateDoc(doc(db, "users", agentId), {
+                epi: arrayUnion({ id: stockId, type: type, taille: taille, date: new Date().toISOString() })
+            });
+
+            // 3. Déduire du stock
+            await updateDoc(doc(db, "stocks", stockId), { quantite: currentQty - 1 });
+
+            // 4. Supprimer la demande
+            await deleteDoc(doc(db, "demandes_materiel", demandeId));
+
+            alert("Opération réussie !");
+            chargerDemandes();
+            charger(); // Rafraîchir le tableau des stocks
+        } catch (e) {
+            alert("Erreur lors de la validation.");
+            console.error(e);
+        }
+    };
+
+    window.refuserDemande = async (id) => {
+        if(confirm("Supprimer cette demande ?")) {
+            await deleteDoc(doc(db, "demandes_materiel", id));
+            chargerDemandes();
+        }
+    };
+
+    // --- GESTION DU STOCK EXISTANT ---
 
     async function charger() {
         try {
@@ -162,7 +257,6 @@
         }).length;
     }
 
-    // FONCTION AJOUT MANUEL
     document.getElementById('btnAddManual').onclick = async () => {
         const type = document.getElementById('newType').value.trim();
         const taille = document.getElementById('newTaille').value.trim();
@@ -170,19 +264,13 @@
         const seuil = parseInt(document.getElementById('newSeuil').value) || 0;
 
         if(!type) { alert("Veuillez saisir une désignation."); return; }
-
         const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
-
-        await setDoc(doc(db, "stocks", id), {
-            type, taille, quantite: qty, seuil, peremption: ""
-        });
-
-        // Vider les champs
+        await setDoc(doc(db, "stocks", id), { type, taille, quantite: qty, seuil, peremption: "" });
+        
         document.getElementById('newType').value = "";
         document.getElementById('newTaille').value = "";
         document.getElementById('newQty').value = "0";
         document.getElementById('newSeuil').value = "1";
-
         alert("Matériel ajouté !");
         charger();
     };
@@ -199,7 +287,6 @@
         if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "stocks", id)); charger(); }
     };
 
-    // Filtres et Recherche
     document.getElementById('searchInput').oninput = () => {
         const val = document.getElementById('searchInput').value.toLowerCase();
         afficher(allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val)));
@@ -216,7 +303,6 @@
         }));
     };
 
-    // Import CSV (gardé au cas où)
     document.getElementById('csvInput').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = async (ev) => {
@@ -238,6 +324,8 @@
         reader.readAsText(e.target.files[0], 'ISO-8859-1');
     };
 
+    // Lancement des chargements au démarrage
+    chargerDemandes();
     charger();
 </script>
 </body>
