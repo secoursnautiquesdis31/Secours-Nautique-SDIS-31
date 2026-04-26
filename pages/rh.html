@@ -90,7 +90,7 @@
     const tr = document.createElement('tr');
     
     // ATTENTION : vérifie si ton fichier s'appelle fiche_agent.html ou fiche-agent.html
-    tr.onclick = () => window.location.href = `fiche_agent.html?id=${agent.id}`;
+    tr.onclick = () => window.location.href = `fiche-agent.html?id=${agent.id}`;
     
     const specsHTML = (agent.specialites || []).map(s => `<span class="spec-pill active">${s}</span>`).join('');
     tr.innerHTML = `
