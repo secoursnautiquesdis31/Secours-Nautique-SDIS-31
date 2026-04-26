@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Agent — SDIS 31</title>
+    <link rel="stylesheet" href="../css/main.css">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --light-bg: #F0F2F5; }
+        body { font-family: 'Barlow', sans-serif; background: var(--light-bg); margin: 0; padding: 0; }
+        
+        .header-agent { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
+        .container { max-width: 600px; margin: 20px auto; padding: 10px; }
+
+        /* Identification Section */
+        .id-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-bottom: 20px; text-align: center; }
+        select { width: 100%; padding: 12px; border-radius: 8px; border: 2px solid #ddd; font-size: 1rem; margin-top: 10px; }
+
+        /* Grid de boutons */
+        .menu-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .menu-btn { background: white; padding: 20px; border-radius: 12px; text-align: center; text-decoration: none; color: var(--navy); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.05); transition: 0.3s; border: 1px solid transparent; }
+        .menu-btn:active { transform: scale(0.95); background: var(--amber); }
+        .menu-btn i { font-size: 2rem; display: block; margin-bottom: 10px; }
+
+        /* Modal */
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
+        .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; position:relative; }
+        input, textarea { width:100%; padding:10px; margin:10px 0; border:1px solid #ccc; border-radius:5px; box-sizing: border-box; }
+        .btn-send { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; }
+    </style>
+</head>
+<body>
+
+    <div class="header-agent">
+        <h1 style="margin:0;">SÉCURITÉ NAUTIQUE 31</h1>
+        <p style="margin:5px 0 0 0; opacity:0.8;">Espace Opérationnel & Logistique</p>
+    </div>
+
+    <div class="container">
+        <div class="id-card">
+            <label style="font-weight: bold; color: var(--navy);">QUI ÊTES-VOUS ?</label>
+            <select id="selectAgent">
+                <option value="">-- Sélectionner mon nom --</option>
+            </select>
+            <p id="msgBienvenue" style="margin-top:10px; font-weight:bold; color:var(--amber); display:none;"></p>
+        </div>
+
+        <div class="menu-grid">
+            <a href="calendrier-public.html" class="menu-btn">
+                📅<br>FORMATION<br><small style="font-weight:normal; opacity:0.7;">Calendrier / Inscriptions</small>
+            </a>
+            <button class="menu-btn" onclick="ouvrirDemande()">
+                📦<br>LOGISTIQUE<br><small style="font-weight:normal; opacity:0.7;">Besoin de matériel</small>
+            </button>
+            <a href="ops.html" class="menu-btn" style="grid-column: span 2;">
+                🌊<br>OPÉRATIONNEL<br><small style="font-weight:normal; opacity:0.7;">Niveaux d'eau, Crues, Alertes</small>
+            </a>
+        </div>
+    </div>
+
+    <div id="modalMatos" class="modal">
+        <div class="modal-content">
+            <h2 style="margin-top:0; color:var(--navy);">Besoin de matériel</h2>
+            <label>Matériel :</label>
+            <input type="text" id="matType" placeholder="ex: Gants, Gilet...">
+            <label>Taille :</label>
+            <input type="text" id="matTaille" placeholder="ex: L, 42, XL...">
+            <label>Raison :</label>
+            <textarea id="matRaison" rows="3" placeholder="ex: Échange suite déchirure..."></textarea>
+            
+            <button onclick="envoyerDemande()" class="btn-send">ENVOYER LA DEMANDE</button>
+            <button onclick="document.getElementById('modalMatos').style.display='none'" style="background:none; border:none; width:100%; margin-top:10px; color:#666;">Fermer</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+            authDomain: "secours-nautique-31.firebaseapp.com",
+            projectId: "secours-nautique-31",
+            storageBucket: "secours-nautique-31.firebasestorage.app",
+            messagingSenderId: "1013387329575",
+            appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+
+        const select = document.getElementById('selectAgent');
+
+        // Charger la liste des agents au démarrage
+        async function chargerAgents() {
+            const snap = await getDocs(collection(db, "users"));
+            snap.forEach(doc => {
+                let opt = document.createElement('option');
+                opt.value = doc.id;
+                opt.text = doc.data().nom;
+                select.appendChild(opt);
+            });
+        }
+
+        // Gérer le changement de nom
+        select.onchange = () => {
+            const nom = select.options[select.selectedIndex].text;
+            if(select.value !== "") {
+                document.getElementById('msgBienvenue').innerText = "Salut " + nom + " !";
+                document.getElementById('msgBienvenue').style.display = "block";
+            } else {
+                document.getElementById('msgBienvenue').style.display = "none";
+            }
+        };
+
+        // Ouvrir le formulaire de matos
+        window.ouvrirDemande = () => {
+            if(!select.value) return alert("Choisis ton nom d'abord !");
+            document.getElementById('modalMatos').style.display = 'flex';
+        };
+
+        // Envoyer la demande à la base (ce qui arrivera sur ta page technique)
+        window.envoyerDemande = async () => {
+            const type = document.getElementById('matType').value;
+            const taille = document.getElementById('matTaille').value;
+            const raison = document.getElementById('matRaison').value;
+
+            if(!type) return alert("Indique le matériel désiré.");
+
+            try {
+                await addDoc(collection(db, "demandes_materiel"), {
+                    agentId: select.value,
+                    agentNom: select.options[select.selectedIndex].text,
+                    type: type,
+                    taille: taille,
+                    raison: raison,
+                    date: new Date().toISOString(),
+                    statut: "en_attente"
+                });
+                alert("Demande envoyée au responsable technique !");
+                document.getElementById('modalMatos').style.display = 'none';
+            } catch (e) { alert("Erreur d'envoi."); }
+        };
+
+        chargerAgents();
+    </script>
+</body>
+</html>
