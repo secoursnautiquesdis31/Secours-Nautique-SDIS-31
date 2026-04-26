@@ -13,6 +13,24 @@
     
     /* Header & Recherche */
     .rh-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+    
+    /* Style du nouveau bouton Aptitudes au milieu */
+    .btn-aptitudes {
+        background: var(--navy);
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: bold;
+        border: 2px solid var(--amber);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        transition: transform 0.2s;
+    }
+    .btn-aptitudes:hover {
+        transform: translateY(-2px);
+        background: #162e4e;
+    }
+
     .search-box { position: relative; width: 350px; }
     .search-box input { 
         width: 100%; padding: 12px 20px; border-radius: 30px; border: 1px solid #DDD;
@@ -38,12 +56,17 @@
   </style>
 </head>
 <body>
+
 <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
   🏠 MENU
 </a>
-  <div class="container">
+
+<div class="container">
   <div class="rh-header">
     <h1 style="font-size: 2rem; color: var(--navy); margin: 0;">Annuaire Nautique</h1>
+    
+    <a href="suivi_aptitudes.html" class="btn-aptitudes">📊 SUIVI DES APTITUDES</a>
+
     <div class="search-box">
       <input type="text" id="searchInput" placeholder="Rechercher un nom ou un CIS..." onkeyup="filtrerTableau()">
     </div>
@@ -87,7 +110,7 @@
   function afficherLigne(agent) {
     const container = document.getElementById('tableBody');
     const tr = document.createElement('tr');
-    tr.onclick = () => window.location.href = `fiche-agent.html?id=${agent.id}`;
+    tr.onclick = () => window.location.href = `fiche_agent.html?id=${agent.id}`;
     
     // Génération des petits badges de spécialités
     const specsHTML = (agent.specialites || []).map(s => `<span class="spec-pill active">${s}</span>`).join('');
