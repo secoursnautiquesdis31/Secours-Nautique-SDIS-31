@@ -3,63 +3,61 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Documents Opérationnels — SDIS 31</title>
+    <title>Opérationnel — SDIS 31</title>
     <link rel="stylesheet" href="../css/main.css">
     <style>
         :root { --navy: #0B1F3A; --amber: #E8A020; --light-bg: #F0F2F5; }
         body { font-family: 'Barlow', sans-serif; background: var(--light-bg); margin: 0; padding: 0; }
         
-        /* Header identique à l'espace agent */
-        .header-ops { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
-        
-        .container { max-width: 600px; margin: 20px auto; padding: 15px; }
+        .header-agent { background: var(--navy); color: white; padding: 20px; text-align: center; border-bottom: 4px solid var(--amber); }
+        .container { max-width: 600px; margin: 20px auto; padding: 10px; }
 
-        /* Bouton Retour spécial Agents */
-        .btn-back { 
-            display: inline-block;
-            background: white; 
-            color: var(--navy); 
-            padding: 10px 20px; 
-            border-radius: 8px; 
-            text-decoration: none; 
-            font-weight: bold; 
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-            border: 1px solid #ddd;
-        }
-
-        /* Liste des documents */
-        .doc-list { display: flex; flex-direction: column; gap: 10px; }
-        .doc-item { 
+        /* Le bouton Retour qui remplace le bouton Menu */
+        .btn-retour { 
+            display: block; 
+            width: 100%; 
             background: white; 
             padding: 15px; 
             border-radius: 12px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center;
-            text-decoration: none;
-            color: var(--navy);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            transition: 0.2s;
+            text-align: center; 
+            text-decoration: none; 
+            color: var(--navy); 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            margin-bottom: 20px;
+            border: 2px solid var(--amber);
         }
-        .doc-item:active { transform: scale(0.98); background: #f0f0f0; }
-        .doc-info { display: flex; align-items: center; gap: 15px; }
-        .doc-icon { font-size: 24px; }
-        .doc-title { font-weight: bold; }
-        .btn-view { background: var(--navy); color: white; padding: 8px 12px; border-radius: 6px; font-size: 0.8rem; }
+
+        /* Liste des docs façon "Menu" pour rester dans le design */
+        .menu-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
+        .doc-btn { 
+            background: white; 
+            padding: 20px; 
+            border-radius: 12px; 
+            text-align: left; 
+            text-decoration: none; 
+            color: var(--navy); 
+            font-weight: bold; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05); 
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .doc-btn:active { transform: scale(0.95); background: var(--amber); }
+        .icon { font-size: 24px; }
     </style>
 </head>
 <body>
 
-    <div class="header-ops">
+    <div class="header-agent">
         <h1 style="margin:0;">DOCUMENTS OPS</h1>
-        <p style="margin:5px 0 0 0; opacity:0.8;">Référentiels & Procédures</p>
+        <p style="margin:5px 0 0 0; opacity:0.8;">Accès réservé aux agents</p>
     </div>
 
     <div class="container">
-        <a href="javascript:history.back()" class="btn-back">⬅️ RETOUR</a>
+        <a href="javascript:history.back()" class="btn-retour">⬅️ RETOUR À L'ACCUEIL</a>
 
-        <div id="listeDocs" class="doc-list">
+        <div id="listeDocs" class="menu-grid">
             <p style="text-align:center;">Chargement des documents...</p>
         </div>
     </div>
@@ -80,38 +78,29 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        async function chargerDocuments() {
-            const listeDiv = document.getElementById('listeDocs');
+        async function chargerDocs() {
+            const liste = document.getElementById('listeDocs');
             try {
                 const q = query(collection(db, "bibliotheque_ops"), orderBy("date", "desc"));
                 const snap = await getDocs(q);
-                listeDiv.innerHTML = "";
+                liste.innerHTML = "";
 
-                if (snap.empty) {
-                    listeDiv.innerHTML = "<p style='text-align:center;'>Aucun document disponible pour le moment.</p>";
+                if(snap.empty) {
+                    liste.innerHTML = "<p style='text-align:center;'>Aucun document disponible.</p>";
                     return;
                 }
 
                 snap.forEach(doc => {
-                    const data = doc.data();
-                    const html = `
-                        <a href="${data.url}" target="_blank" class="doc-item">
-                            <div class="doc-info">
-                                <span class="doc-icon">📄</span>
-                                <span class="doc-title">${data.titre}</span>
-                            </div>
-                            <div class="btn-view">VOIR</div>
-                        </a>
-                    `;
-                    listeDiv.innerHTML += html;
+                    const d = doc.data();
+                    liste.innerHTML += `
+                        <a href="${d.url}" target="_blank" class="doc-btn">
+                            <span class="icon">📄</span>
+                            <span>${d.titre}</span>
+                        </a>`;
                 });
-            } catch (e) {
-                console.error(e);
-                listeDiv.innerHTML = "<p>Erreur lors du chargement.</p>";
-            }
+            } catch (e) { liste.innerHTML = "Erreur de chargement."; }
         }
-
-        chargerDocuments();
+        chargerDocs();
     </script>
 </body>
 </html>
