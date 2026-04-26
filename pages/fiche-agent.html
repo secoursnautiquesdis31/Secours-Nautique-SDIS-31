@@ -8,31 +8,23 @@
     <style>
         :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --green: #2A9D5C; }
         body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
-        
         .fiche-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
         .header { background: var(--navy); color: white; padding: 30px; position: relative; }
         .content { padding: 30px; }
-        
         .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
-        
         .quota-container { background: #F0F4F8; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid var(--amber); }
         .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
         .quota-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; display: flex; justify-content: space-between; align-items: center; }
         .quota-item label { font-size: 0.8rem; font-weight: bold; color: #555; }
         .quota-item input { width: 45px; padding: 5px; text-align: center; border: 1px solid #CCC; border-radius: 4px; font-weight: bold; color: var(--navy); }
-        
         .btn-save-quotas { width: 100%; margin-top: 15px; background: var(--navy); color: white; border: 2px solid var(--amber); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-save-quotas:hover { background: var(--amber); color: var(--navy); }
-
         .spec-tag { padding: 8px 15px; border-radius: 20px; border: 2px solid #DDD; cursor: pointer; font-weight: bold; margin-right: 8px; color: #888; transition: 0.2s; }
         .spec-tag.active { border-color: var(--amber); background: var(--amber); color: var(--navy); }
-        
         table { width: 100%; border-collapse: collapse; }
         th { background: #F8F9FA; color: var(--navy); text-align: left; padding: 12px; border-bottom: 2px solid #EEE; font-size: 0.85rem; }
         td { padding: 12px; border-bottom: 1px solid #F0F0F0; font-size: 0.95rem; }
-        
         .epi-row { display: flex; justify-content: space-between; padding: 12px; border-bottom: 1px solid #F0F0F0; align-items: center; }
-        
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); }
         .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
         .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
@@ -54,10 +46,10 @@
         <div class="section-title">Objectifs de Formation Individuels</div>
         <div class="quota-container">
             <div class="quota-grid">
-                <div class="quota-item"><label>Recyclage SAV SEV</label><input type="number" id="q_sav"></div>
-                <div class="quota-item"><label>FMPA Mer</label><input type="number" id="q_fmpa"></div>
-                <div class="quota-item"><label>Recyclage CEN</label><input type="number" id="q_cen"></div>
-                <div class="quota-item"><label>Entrainement / MSO</label><input type="number" id="q_mso"></div>
+                <div class="quota-item"><label>Recyclage SAV SEV</label><input type="number" id="q_sav" value="0"></div>
+                <div class="quota-item"><label>FMPA Mer</label><input type="number" id="q_fmpa" value="0"></div>
+                <div class="quota-item"><label>Recyclage CEN</label><input type="number" id="q_cen" value="0"></div>
+                <div class="quota-item"><label>Entrainement / MSO</label><input type="number" id="q_mso" value="0"></div>
             </div>
             <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
         </div>
@@ -109,28 +101,21 @@
     const agentId = params.get('id');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-   async function charger() {
+    async function charger() {
         if(!agentId) return;
-        
         try {
-            // 1. RÉCUPÉRATION DES DONNÉES DE L'AGENT
             const snap = await getDoc(doc(db, "users", agentId));
-            if (!snap.exists()) {
-                document.getElementById('nomAgent').innerText = "AGENT INTROUVABLE";
-                return;
-            }
-            
+            if (!snap.exists()) return;
             const agent = snap.data();
             const agentNom = agent.nom || "Inconnu";
 
-            // AFFICHAGE NOM ET CIS
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
 
-            // 2. GESTION DES SPÉCIALITÉS (Sécurisée)
+            // 1. SPÉCIALITÉS
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
-            const agentSpecs = agent.specialites || []; // Si vide, on prend un tableau vide []
+            const agentSpecs = agent.specialites || [];
             listeSpecs.forEach(s => {
                 const active = agentSpecs.includes(s);
                 const btn = document.createElement('div');
@@ -140,45 +125,37 @@
                 grid.appendChild(btn);
             });
 
-            // 3. GESTION DE L'EPI (Sécurisée)
+            // 2. EPI
             const epiList = document.getElementById('epiList');
-            if (epiList) { // On vérifie que l'élément existe dans le HTML
-                epiList.innerHTML = "";
-                const agentEpi = agent.epi || [];
-                if (agentEpi.length > 0) {
-                    agentEpi.forEach(item => {
-                        const div = document.createElement('div');
-                        div.className = "epi-row";
-                        div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
-                            <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                            onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
-                        epiList.appendChild(div);
-                    });
-                } else {
-                    epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
-                }
+            epiList.innerHTML = "";
+            const agentEpi = agent.epi || [];
+            if (agentEpi.length > 0) {
+                agentEpi.forEach(item => {
+                    const div = document.createElement('div');
+                    div.className = "epi-row";
+                    div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
+                        <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
+                        onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
+                    epiList.appendChild(div);
+                });
+            } else {
+                epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
             }
 
-            // 4. CALCUL DES APTITUDES ET HISTORIQUE
+            // 3. HISTORIQUE ET APTITUDES
             let compteurs = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
             const histTbody = document.getElementById('listeFormations');
-            histTbody.innerHTML = "<tr><td colspan='3'>Recherche des présences...</td></tr>";
+            histTbody.innerHTML = "";
 
             const fSnap = await getDocs(collection(db, "formations"));
-            let htmlHistorique = "";
-            let aDesPresences = false;
-
             fSnap.forEach(fDoc => {
                 const f = fDoc.data();
                 const inscrits = f.inscrits || [];
-                
-                // On vérifie si l'agent est marqué "présent"
                 const presence = inscrits.find(i => i.nom === agentNom && i.statut === "présent");
 
                 if (presence) {
-                    aDesPresences = true;
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                    htmlHistorique += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
+                    histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
 
                     const titre = f.nom.toUpperCase();
                     if (titre.includes("SAV") || titre.includes("SEV")) compteurs.sav++;
@@ -188,47 +165,12 @@
                 }
             });
 
-            histTbody.innerHTML = aDesPresences ? htmlHistorique : "<tr><td colspan='3' style='color:#999;'>Aucune présence validée.</td></tr>";
-
-            // Mise à jour visuelle des compteurs
             document.getElementById('q_sav').value = compteurs.sav;
             document.getElementById('q_fmpa').value = compteurs.fmpa;
             document.getElementById('q_cen').value = compteurs.cen;
             document.getElementById('q_mso').value = compteurs.mso;
 
-        } catch (error) {
-            console.error("Erreur lors du chargement :", error);
-            document.getElementById('nomAgent').innerText = "ERREUR DE CHARGEMENT";
-        }
-    }
-    const grid = document.getElementById('specsGrid');
-            grid.innerHTML = "";
-            listeSpecs.forEach(s => {
-                const active = (agent.specialites || []).includes(s);
-                const btn = document.createElement('div');
-                btn.className = `spec-tag ${active ? 'active' : ''}`;
-                btn.innerText = s;
-                btn.onclick = () => toggleSpec(s, agent.specialites || []);
-                grid.appendChild(btn);
-            });
-
-            const epiList = document.getElementById('epiList');
-            epiList.innerHTML = "";
-            if (agent.epi && agent.epi.length > 0) {
-                agent.epi.forEach(item => {
-                    const div = document.createElement('div');
-                    div.className = "epi-row";
-                    // Note: On passe "null" en texte si la taille n'existe pas
-                    const tailleArg = item.taille ? item.taille : "";
-                    div.innerHTML = `<div><strong>${item.type}</strong> <small>${item.taille ? `(${item.taille})` : ''}</small></div>
-                        <button style="color:var(--danger); border:none; background:none; cursor:pointer; font-weight:bold;" 
-                        onclick="retirerEPI('${item.id}', '${item.type}', '${tailleArg}')">🗑️ RETIRER</button>`;
-                    epiList.appendChild(div);
-                });
-            } else {
-                epiList.innerHTML = "<p style='color:#999;'>Aucun EPI affecté.</p>";
-            }
-        }
+        } catch (e) { console.error(e); }
     }
 
     async function toggleSpec(spec, current) {
@@ -263,10 +205,7 @@
                 div.onclick = async () => {
                     let objetAajouter = { id: d.id, type: s.type };
                     if(s.taille) objetAajouter.taille = s.taille;
-
-                    await updateDoc(doc(db, "users", agentId), { 
-                        epi: arrayUnion(objetAajouter) 
-                    });
+                    await updateDoc(doc(db, "users", agentId), { epi: arrayUnion(objetAajouter) });
                     await updateDoc(doc(db, "stocks", d.id), { quantite: increment(-1) });
                     document.getElementById('modalStock').style.display = 'none';
                     charger();
@@ -277,45 +216,19 @@
     };
 
     window.retirerEPI = async (stockId, type, taille) => {
-    if(confirm(`Supprimer l'affectation de ${type} ?`)) {
-        try {
+        if(confirm(`Supprimer l'affectation de ${type} ?`)) {
             const agentRef = doc(db, "users", agentId);
-            
-            // 1. On récupère d'abord les données actuelles de l'agent pour être sûr de l'objet
             const agentSnap = await getDoc(agentRef);
-            if (!agentSnap.exists()) return;
-            
             const currentEpi = agentSnap.data().epi || [];
-            
-            // 2. On cherche l'objet précis dans le tableau de l'agent
-            // On compare l'ID et le Type pour être certain de trouver le bon
-            const objetATrouver = currentEpi.find(item => 
-                item.id === stockId && item.type === type
-            );
-
-            if (objetATrouver) {
-                // 3. Si on le trouve, on demande à Firebase de retirer CET objet précis
-                await updateDoc(agentRef, {
-                    epi: arrayRemove(objetATrouver)
-                });
-                console.log("Objet trouvé et supprimé :", objetATrouver);
-            } else {
-                console.error("Impossible de trouver l'objet exact dans la base de l'agent");
-                alert("Erreur de correspondance : l'objet n'a pas été trouvé dans la base.");
+            const obj = currentEpi.find(item => item.id === stockId && item.type === type);
+            if (obj) {
+                await updateDoc(agentRef, { epi: arrayRemove(obj) });
+                charger();
             }
-
-            // 4. On rafraîchit l'affichage
-            charger();
-
-        } catch (error) {
-            console.error("Erreur Firebase :", error);
-            alert("Erreur technique lors de la suppression.");
         }
-    }
-};
-    // Lancer le chargement
-    charger();
+    };
 
+    charger();
 </script>
 </body>
 </html>
