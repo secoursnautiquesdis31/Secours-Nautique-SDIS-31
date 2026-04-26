@@ -108,19 +108,23 @@
         }
 
         // 2. Charger la liste du MATÉRIEL (Stock technique)
-       async function chargerListeMateriel() {
+        async function chargerListeMateriel() {
     try {
-        // 1. On cible la bonne collection "stocks"
         const snap = await getDocs(collection(db, "stocks")); 
         selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
         
         snap.forEach(doc => {
             const item = doc.data();
-            // 2. CORRECTION : On utilise item.type au lieu de item.nom
             if(item.type) { 
                 let opt = document.createElement('option');
-                opt.value = item.type; // On stocke le nom de l'article
-                opt.text = item.type;  // On affiche le nom de l'article
+                
+                // On récupère la taille si elle existe, sinon on met "N/A" ou rien
+                const affichageTaille = item.taille ? ` (Taille: ${item.taille})` : "";
+                
+                // La valeur envoyée à la base reste le type, mais le texte affiché inclut la taille
+                opt.value = item.type; 
+                opt.text = item.type + affichageTaille; 
+                
                 selectMat.appendChild(opt);
             }
         });
@@ -128,7 +132,7 @@
         console.error("Erreur chargement stock:", e);
         selectMat.innerHTML = '<option value="">Erreur de chargement</option>';
     }
-}
+}        
         // Gérer le choix de l'agent
         selectAgent.onchange = () => {
             const nom = selectAgent.options[selectAgent.selectedIndex].text;
