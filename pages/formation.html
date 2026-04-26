@@ -14,7 +14,17 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
-    .fc-event { cursor: pointer; padding: 3px; border: none !important; background-color: var(--navy) !important; color: white !important; }
+    /* Style des événements pour afficher plusieurs lignes si besoin */
+    .fc-event { 
+        cursor: pointer; 
+        padding: 5px; 
+        border: none !important; 
+        background-color: var(--navy) !important; 
+        color: white !important;
+        white-space: normal !important; /* Permet le retour à la ligne */
+        font-size: 0.85rem !important;
+        line-height: 1.2;
+    }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
@@ -72,6 +82,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
+    // 🔴 PENSE À METTRE TES CLÉS ICI
     const firebaseConfig = {
       apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
@@ -104,9 +115,11 @@
                     const evts = [];
                     snap.forEach(d => {
                         const data = d.data();
+                        // MODIFICATION ICI : On combine le nom et le lieu dans le titre
+                        const nbInscrits = data.inscrits ? data.inscrits.length : 0;
                         evts.push({
                             id: d.id,
-                            title: `${data.nom} (${data.inscrits ? data.inscrits.length : 0})`,
+                            title: `${data.nom} \n 📍 ${data.lieu} (${nbInscrits})`,
                             start: data.date,
                             extendedProps: { ...data }
                         });
