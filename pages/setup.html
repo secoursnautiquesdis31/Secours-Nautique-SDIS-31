@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuration SDIS 31</title>
+    <style>
+        body { font-family: sans-serif; padding: 50px; line-height: 1.6; }
+        .card { border: 2px solid #0B1F3A; padding: 20px; border-radius: 10px; max-width: 500px; }
+        button { background: #E8A020; border: none; padding: 10px 20px; cursor: pointer; font-weight: bold; }
+        .status { margin-top: 20px; color: green; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>Initialisation Base Nautique</h1>
+        <p>1. Sélectionne le fichier <strong>Liste personnes.csv</strong></p>
+        <input type="file" id="csvFile" accept=".csv">
+        <br><br>
+        <button id="btnGo">LANCER L'IMPORTATION</button>
+        <div id="status"></div>
+    </div>
+
+    <script type="module">
+        import { db, doc, setDoc } from "./auth.js";
+
+        document.getElementById('btnGo').onclick = async () => {
+            const file = document.getElementById('csvFile').files[0];
+            if (!file) return alert("Choisis le fichier d'abord");
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const lignes = e.target.result.split(/\r?\n/);
+                const status = document.getElementById('status');
+                let count = 0;
+
+                for (let i = 1; i < lignes.length; i++) {
+                    const col = lignes[i].split(';');
+                    if (col[0]) {
+                        const nom = col[0].trim();
+                        const id = nom.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, '_');
+                        
+                        await setDoc(doc(db, "users", id), {
+                            nom: nom,
+                            cis: col[1] ? col[1].trim() : "",
+                            tel: col[2] ? col[2].trim() : "",
+                            role: "Agent",
+                            specialites: [],
+                            aptitude: "A vérifier"
+                        });
+                        count++;
+                        status.innerText = "Importation : " + count + " agents...";
+                    }
+                }
+                status.innerText = "✅ Terminé ! " + count + " agents créés.";
+            };
+            reader.readAsText(file, 'ISO-8859-1');
+        };
+    </script>
+</body>
+</html>
