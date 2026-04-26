@@ -9,6 +9,13 @@
     body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
     .tech-container { max-width: 1200px; margin: 0 auto; }
     .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    
+    /* Nouveau style pour le formulaire d'ajout */
+    .add-bar { background: white; padding: 15px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); align-items: flex-end; border-top: 4px solid var(--amber); }
+    .add-bar div { display: flex; flex-direction: column; gap: 5px; }
+    .add-bar input { padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+    .btn-add { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 4px; cursor: pointer; font-weight: bold; height: 35px; }
+
     .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
     .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
     .stat-card { background: white; padding: 10px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
@@ -32,6 +39,26 @@
       <h1>LOGISTIQUE TECHNIQUE</h1>
       <button style="background: var(--amber); border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
       <input type="file" id="csvInput" accept=".csv" style="display:none">
+    </div>
+
+    <div class="add-bar">
+        <div style="flex:3">
+            <label><small>Désignation Matériel</small></label>
+            <input type="text" id="newType" placeholder="ex: Combinaison">
+        </div>
+        <div style="flex:1">
+            <label><small>Taille</small></label>
+            <input type="text" id="newTaille" placeholder="ex: XL">
+        </div>
+        <div style="flex:1">
+            <label><small>Stock actuel</small></label>
+            <input type="number" id="newQty" value="0">
+        </div>
+        <div style="flex:1">
+            <label><small>Seuil Alerte</small></label>
+            <input type="number" id="newSeuil" value="1">
+        </div>
+        <button class="btn-add" id="btnAddManual">➕ AJOUTER</button>
     </div>
 
     <div class="stats-bar">
@@ -85,53 +112,40 @@
     let allItems = [];
 
     async function charger() {
-        console.log("Lecture de la collection 'stocks'...");
         try {
             const snap = await getDocs(collection(db, "stocks"));
-            console.log("Documents trouvés :", snap.size);
-            
             if (snap.empty) {
-                stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>La collection 'stocks' est vide dans Firestore.</td></tr>";
+                stockBody.innerHTML = "<tr><td colspan='6' style='text-align:center; padding:30px;'>Base vide.</td></tr>";
                 return;
             }
-
             allItems = [];
-            snap.forEach(d => {
-                allItems.push({ id: d.id, ...d.data() });
-            });
-
+            snap.forEach(d => allItems.push({ id: d.id, ...d.data() }));
             afficher(allItems);
             updateStats(allItems);
         } catch (e) {
-            console.error("Erreur Firestore :", e);
-            stockBody.innerHTML = `<tr><td colspan='6' style='color:red;'>Erreur : ${e.message}</td></tr>`;
+            console.error(e);
         }
     }
 
     function afficher(items) {
         stockBody.innerHTML = "";
-        items.forEach(item => {
-            // Sécurité sur les noms de champs (avec ou sans accents)
-            const type = item.type || item.Type || "Inconnu";
-            const q = parseInt(item.quantite || item.quantité || 0);
+        items.sort((a,b) => (a.type || "").localeCompare(b.type || "")).forEach(item => {
+            const q = parseInt(item.quantite || 0);
             const s = parseInt(item.seuil || 0);
-            const t = item.taille || "";
-            const p = item.peremption || "";
-
             let cl = "bg-green";
             if (q === 0) cl = "bg-red";
             else if (q <= s) cl = "bg-orange";
 
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td><input class="cell-edit" value="${type}" onchange="upd('${item.id}','type',this.value)"></td>
-                <td><input class="cell-edit" value="${t}" onchange="upd('${item.id}','taille',this.value)"></td>
+                <td><input class="cell-edit" value="${item.type || ''}" onchange="upd('${item.id}','type',this.value)"></td>
+                <td><input class="cell-edit" value="${item.taille || ''}" onchange="upd('${item.id}','taille',this.value)"></td>
                 <td>
                     <span class="stock-badge ${cl}">${q}</span>
                     <input type="number" style="width:40px" value="${q}" onchange="upd('${item.id}','quantite',this.value)">
                 </td>
                 <td><input type="number" class="cell-edit" value="${s}" onchange="upd('${item.id}','seuil',this.value)"></td>
-                <td><input class="cell-edit" value="${p}" onchange="upd('${item.id}','peremption',this.value)"></td>
+                <td><input class="cell-edit" value="${item.peremption || ''}" onchange="upd('${item.id}','peremption',this.value)"></td>
                 <td><button class="btn-suppr" onclick="del('${item.id}')">🗑️</button></td>
             `;
             stockBody.appendChild(tr);
@@ -140,18 +154,42 @@
 
     function updateStats(items) {
         document.getElementById('statTotal').innerText = items.length;
-        document.getElementById('statRupture').innerText = items.filter(i => parseInt(i.quantite || i.quantité || 0) === 0).length;
+        document.getElementById('statRupture').innerText = items.filter(i => parseInt(i.quantite || 0) === 0).length;
         document.getElementById('statAlerte').innerText = items.filter(i => {
-            const q = parseInt(i.quantite || i.quantité || 0);
+            const q = parseInt(i.quantite || 0);
             const s = parseInt(i.seuil || 0);
             return q > 0 && q <= s;
         }).length;
     }
 
+    // FONCTION AJOUT MANUEL
+    document.getElementById('btnAddManual').onclick = async () => {
+        const type = document.getElementById('newType').value.trim();
+        const taille = document.getElementById('newTaille').value.trim();
+        const qty = parseInt(document.getElementById('newQty').value) || 0;
+        const seuil = parseInt(document.getElementById('newSeuil').value) || 0;
+
+        if(!type) { alert("Veuillez saisir une désignation."); return; }
+
+        const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
+
+        await setDoc(doc(db, "stocks", id), {
+            type, taille, quantite: qty, seuil, peremption: ""
+        });
+
+        // Vider les champs
+        document.getElementById('newType').value = "";
+        document.getElementById('newTaille').value = "";
+        document.getElementById('newQty').value = "0";
+        document.getElementById('newSeuil').value = "1";
+
+        alert("Matériel ajouté !");
+        charger();
+    };
+
     window.upd = async (id, f, v) => {
         const val = (f === 'quantite' || f === 'seuil') ? parseInt(v) : v;
         await updateDoc(doc(db, "stocks", id), { [f]: val });
-        // Mise à jour locale sans recharger tout
         const i = allItems.find(x => x.id === id);
         if(i) i[f] = val;
         updateStats(allItems);
@@ -161,26 +199,24 @@
         if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "stocks", id)); charger(); }
     };
 
-    // Filtres
+    // Filtres et Recherche
     document.getElementById('searchInput').oninput = () => {
         const val = document.getElementById('searchInput').value.toLowerCase();
-        const filtered = allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val));
-        afficher(filtered);
+        afficher(allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val)));
     };
 
     document.getElementById('statusFilter').onchange = () => {
         const val = document.getElementById('statusFilter').value;
-        const filtered = allItems.filter(i => {
-            const q = parseInt(i.quantite || i.quantité || 0);
+        afficher(allItems.filter(i => {
+            const q = parseInt(i.quantite || 0);
             const s = parseInt(i.seuil || 0);
             if(val === "rupture") return q === 0;
             if(val === "alerte") return q > 0 && q <= s;
             return true;
-        });
-        afficher(filtered);
+        }));
     };
 
-    // Import CSV
+    // Import CSV (gardé au cas où)
     document.getElementById('csvInput').onchange = (e) => {
         const reader = new FileReader();
         reader.onload = async (ev) => {
@@ -197,7 +233,6 @@
                     type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||""
                 });
             }
-            alert("Import terminé !");
             charger();
         };
         reader.readAsText(e.target.files[0], 'ISO-8859-1');
