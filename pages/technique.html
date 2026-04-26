@@ -18,16 +18,13 @@
         .toolbar { display: flex; gap: 10px; margin-bottom: 20px; }
         .stats-bar { display: flex; gap: 15px; margin-bottom: 20px; }
         .stat-card { background: white; padding: 10px; border-radius: 8px; flex: 1; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        
         table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
         th { background: #eee; padding: 12px; text-align: left; color: var(--navy); }
         td { padding: 10px; border-bottom: 1px solid #eee; }
-        
         .stock-badge { padding: 4px 8px; border-radius: 4px; font-weight: bold; }
         .bg-red { background: #fee2e2; color: var(--red); }
         .bg-orange { background: #ffedd5; color: #d97706; }
         .bg-green { background: #dcfce7; color: var(--green); }
-        
         input.cell-edit { border: 1px solid #ddd; padding: 5px; border-radius: 4px; width: 85%; }
         .btn-suppr { border: none; background: none; cursor: pointer; font-size: 1.1rem; }
 
@@ -38,7 +35,7 @@
 </head>
 <body>
 
-<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber);">🏠 MENU</a>
+<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber); z-index: 999;">🏠 MENU</a>
 
 <div class="tech-container">
 
@@ -84,7 +81,7 @@
     </div>
 
     <div class="toolbar">
-        <input type="text" id="searchInput" placeholder="Rechercher un matériel..." style="flex:2; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
+        <input type="text" id="searchInput" placeholder="Rechercher..." style="flex:2; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
         <select id="statusFilter" style="flex:1; padding: 10px; border-radius: 5px; border: 1px solid #ddd;">
             <option value="all">Tous les stocks</option>
             <option value="rupture">En rupture</option>
@@ -129,61 +126,50 @@
 
     // --- GESTION DES DEMANDES ---
     async function chargerDemandes() {
-        const snap = await getDocs(collection(db, "demandes_materiel"));
-        const container = document.getElementById('listeDemandes');
-        
-        if (snap.empty) {
-            container.innerHTML = "<p style='text-align:center; color:#999; margin:0;'>Aucune demande de matériel en attente.</p>";
-            return;
-        }
-
-        container.innerHTML = "";
-        snap.forEach(d => {
-            const dem = d.data();
-            const div = document.createElement('div');
-            div.className = "demande-card";
-            const tailleDemande = dem.taille || ""; 
-            div.innerHTML = `
-                <div>
-                    <strong style="color:var(--navy);">${dem.agentNom}</strong> demande : 
-                    <strong>${dem.type}</strong> ${tailleDemande ? '(Taille: '+tailleDemande+')' : ''}<br>
-                    <small style="color:#666;">Motif : ${dem.raison || 'Non précisé'}</small>
-                </div>
-                <div>
-                    <button onclick="validerDemande('${d.id}', '${dem.agentId}', '${dem.type}', '${tailleDemande}')" class="btn-valider">✅ VALIDER</button>
-                    <button onclick="refuserDemande('${d.id}')" class="btn-refuser">🗑️</button>
-                </div>
-            `;
-            container.appendChild(div);
-        });
-    }
-
-    window.validerDemande = async (demandeId, agentId, typeFusionne, tailleAncienne) => {
-        if(!confirm("Valider cette distribution ?")) return;
         try {
-            let nomPropre = typeFusionne;
-            let tailleReelle = tailleAncienne;
-            if (typeFusionne.includes(" (Taille:")) {
-                const parties = typeFusionne.split(" (Taille:");
-                nomPropre = parties[0].trim();
-                tailleReelle = parties[1].replace(")", "").trim();
-            }
-
-            const itemStock = allItems.find(i => i.type.toLowerCase() === nomPropre.toLowerCase() && (i.taille || "") === (tailleReelle || ""));
-            
-            if(!itemStock || itemStock.quantite <= 0) {
-                alert("Erreur : Article introuvable ou stock épuisé.");
+            const snap = await getDocs(collection(db, "demandes_materiel"));
+            const container = document.getElementById('listeDemandes');
+            if (snap.empty) {
+                container.innerHTML = "<p style='text-align:center; color:#999; margin:0;'>Aucune demande en attente.</p>";
                 return;
             }
+            container.innerHTML = "";
+            snap.forEach(d => {
+                const dem = d.data();
+                const div = document.createElement('div');
+                div.className = "demande-card";
+                const t = dem.taille || ""; 
+                div.innerHTML = `
+                    <div>
+                        <strong>${dem.agentNom}</strong> demande : <strong>${dem.type}</strong> ${t ? '('+t+')' : ''}<br>
+                        <small>Motif : ${dem.raison || 'Non précisé'}</small>
+                    </div>
+                    <div>
+                        <button onclick="validerDemande('${d.id}', '${dem.agentId}', '${dem.type}', '${t}')" class="btn-valider">✅ VALIDER</button>
+                        <button onclick="refuserDemande('${d.id}')" class="btn-refuser">🗑️</button>
+                    </div>
+                `;
+                container.appendChild(div);
+            });
+        } catch(e) { console.error(e); }
+    }
 
-            let objEpi = { id: itemStock.id, type: itemStock.type, date: new Date().toLocaleDateString() };
-            if(itemStock.taille) objEpi.taille = itemStock.taille;
+    window.validerDemande = async (demandeId, agentId, type, taille) => {
+        if(!confirm("Valider cette distribution ?")) return;
+        try {
+            const itemStock = allItems.find(i => i.type === type && (i.taille || "") === (taille || ""));
+            if(!itemStock || itemStock.quantite <= 0) {
+                alert("Article introuvable ou stock épuisé.");
+                return;
+            }
+            const epiRef = { id: itemStock.id, type: itemStock.type, date: new Date().toLocaleDateString() };
+            if(itemStock.taille) epiRef.taille = itemStock.taille;
 
-            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion(objEpi) });
+            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion(epiRef) });
             await updateDoc(doc(db, "stocks", itemStock.id), { quantite: itemStock.quantite - 1 });
             await deleteDoc(doc(db, "demandes_materiel", demandeId));
 
-            alert("Validation réussie !");
+            alert("Validé !");
             chargerDemandes();
             charger();
         } catch (e) { console.error(e); }
@@ -212,13 +198,91 @@
         items.sort((a,b) => (a.type || "").localeCompare(b.type || "")).forEach(item => {
             const q = parseInt(item.quantite || 0);
             const s = parseInt(item.seuil || 0);
-            let cl = "bg-green";
-            if (q === 0) cl = "bg-red";
-            else if (q <= s) cl = "bg-orange";
-
+            const cl = q === 0 ? "bg-red" : (q <= s ? "bg-orange" : "bg-green");
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><input class="cell-edit" value="${item.type || ''}" onchange="upd('${item.id}','type',this.value)"></td>
                 <td><input class="cell-edit" value="${item.taille || ''}" onchange="upd('${item.id}','taille',this.value)"></td>
                 <td>
-                    <span class="stock-badge ${cl}">${
+                    <span class="stock-badge ${cl}">${q}</span>
+                    <input type="number" style="width:40px" value="${q}" onchange="upd('${item.id}','quantite',this.value)">
+                </td>
+                <td><input type="number" class="cell-edit" value="${s}" onchange="upd('${item.id}','seuil',this.value)"></td>
+                <td><input class="cell-edit" value="${item.peremption || ''}" onchange="upd('${item.id}','peremption',this.value)"></td>
+                <td><button class="btn-suppr" onclick="del('${item.id}')">🗑️</button></td>
+            `;
+            stockBody.appendChild(tr);
+        });
+    }
+
+    function updateStats(items) {
+        document.getElementById('statTotal').innerText = items.length;
+        document.getElementById('statRupture').innerText = items.filter(i => parseInt(i.quantite || 0) === 0).length;
+        document.getElementById('statAlerte').innerText = items.filter(i => {
+            const q = parseInt(i.quantite || 0);
+            return q > 0 && q <= parseInt(i.seuil || 0);
+        }).length;
+    }
+
+    document.getElementById('btnAddManual').onclick = async () => {
+        const type = document.getElementById('newType').value.trim();
+        const taille = document.getElementById('newTaille').value.trim();
+        const qty = parseInt(document.getElementById('newQty').value) || 0;
+        const seuil = parseInt(document.getElementById('newSeuil').value) || 0;
+        if(!type) return alert("Nom requis");
+        const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
+        await setDoc(doc(db, "stocks", id), { type, taille, quantite: qty, seuil, peremption: "" });
+        document.getElementById('newType').value = "";
+        document.getElementById('newTaille').value = "";
+        charger();
+    };
+
+    window.upd = async (id, f, v) => {
+        const val = (f === 'quantite' || f === 'seuil') ? parseInt(v) : v;
+        await updateDoc(doc(db, "stocks", id), { [f]: val });
+        charger();
+    };
+
+    window.del = async (id) => {
+        if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "stocks", id)); charger(); }
+    };
+
+    document.getElementById('searchInput').oninput = () => {
+        const val = document.getElementById('searchInput').value.toLowerCase();
+        afficher(allItems.filter(i => (i.type||"").toLowerCase().includes(val) || (i.taille||"").toLowerCase().includes(val)));
+    };
+
+    document.getElementById('statusFilter').onchange = () => {
+        const val = document.getElementById('statusFilter').value;
+        afficher(allItems.filter(i => {
+            const q = parseInt(i.quantite || 0);
+            const s = parseInt(i.seuil || 0);
+            if(val === "rupture") return q === 0;
+            if(val === "alerte") return q > 0 && q <= s;
+            return true;
+        }));
+    };
+
+    document.getElementById('csvInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = async (ev) => {
+            const lignes = ev.target.result.split(/\r?\n/);
+            for (let i = 1; i < lignes.length; i++) {
+                const col = lignes[i].split(';');
+                if (col.length < 3) continue;
+                const type = col[0].trim();
+                const id = (type + "_" + (col[2]||'')).toLowerCase().replace(/[^a-z0-9]/g, '_');
+                await setDoc(doc(db, "stocks", id), {
+                    type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||""
+                });
+            }
+            charger();
+        };
+        reader.readAsText(e.target.files[0], 'ISO-8859-1');
+    };
+
+    chargerDemandes();
+    charger();
+</script>
+</body>
+</html>
