@@ -14,20 +14,31 @@
   <style>
     :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F4F6F8; }
     body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
+    
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
-    .fc-event { cursor: pointer; padding: 2px 5px; border: none !important; background-color: var(--navy) !important; color: white !important; font-size: 0.75rem !important; }
+    .fc-event { 
+        cursor: pointer; padding: 2px 5px; border: none !important; 
+        background-color: var(--navy) !important; color: white !important;
+        font-size: 0.75rem !important;
+    }
+    
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
+
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
     .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; }
     label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: block; margin-top: 10px; }
     input { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
+    
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .btn-group { display: flex; gap: 10px; margin-top: 10px; }
     .btn-export { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #DDD; cursor: pointer; font-weight: bold; font-size: 0.75rem; background: #f8f9fa; display: flex; align-items: center; justify-content: center; gap: 5px; }
-    .inscrit-item { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid #EEE; margin-bottom: 5px; }
-    .btn-valide { background: #2A9D5C; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+
+    /* Ajout du style pour la liste de validation */
+    .ligne-inscrit { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px solid #eee; }
+    .btn-valider-admin { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; font-weight: bold; }
   </style>
 </head>
 <body>
@@ -46,6 +57,7 @@
   <div id="modalEvent" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle" style="margin-top:0; color: var(--navy);">Session</h2>
+      
       <div id="formSection">
           <input type="hidden" id="selectedDate">
           <label>Nom de la formation :</label>
@@ -54,20 +66,25 @@
           <input type="text" id="formLieu" placeholder="ex: Cale de mise à l'eau">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">ENREGISTRER</button>
       </div>
+      
       <div id="detailSection" style="display:none;">
           <p id="detLieu" style="font-weight: bold; margin-bottom: 10px;"></p>
           <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
           <strong>Inscrits :</strong>
-          <div id="detInscrits" style="margin: 10px 0; font-size: 0.85rem; background: #F8F9FA; padding: 10px; border-radius: 6px; max-height: 200px; overflow-y: auto;"></div>
+          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; background: #F8F9FA; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto;"></div>
+          
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
+          
           <div class="btn-group">
             <button class="btn-export" id="btnPDF">📄 PDF ÉMARGEMENT</button>
             <button class="btn-export" id="btnExcel">📊 EXCEL</button>
           </div>
+
           <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.7rem;">Supprimer la session</button>
       </div>
-      <button id="btnClose" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
+      
+      <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
     </div>
   </div>
 
@@ -89,14 +106,45 @@
     let agentConnecte = "";
     let calendar;
 
-    // Définition de la fermeture de modal accessible partout
-    const fermerModal = () => { document.getElementById('modalEvent').style.display = 'none'; };
-    document.getElementById('btnClose').onclick = fermerModal;
-
     async function init() {
         try {
             const uSnap = await getDocs(collection(db, "users"));
             const sel = document.getElementById('selectAgentSession');
             sel.innerHTML = '<option value="">-- Agent --</option>';
             uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
-            sel.onchange = (e) => { agentConnecte =
+            sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
+
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'fr',
+                firstDay: 1,
+                headerToolbar: { 
+                    left: 'prev,next today', 
+                    center: 'title', 
+                    right: 'dayGridMonth,multiMonthYear' 
+                },
+                buttonText: {
+                    today: "Aujourd'hui",
+                    month: "Mois",
+                    year: "Année"
+                },
+                events: async (info, success, failure) => {
+                    const snap = await getDocs(collection(db, "formations"));
+                    const evts = [];
+                    snap.forEach(d => {
+                        const data = d.data();
+                        evts.push({
+                            id: d.id,
+                            title: `${data.nom} | 📍 ${data.lieu}`,
+                            start: data.date,
+                            extendedProps: { ...data }
+                        });
+                    });
+                    success(evts);
+                },
+                dateClick: (info) => {
+                    document.getElementById('modalTitle').innerText = "Nouvelle session";
+                    document.getElementById('formSection').style.display = "block";
+                    document.getElementById('detailSection').style.display = "none";
+                    document.getElementById('selectedDate').value = info.
