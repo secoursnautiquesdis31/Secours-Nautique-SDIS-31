@@ -67,7 +67,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // RÉCUPÉRATION DE L'AGENT DEPUIS LE LOCALSTORAGE
     const agentConnecte = localStorage.getItem('agentNomSelected');
     if(!agentConnecte) {
         alert("Veuillez d'abord choisir votre nom sur la page d'accueil.");
@@ -85,28 +84,25 @@
             firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
             buttonText: { today: "Aujourd'hui", month: "Mois", year: "Année" },
-            // Remplace ton bloc events par celui-ci :
-events: async (info, success, failure) => {
-    try {
-        const snap = await getDocs(collection(db, "formations"));
-        const evts = snap.docs.map(d => {
-            const data = d.data();
-            return {
-                id: d.id, // L'ID du document Firestore
-                title: data.nom,
-                start: data.date,
-                extendedProps: { 
-                    lieu: data.lieu,
-                    inscrits: data.inscrits || [], // On force la récupération du tableau
-                    nom: data.nom
-                }
-            };
-        });
-        success(evts);
-    } catch (e) { console.error(e); failure(e); }
-},
-          // DÉSCRIPTION : Pas de création possible pour l'agent au clic sur une date
-            dateClick: null, 
+            events: async (info, success, failure) => {
+                try {
+                    const snap = await getDocs(collection(db, "formations"));
+                    const evts = snap.docs.map(d => {
+                        const data = d.data();
+                        return {
+                            id: d.id,
+                            title: data.nom,
+                            start: data.date,
+                            extendedProps: { 
+                                lieu: data.lieu,
+                                inscrits: data.inscrits || [], 
+                                nom: data.nom
+                            }
+                        };
+                    });
+                    success(evts);
+                } catch (e) { console.error(e); failure(e); }
+            },
             eventClick: (info) => ouvrirDetails(info.event)
         });
         calendar.render();
@@ -121,54 +117,70 @@ events: async (info, success, failure) => {
         document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
         document.getElementById('detInscrits').innerText = inscrits.length + " inscrit(s).";
         
-        const estInscrit = inscrits.includes(agentConnecte);
-        document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
-        document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+        // RECHERCHE DE L'AGENT DANS LE TABLEAU D'OBJETS
+        const inscription = inscrits.find(i => i.nom === agentConnecte);
+        const estInscrit = !!inscription;
 
-        document.getElementById('btnInscrire').onclick = () => inscrire(id);
-        document.getElementById('btnDesinscrire').onclick = () => desinscrire(id);
+        const btnInscrire = document.getElementById('btnInscrire');
+        const btnDesinscrire = document.getElementById('btnDesinscrire');
+
+        if (estInscrit) {
+            btnInscrire.style.display = "none";
+            btnDesinscrire.style.display = "block";
+
+            // SI L'AGENT EST MARQUÉ "PRÉSENT", IL NE PEUT PLUS SE DÉSISTER
+            if(inscription.statut === "présent") {
+                btnDesinscrire.innerText = "PRÉSENCE VALIDÉE ✅";
+                btnDesinscrire.style.background = "#2A9D5C";
+                btnDesinscrire.onclick = null; 
+            } else {
+                btnDesinscrire.innerText = "SE DÉSISTER";
+                btnDesinscrire.style.background = "#D94040";
+                btnDesinscrire.onclick = () => desinscrire(id, inscription);
+            }
+        } else {
+            btnInscrire.style.display = "block";
+            btnDesinscrire.style.display = "none";
+            btnInscrire.onclick = () => inscrire(id);
+        }
         
         document.getElementById('modalEvent').style.display = 'block';
     }
 
     async function inscrire(formationId) {
-        if(!agentConnecte) {
-            alert("Erreur : Nom d'agent introuvable. Retournez à l'accueil.");
-            return;
-        }
-
         try {
             const formationRef = doc(db, "formations", formationId);
-            // On ajoute l'agent au tableau 'inscrits'
+            // ON INSCRIT UN OBJET AVEC STATUT PAR DÉFAUT
             await updateDoc(formationRef, { 
-                inscrits: arrayUnion(agentConnecte) 
+                inscrits: arrayUnion({ nom: agentConnecte, statut: "en attente" }) 
             });
             
             alert("Inscription validée !");
             document.getElementById('modalEvent').style.display = 'none';
-            
-            // Rafraîchir le calendrier pour voir le nouveau nombre d'inscrits
             if(calendar) calendar.refetchEvents();
         } catch (e) { 
-            console.error("Erreur Firestore :", e);
-            alert("Erreur lors de l'inscription. Vérifiez votre connexion."); 
+            console.error(e);
+            alert("Erreur lors de l'inscription."); 
         }
     }
 
-    async function desinscrire(formationId) {
+    async function desinscrire(formationId, objetInscrit) {
+        if(!confirm("Voulez-vous vraiment vous désister ?")) return;
         try {
             const formationRef = doc(db, "formations", formationId);
+            // ON RETIRE L'OBJET PRÉCIS
             await updateDoc(formationRef, { 
-                inscrits: arrayRemove(agentConnecte) 
+                inscrits: arrayRemove(objetInscrit) 
             });
             alert("Désinscription prise en compte.");
             document.getElementById('modalEvent').style.display = 'none';
             if(calendar) calendar.refetchEvents();
         } catch (e) { 
-            console.error("Erreur Désinscription :", e);
+            console.error(e);
             alert("Erreur lors de la désinscription."); 
         }
     }
+
     window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
 
     init();
