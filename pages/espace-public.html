@@ -111,7 +111,7 @@
         async function chargerListeMateriel() {
             try {
                 // Remplace "materiel" par le nom exact de ta collection de stock si besoin
-                const snap = await getDocs(collection(db, "materiel")); 
+                const snap = await getDocs(collection(db, "stocks")); 
                 selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
                 
                 snap.forEach(doc => {
