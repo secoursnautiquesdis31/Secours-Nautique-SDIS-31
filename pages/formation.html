@@ -5,6 +5,10 @@
   <title>Calendrier Formation — SDIS 31</title>
   
   <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.8/index.global.min.js'></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  
   <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
   
   <style>
@@ -15,24 +19,22 @@
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     .fc-event { 
-        cursor: pointer; 
-        padding: 5px; 
-        border: none !important; 
-        background-color: var(--navy) !important; 
-        color: white !important;
-        white-space: normal !important; 
-        font-size: 0.85rem !important;
-        line-height: 1.2;
+        cursor: pointer; padding: 5px; border: none !important; 
+        background-color: var(--navy) !important; color: white !important;
+        white-space: normal !important; font-size: 0.85rem !important; line-height: 1.2;
     }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
 
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
-    .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; }
+    .modal-content { background: white; margin: 8% auto; padding: 30px; width: 420px; border-radius: 12px; }
     label { font-size: 0.8rem; font-weight: bold; color: var(--navy); display: block; margin-top: 10px; }
     input { width: 100%; padding: 12px; margin: 5px 0 10px 0; border: 1px solid #DDD; border-radius: 6px; box-sizing: border-box; }
+    
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
+    .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+    .btn-export { flex: 1; padding: 10px; border-radius: 6px; border: 1px solid #DDD; cursor: pointer; font-weight: bold; font-size: 0.75rem; background: #f8f9fa; display: flex; align-items: center; justify-content: center; gap: 5px; }
   </style>
 </head>
 <body>
@@ -55,21 +57,27 @@
       <div id="formSection">
           <input type="hidden" id="selectedDate">
           <label>Nom de la formation :</label>
-          <input type="text" id="formNom" placeholder="ex: Manœuvre SAL Garonne">
+          <input type="text" id="formNom" placeholder="ex: Manœuvre Garonne">
           <label>Lieu :</label>
           <input type="text" id="formLieu" placeholder="ex: Cale de mise à l'eau">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">ENREGISTRER</button>
       </div>
       
       <div id="detailSection" style="display:none;">
-          <p id="detLieu" style="font-weight: bold; margin-bottom: 15px;"></p>
+          <p id="detLieu" style="font-weight: bold; margin-bottom: 10px;"></p>
           <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
           <strong>Inscrits :</strong>
-          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; background: #F8F9FA; padding: 10px; border-radius: 6px;"></div>
+          <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; background: #F8F9FA; padding: 10px; border-radius: 6px; max-height: 150px; overflow-y: auto;"></div>
           
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
           <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
-          <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.8rem;">Supprimer la session</button>
+          
+          <div class="btn-group">
+            <button class="btn-export" id="btnPDF">📄 PDF</button>
+            <button class="btn-export" id="btnExcel">📊 EXCEL</button>
+          </div>
+
+          <button class="btn-main" id="btnSuppr" style="background: none; color: #999; border: 1px solid #EEE; margin-top: 20px; font-size: 0.7rem;">Supprimer la session</button>
       </div>
       
       <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
@@ -81,7 +89,7 @@
     import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
-      apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+     apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
         projectId: "secours-nautique-31",
         storageBucket: "secours-nautique-31.firebasestorage.app",
@@ -98,7 +106,7 @@
         try {
             const uSnap = await getDocs(collection(db, "users"));
             const sel = document.getElementById('selectAgentSession');
-            sel.innerHTML = '<option value="">-- Qui êtes-vous ? --</option>';
+            sel.innerHTML = '<option value="">-- Agent --</option>';
             uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
             sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
 
@@ -106,17 +114,16 @@
             calendar = new FullCalendar.Calendar(calendarEl, {
                 initialView: 'dayGridMonth',
                 locale: 'fr',
-                firstDay: 1, // 🔴 ICI : Définit le Lundi comme premier jour de la semaine
+                firstDay: 1,
                 headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth' },
                 events: async (info, success, failure) => {
                     const snap = await getDocs(collection(db, "formations"));
                     const evts = [];
                     snap.forEach(d => {
                         const data = d.data();
-                        const nbInscrits = data.inscrits ? data.inscrits.length : 0;
                         evts.push({
                             id: d.id,
-                            title: `${data.nom} \n 📍 ${data.lieu} (${nbInscrits})`,
+                            title: `${data.nom} \n 📍 ${data.lieu} (${data.inscrits ? data.inscrits.length : 0})`,
                             start: data.date,
                             extendedProps: { ...data }
                         });
@@ -133,7 +140,9 @@
                 eventClick: (info) => {
                     const data = info.event.extendedProps;
                     const id = info.event.id;
+                    const dateStr = info.event.startStr;
                     const inscrits = data.inscrits || [];
+
                     document.getElementById('modalTitle').innerText = data.nom;
                     document.getElementById('formSection').style.display = "none";
                     document.getElementById('detailSection').style.display = "block";
@@ -143,6 +152,35 @@
                     const estInscrit = agentConnecte && inscrits.includes(agentConnecte);
                     document.getElementById('btnInscrire').style.display = estInscrit ? "none" : "block";
                     document.getElementById('btnDesinscrire').style.display = estInscrit ? "block" : "none";
+
+                    // LOGIQUE EXPORT PDF
+                    document.getElementById('btnPDF').onclick = () => {
+                        const { jsPDF } = window.jspdf;
+                        const docPDF = new jsPDF();
+                        docPDF.setFontSize(16);
+                        docPDF.text(`LISTE D'ÉMARGEMENT : ${data.nom}`, 14, 20);
+                        docPDF.setFontSize(10);
+                        docPDF.text(`Date : ${dateStr} | Lieu : ${data.lieu}`, 14, 28);
+                        const lignes = inscrits.map((nom, i) => [i + 1, nom, ""]);
+                        docPDF.autoTable({ startY: 35, head: [['#', 'Nom de l\'agent', 'Signature']], body: lignes, theme: 'grid', headStyles: { fillColor: [11, 31, 58] }});
+                        docPDF.save(`Emargement_${data.nom}.pdf`);
+                    };
+
+                    // LOGIQUE EXPORT EXCEL
+                    document.getElementById('btnExcel').onclick = () => {
+                        const wb = XLSX.utils.book_new();
+                        const wsData = [
+                            ["FORMATION", data.nom],
+                            ["DATE", dateStr],
+                            ["LIEU", data.lieu],
+                            [],
+                            ["N°", "NOM DE L'AGENT"]
+                        ];
+                        inscrits.forEach((nom, i) => wsData.push([i + 1, nom]));
+                        const ws = XLSX.utils.aoa_to_sheet(wsData);
+                        XLSX.utils.book_append_sheet(wb, ws, "Inscrits");
+                        XLSX.writeFile(wb, `Formation_${data.nom}.xlsx`);
+                    };
 
                     document.getElementById('btnInscrire').onclick = async () => {
                         if(!agentConnecte) return alert("Sélectionnez votre nom");
@@ -154,7 +192,7 @@
                         fermerModal(); calendar.refetchEvents();
                     };
                     document.getElementById('btnSuppr').onclick = async () => {
-                        if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
+                        if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); fermerModal(); calendar.refetchEvents(); }
                     };
                     document.getElementById('modalEvent').style.display = 'block';
                 }
@@ -169,12 +207,10 @@
         const nom = document.getElementById('formNom').value;
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
-        if(!nom || !lieu) return alert("Remplissez tout !");
+        if(!nom || !lieu) return alert("Remplissez le nom et le lieu");
         await addDoc(collection(db, "formations"), { nom, lieu, date, inscrits: [] });
-        document.getElementById('formNom').value = "";
-        document.getElementById('formLieu').value = "";
-        fermerModal();
-        calendar.refetchEvents();
+        document.getElementById('formNom').value = ""; document.getElementById('formLieu').value = "";
+        fermerModal(); calendar.refetchEvents();
     };
 
     init();
