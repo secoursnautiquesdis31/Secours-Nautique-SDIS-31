@@ -243,25 +243,19 @@
         });
     };
 
-  window.retirerEPI = async (stockId, type, taille) => {
-        // Changement du message pour être cohérent avec l'action
-        if(confirm(`Supprimer l'affectation de ${type} (${taille}) sur cette fiche ?\n(Le stock technique ne sera pas impacté)`)) {
-            try {
-                // 1. On retire l'objet du tableau 'epi' de l'utilisateur
-                await updateDoc(doc(db, "users", agentId), { 
-                    epi: arrayRemove({ id: stockId, type, taille }) 
-                });
-
-                // --- LA PARTIE SUR LE STOCK A ÉTÉ SUPPRIMÉE ICI ---
-                
-                alert("L'affectation a été supprimée de la fiche.");
-                charger(); // Rafraîchissement de l'affichage
-            } catch (e) {
-                console.error("Erreur lors du retrait :", e);
-                alert("Une erreur est survenue lors de la suppression.");
-            }
+window.retirerEPI = async (stockId, type, taille) => {
+    if(confirm("Supprimer cette ligne de la fiche (sans toucher au stock) ?")) {
+        try {
+            await updateDoc(doc(db, "users", agentId), { 
+                epi: arrayRemove({ id: stockId, type, taille }) 
+            });
+            alert("Supprimé de la fiche.");
+            charger();
+        } catch (e) {
+            alert("Erreur lors de la suppression.");
         }
-    };
+    }
+};
   charger();
 </script>
 </body>
