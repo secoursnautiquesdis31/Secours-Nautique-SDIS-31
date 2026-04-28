@@ -42,6 +42,9 @@
   </main>
 
 <script type="module">
+  // On remet les droits admin dès qu'on arrive sur le tableau de bord
+localStorage.removeItem('modeConsultation');
+  
   // On importe les outils nécessaires depuis auth.js
   import { requireAuth, auth, signOut } from "./auth.js";
 
