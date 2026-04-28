@@ -33,11 +33,11 @@
 </head>
 <body>
 
-<a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020;">🏠 MENU</a>
+<a href="dashboard.html" id="btnHome" style="position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020;">🏠 MENU</a>
 
 <div class="fiche-card">
     <div class="header">
-        <a href="rh.html" style="color:white; text-decoration:none; opacity:0.8;">← Retour à l'annuaire</a>
+        <a href="rh.html" id="backLink" style="color:white; text-decoration:none; opacity:0.8;">← Retour à l'annuaire</a>
         <h1 id="nomAgent" style="margin: 20px 0 5px 0; text-transform: uppercase; letter-spacing: 1px;">CHARGEMENT...</h1>
         <div id="cisAgent" style="color: var(--amber); font-weight: bold; font-size: 1.1rem;">CIS ...</div>
     </div>
@@ -99,6 +99,7 @@
 
     const params = new URLSearchParams(window.location.search);
     const agentId = params.get('id');
+    const modePublic = localStorage.getItem('modeConsultation'); // Récupération du mode
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
     async function charger() {
@@ -152,7 +153,13 @@
                 const btn = document.createElement('div');
                 btn.className = `spec-tag ${active ? 'active' : ''}`;
                 btn.innerText = s;
-                btn.onclick = () => toggleSpec(s, agentSpecs);
+                
+                // On bloque le clic si on est en mode public
+                if (modePublic !== 'true') {
+                    btn.onclick = () => toggleSpec(s, agentSpecs);
+                } else {
+                    btn.style.cursor = "default";
+                }
                 grid.appendChild(btn);
             });
 
@@ -161,22 +168,41 @@
             (agent.epi || []).forEach(item => {
                 const div = document.createElement('div');
                 div.className = "epi-row";
-                div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille || ""})</small></div>
-                    <button style="color:var(--danger); border:none; background:none; cursor:pointer;" 
-                    onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>`;
+                
+                // On n'affiche le bouton "Retirer" que pour l'admin
+                let deleteBtn = (modePublic !== 'true') ? 
+                    `<button style="color:var(--danger); border:none; background:none; cursor:pointer;" 
+                    onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>` : "";
+
+                div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille || ""})</small></div> ${deleteBtn}`;
                 epiList.appendChild(div);
             });
+
+            // --- APPLIQUER LE VERROUILLAGE VISUEL ---
+            if (modePublic === 'true') {
+                const homeBtn = document.getElementById('btnHome');
+                if(homeBtn) homeBtn.href = "espace-public.html"; // Retour Espace Public
+
+                if(document.getElementById('btnSaveQuotas')) document.getElementById('btnSaveQuotas').style.display = 'none';
+                if(document.getElementById('btnOpenStock')) document.getElementById('btnOpenStock').style.display = 'none';
+                if(document.getElementById('backLink')) document.getElementById('backLink').style.display = 'none';
+                
+                const inputs = document.querySelectorAll('.quota-item input');
+                inputs.forEach(i => i.readOnly = true);
+            }
 
         } catch (e) { console.error(e); }
     }
 
     async function toggleSpec(spec, current) {
+        if (modePublic === 'true') return; // Sécurité supplémentaire
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
         charger();
     }
 
     document.getElementById('btnSaveQuotas').onclick = async () => {
+        if (modePublic === 'true') return;
         const nouveauxQuotas = {
             sav: parseInt(document.getElementById('q_sav').value) || 0,
             fmpa: parseInt(document.getElementById('q_fmpa').value) || 0,
@@ -189,6 +215,7 @@
     };
 
     document.getElementById('btnOpenStock').onclick = async () => {
+        if (modePublic === 'true') return;
         document.getElementById('modalStock').style.display = 'block';
         const list = document.getElementById('listeChoixStock');
         list.innerHTML = "Chargement...";
@@ -214,6 +241,7 @@
     };
 
     window.retirerEPI = async (stockId, type, taille) => {
+        if (modePublic === 'true') return;
         if(confirm(`Supprimer l'affectation de ${type} ?`)) {
             const agentRef = doc(db, "users", agentId);
             const agentSnap = await getDoc(agentRef);
