@@ -45,11 +45,18 @@
     // On importe la fonction de protection et les utilitaires depuis auth.js
     import { requireAuth, auth, signOut } from "./auth.js";
 
+    // 1. On protège la page : si l'utilisateur n'est pas connecté, 
+    // il sera redirigé automatiquement vers l'index.
     requireAuth((profile) => {
         console.log("Connecté en tant que :", profile.prenom);
         
+        // Ici tu peux ajouter du code qui s'exécute une fois 
+        // que l'utilisateur est identifié (ex: afficher son nom)
     });
 
+    // NOTE : Le bouton logout est déjà géré par buildSidebar() dans auth.js
+    // Mais par sécurité, si tu as un bouton avec l'ID "logoutBtn", 
+    // auth.js s'en occupe tout seul !
   </script>
 </body>
 </html>
