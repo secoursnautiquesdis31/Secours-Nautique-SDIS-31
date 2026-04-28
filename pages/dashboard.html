@@ -42,15 +42,37 @@
   </main>
 
 <script type="module">
-  import { requireAuth } from "./auth.js";
+  import { requireAuth, auth, signOut } from "./auth.js";
 
-  // requireAuth va :
-  // 1. Vérifier si l'utilisateur est connecté
-  // 2. Charger son profil Firestore
-  // 3. Appeler buildSidebar() qui va activer le bouton #logoutBtn
+  // 1. On lance la protection de page
   requireAuth((profile) => {
-    console.log("Dashboard chargé pour :", profile.prenom);
+    console.log("Session vérifiée pour :", profile.email);
   });
+
+  // 2. Fonction de déconnexion robuste
+  async function handleLogout() {
+    if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
+      try {
+        await signOut(auth);
+        console.log("Déconnexion réussie");
+        window.location.replace("../index.html");
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion :", error);
+        alert("Erreur de déconnexion. Vérifiez votre console.");
+      }
+    }
+  }
+
+  // 3. On force l'attachement du clic même si la sidebar met du temps à charger
+  const checkButtonInterval = setInterval(() => {
+    const btn = document.getElementById("logoutBtn");
+    if (btn) {
+      // On retire tout ancien écouteur pour éviter les doublons et on met le nôtre
+      btn.onclick = handleLogout;
+      clearInterval(checkButtonInterval); // On arrête de chercher une fois trouvé
+      console.log("Bouton de déconnexion activé !");
+    }
+  }, 100); // Vérifie toutes les 100ms si le bouton est là
 </script>
 </body>
 </html>
