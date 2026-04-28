@@ -7,6 +7,55 @@
   <link rel="stylesheet" href="main.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    /* Styles pour les nouveaux boutons de choix */
+    .choice-container {
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      margin-top: 20px;
+    }
+    .btn-choice {
+      display: block;
+      padding: 15px;
+      border-radius: 6px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      text-decoration: none;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-size: 1.1em;
+    }
+    .btn-admin-choice {
+      background: #E8A020;
+      color: #1a1a1a;
+      border: none;
+    }
+    .btn-specialist-choice {
+      background: transparent;
+      color: #E8A020;
+      border: 2px solid #E8A020;
+    }
+    .btn-choice:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 15px rgba(232, 160, 32, 0.3);
+    }
+    /* On cache le formulaire par défaut */
+    #loginFormContainer {
+      display: none;
+      margin-top: 20px;
+    }
+    .back-link {
+      display: block;
+      margin-top: 15px;
+      color: rgba(255,255,255,0.5);
+      font-size: 0.8em;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body class="login-page">
 
@@ -34,24 +83,25 @@
         </div>
       </div>
 
-      <form id="loginForm" class="login-form">
-        <div class="form-group">
-          <label for="email">Adresse e-mail</label>
-          <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
-        </div>
-        <div class="form-group">
-          <label for="password">Mot de passe</label>
-          <input type="password" id="password" placeholder="••••••••" required>
-        </div>
-        <div id="loginError" class="error-msg" style="display:none"></div>
-        <button type="submit" class="btn-primary" id="loginBtn">Connexion</button>
-      </form>
+      <div id="choiceScreen" class="choice-container">
+        <button id="showAdminBtn" class="btn-choice btn-admin-choice">Accès Administrateur</button>
+        <a href="https://secoursnautiquesdis31.github.io/Secours-Nautique-SDIS-31/pages/espace-public.html" class="btn-choice btn-specialist-choice">Accès Spécialiste</a>
+      </div>
 
-      <div class="agent-access-link" style="margin-top: 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 20px;">
-        <p style="color: rgba(255,255,255,0.6); font-family: 'Barlow', sans-serif; font-size: 0.85em; margin-bottom: 12px;">Vous êtes un agent ?</p>
-        <a href="https://secoursnautiquesdis31.github.io/Secours-Nautique-SDIS-31/pages/espace-public.html" style="display: inline-block; text-decoration: none; color: #E8A020; border: 1px solid #E8A020; padding: 8px 18px; border-radius: 4px; font-family: 'Barlow Condensed', sans-serif; font-weight: 600; font-size: 0.9em; text-transform: uppercase; transition: opacity 0.2s;">
-          Accéder à l'Espace Agents
-        </a>
+      <div id="loginFormContainer">
+        <form id="loginForm" class="login-form">
+          <div class="form-group">
+            <label for="email">Adresse e-mail</label>
+            <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Mot de passe</label>
+            <input type="password" id="password" placeholder="••••••••" required>
+          </div>
+          <div id="loginError" class="error-msg" style="display:none"></div>
+          <button type="submit" class="btn-primary" id="loginBtn">Connexion</button>
+        </form>
+        <span class="back-link" id="backBtn">Retour au choix des accès</span>
       </div>
 
     </div>
@@ -61,6 +111,7 @@
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
+    // Configuration Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
         authDomain: "secours-nautique-31.firebaseapp.com",
@@ -73,6 +124,21 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    // Gestion de l'affichage
+    const choiceScreen = document.getElementById('choiceScreen');
+    const loginFormContainer = document.getElementById('loginFormContainer');
+    
+    document.getElementById('showAdminBtn').addEventListener('click', () => {
+        choiceScreen.style.display = 'none';
+        loginFormContainer.style.display = 'block';
+    });
+
+    document.getElementById('backBtn').addEventListener('click', () => {
+        loginFormContainer.style.display = 'none';
+        choiceScreen.style.display = 'flex';
+    });
+
+    // Connexion Firebase
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const errDiv = document.getElementById("loginError");
