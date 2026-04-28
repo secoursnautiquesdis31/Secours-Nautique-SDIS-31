@@ -141,17 +141,17 @@ window.ouvrirFormation = () => {
     // 3. On redirige vers le calendrier
     window.location.href = `calendrier-public.html`;
 };
-        window.ouvrirMaFiche = () => {
+window.ouvrirMaFiche = () => {
     // 1. On vérifie si un nom est sélectionné
     if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
     
     // 2. On récupère le texte du nom (ex: DUPONT Jean)
     const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
     
-    // 3. On l'enregistre pour que la page suivante le reconnaisse
+    // 3. On l'enregistre pour que la fiche-agent sache qui afficher
     localStorage.setItem('agentNomSelected', nomAgent);
     
-    // 4. On part vers la page fiche (il faudra créer ce fichier après)
+    // 4. On redirige vers la fiche
     window.location.href = "fiche-agent.html";
 };
         document.getElementById('btnEnvoyer').onclick = async () => {
