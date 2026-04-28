@@ -150,8 +150,11 @@ window.ouvrirMaFiche = () => {
     
     // 3. On l'enregistre pour que la fiche-agent sache qui afficher
     localStorage.setItem('agentNomSelected', nomAgent);
+
+    // 4. On ajoute un petit "marqueur" pour dire que c'est une consultation publique
+    localStorage.setItem('modeConsultation', 'true')  
     
-    // 4. On redirige vers la fiche
+    // 5. On redirige vers la fiche
     window.location.href = "fiche-agent.html";
 };
         document.getElementById('btnEnvoyer').onclick = async () => {
