@@ -1,103 +1,159 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Secours Nautique 31 - Accueil</title>
-    <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600&family=Barlow:wght@400&display=swap" rel="stylesheet">
-    <style>
-        /* Configuration du fond d'écran */
-        body, html {
-            height: 100%;
-            margin: 0;
-            font-family: 'Barlow', sans-serif;
-            overflow: hidden; /* Empêche le défilement si le fond est fixe */
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SDIS 31 — Secours Nautique</title>
+  <link rel="stylesheet" href="main.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    body, html {
+      height: 100%;
+      margin: 0;
+      background-color: #0d1b2a; /* Fond bleu foncé assorti */
+      font-family: 'Barlow', sans-serif;
+    }
 
-        .bg-image {
-            /* Chemin vers ton image enregistrée localement */
-            background-image: url('fond-page.png'); 
-            
-            /* Paramètres pour un fond d'écran complet et centré */
-            background-position: center;
-            background-repeat: no-repeat;
-            background-size: cover; /* L'image s'adapte à la taille de l'écran */
-            height: 100%;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: flex-end; /* Aligne le contenu (boutons) en bas */
-            padding-bottom: 50px; /* Espace depuis le bas de l'écran */
-        }
+    /* FOND D'ECRAN : l'image est entière et non zoomée */
+    .bg-container {
+      background-image: url('Logo Secours Nautique.JPG'); 
+      background-position: center;
+      background-repeat: no-repeat;
+      background-size: contain; /* L'image s'affiche entièrement sans être coupée */
+      height: 100vh;
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end; /* Pousse tout vers le bas */
+      align-items: center;
+    }
 
-        /* Conteneur des boutons */
-        .buttons-container {
-            display: flex;
-            flex-direction: column; /* Boutons l'un au-dessus de l'autre sur mobile */
-            gap: 20px;
-            width: 90%;
-            max-width: 500px; /* Largeur maximale pour ne pas être trop larges */
-            text-align: center;
-        }
+    /* CONTENEUR DES BOUTONS (En bas de page) */
+    .bottom-interface {
+      width: 100%;
+      max-width: 500px;
+      padding-bottom: 40px;
+      text-align: center;
+    }
 
-        /* Style commun pour les deux boutons */
-        .btn {
-            display: block;
-            padding: 15px 20px;
-            border-radius: 8px;
-            font-family: 'Barlow Condensed', sans-serif;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            text-decoration: none;
-            transition: all 0.3s ease;
-            cursor: pointer;
-            border: 2px solid transparent;
-        }
+    .choice-buttons {
+      display: flex;
+      gap: 15px;
+      padding: 0 20px;
+    }
 
-        /* Style spécifique : Accès Administrateur */
-        .btn-admin {
-            background-color: #E8A020; /* Jaune orangé de l'emblème */
-            color: #1a1a1a;
-        }
+    .btn-choice {
+      flex: 1;
+      padding: 15px;
+      border-radius: 8px;
+      font-family: 'Barlow Condensed', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      text-decoration: none;
+      cursor: pointer;
+      transition: 0.3s;
+      font-size: 1em;
+      border: 2px solid #E8A020;
+    }
 
-        .btn-admin:hover {
-            background-color: #f7b23b;
-            transform: translateY(-2px);
-        }
+    .btn-admin { background: #E8A020; color: #1a1a1a; }
+    .btn-spec { background: #E8A020; color: #1a1a1a; }
 
-        /* Style spécifique : Accès Spécialiste */
-        .btn-specialist {
-            background-color: transparent;
-            color: #E8A020;
-            border-color: #E8A020;
-        }
+    /* BOITE DE CONNEXION (Cachée par défaut) */
+    #loginBox {
+      display: none;
+      background: rgba(255, 255, 255, 0.95);
+      padding: 25px;
+      border-radius: 12px;
+      margin: 0 20px 20px 20px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
 
-        .btn-specialist:hover {
-            background-color: rgba(232, 160, 32, 0.1);
-            transform: translateY(-2px);
-        }
-
-        /* Responsive : passer les boutons côte à côte sur tablette/PC */
-        @media (min-width: 600px) {
-            .buttons-container {
-                flex-direction: row; /* Boutons l'un à côté de l'autre */
-                justify-content: center;
-            }
-            .btn {
-                flex: 1; /* Les boutons prennent la même largeur */
-            }
-        }
-    </style>
+    .back-btn {
+      display: block;
+      margin-top: 10px;
+      color: #666;
+      font-size: 0.8em;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+  </style>
 </head>
 <body>
 
-    <div class="bg-image">
-        <div class="buttons-container">
-            <a href="pages/admin-login.html" class="btn btn-admin">Accès Administrateur</a>
-            <a href="https://secoursnautiquesdis31.github.io/Secours-Nautique-SDIS-31/pages/espace-public.html" class="btn btn-specialist">Accès Spécialiste</a>
-        </div>
+  <div class="bg-container">
+    
+    <div class="bottom-interface">
+      
+      <div id="choiceScreen" class="choice-buttons">
+        <button onclick="showLogin()" class="btn-choice btn-admin">Accès Administrateur</button>
+        <a href="URL_DE_TON_ESPACE_PUBLIC" class="btn-choice btn-spec">Accès Spécialiste</a>
+      </div>
+
+      <div id="loginBox">
+        <h2 style="color: #333; margin-top: 0; font-family: 'Barlow Condensed'">Connexion Admin</h2>
+        <form id="loginForm" class="login-form" style="text-align: left;">
+          <div class="form-group">
+            <label for="email" style="color:#333">Email</label>
+            <input type="email" id="email" style="width:100%; padding:10px; margin: 5px 0;" placeholder="prenom.nom@sdis31.fr" required>
+          </div>
+          <div class="form-group">
+            <label for="password" style="color:#333">Mot de passe</label>
+            <input type="password" id="password" style="width:100%; padding:10px; margin: 5px 0;" placeholder="••••••••" required>
+          </div>
+          <div id="loginError" class="error-msg" style="display:none; color: red; margin: 10px 0;"></div>
+          <button type="submit" class="btn-primary" style="width:100%; background:#E8A020; border:none; padding:12px; font-weight:bold; cursor:pointer;">SE CONNECTER</button>
+        </form>
+        <span class="back-btn" onclick="hideLogin()">Retour</span>
+      </div>
+
     </div>
 
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
+        authDomain: "secours-nautique-31.firebaseapp.com",
+        projectId: "secours-nautique-31",
+        storageBucket: "secours-nautique-31.firebasestorage.app",
+        messagingSenderId: "1013387329575",
+        appId: "1:1013387329575:web:aa1148aedf7e3106bb4e02"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Fonctions pour afficher/cacher la boite
+    window.showLogin = () => {
+      document.getElementById('choiceScreen').style.display = 'none';
+      document.getElementById('loginBox').style.display = 'block';
+    };
+    window.hideLogin = () => {
+      document.getElementById('choiceScreen').style.display = 'flex';
+      document.getElementById('loginBox').style.display = 'none';
+    };
+
+    // Gestion Connexion
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const errDiv = document.getElementById("loginError");
+        errDiv.style.display = "none";
+        const email = document.getElementById("email").value.trim();
+        const pass = document.getElementById("password").value;
+
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            window.location.href = "pages/dashboard.html";
+        } catch (err) {
+            errDiv.style.display = "block";
+            errDiv.textContent = "Identifiants incorrects.";
+        }
+    });
+  </script>
 </body>
 </html>
