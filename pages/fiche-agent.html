@@ -46,12 +46,12 @@
         <div class="section-title">Objectifs & Acquis (Calendrier)</div>
         <div class="quota-container">
             <div class="quota-grid">
-               <div class="quota-item"><label>SAV SEV</label><div><b id="count_sav">0</b> / <input type="number" id="q_sav"></div></div>
-<div class="quota-item"><label>FMPA Mer</label><div><b id="count_fmpa">0</b> / <input type="number" id="q_fmpa"></div></div>
-<div class="quota-item"><label>CEN</label><div><b id="count_cen">0</b> / <input type="number" id="q_cen"></div></div>
-<div class="quota-item"><label>MSO / ENT</label><div><b id="count_mso">0</b> / <input type="number" id="q_mso"></div></div>            
-                
-                <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
+                <div class="quota-item"><label>SAV SEV</label><div><b id="count_sav">0</b> / <input type="number" id="q_sav"></div></div>
+                <div class="quota-item"><label>FMPA Mer</label><div><b id="count_fmpa">0</b> / <input type="number" id="q_fmpa"></div></div>
+                <div class="quota-item"><label>CEN</label><div><b id="count_cen">0</b> / <input type="number" id="q_cen"></div></div>
+                <div class="quota-item"><label>MSO / ENT</label><div><b id="count_mso">0</b> / <input type="number" id="q_mso"></div></div>
+            </div>
+            <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
         </div>
 
         <div class="section-title">Spécialités Détachées</div>
@@ -99,8 +99,20 @@
 
     const params = new URLSearchParams(window.location.search);
     const agentId = params.get('id');
-    const modePublic = localStorage.getItem('modeConsultation'); // Récupération du mode
+    const modePublic = localStorage.getItem('modeConsultation');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
+
+    // Fonction de coloration des objectifs
+    function appliquerCouleurs(acquis, objId, bId) {
+        const objectif = parseInt(document.getElementById(objId).value) || 0;
+        const element = document.getElementById(bId);
+        element.innerText = acquis;
+        if (acquis >= objectif && objectif > 0) {
+            element.style.color = "var(--green)";
+        } else {
+            element.style.color = "var(--danger)";
+        }
+    }
 
     async function charger() {
         if(!agentId) return;
@@ -140,10 +152,21 @@
                 }
             });
 
-            document.getElementById('count_sav').innerText = presences.sav;
-            document.getElementById('count_fmpa').innerText = presences.fmpa;
-            document.getElementById('count_cen').innerText = presences.cen;
-            document.getElementById('count_mso').innerText = presences.mso;
+            // Mise à jour des compteurs avec couleur
+            appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
+            appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
+            appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
+            appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
+
+            // Écouteurs pour changer la couleur en temps réel si l'admin change l'objectif
+            ['q_sav', 'q_fmpa', 'q_cen', 'q_mso'].forEach(id => {
+                document.getElementById(id).oninput = () => {
+                    appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
+                    appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
+                    appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
+                    appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
+                };
+            });
 
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
@@ -153,8 +176,6 @@
                 const btn = document.createElement('div');
                 btn.className = `spec-tag ${active ? 'active' : ''}`;
                 btn.innerText = s;
-                
-                // On bloque le clic si on est en mode public
                 if (modePublic !== 'true') {
                     btn.onclick = () => toggleSpec(s, agentSpecs);
                 } else {
@@ -168,34 +189,27 @@
             (agent.epi || []).forEach(item => {
                 const div = document.createElement('div');
                 div.className = "epi-row";
-                
-                // On n'affiche le bouton "Retirer" que pour l'admin
                 let deleteBtn = (modePublic !== 'true') ? 
                     `<button style="color:var(--danger); border:none; background:none; cursor:pointer;" 
                     onclick="retirerEPI('${item.id}', '${item.type}', '${item.taille || ""}')">🗑️ RETIRER</button>` : "";
-
                 div.innerHTML = `<div><strong>${item.type}</strong> <small>(${item.taille || ""})</small></div> ${deleteBtn}`;
                 epiList.appendChild(div);
             });
 
-            // --- APPLIQUER LE VERROUILLAGE VISUEL ---
             if (modePublic === 'true') {
                 const homeBtn = document.getElementById('btnHome');
-                if(homeBtn) homeBtn.href = "espace-public.html"; // Retour Espace Public
-
+                if(homeBtn) homeBtn.href = "espace-public.html";
                 if(document.getElementById('btnSaveQuotas')) document.getElementById('btnSaveQuotas').style.display = 'none';
                 if(document.getElementById('btnOpenStock')) document.getElementById('btnOpenStock').style.display = 'none';
                 if(document.getElementById('backLink')) document.getElementById('backLink').style.display = 'none';
-                
-                const inputs = document.querySelectorAll('.quota-item input');
-                inputs.forEach(i => i.readOnly = true);
+                document.querySelectorAll('.quota-item input').forEach(i => i.readOnly = true);
             }
 
         } catch (e) { console.error(e); }
     }
 
     async function toggleSpec(spec, current) {
-        if (modePublic === 'true') return; // Sécurité supplémentaire
+        if (modePublic === 'true') return;
         const news = current.includes(spec) ? current.filter(s => s !== spec) : [...current, spec];
         await updateDoc(doc(db, "users", agentId), { specialites: news });
         charger();
