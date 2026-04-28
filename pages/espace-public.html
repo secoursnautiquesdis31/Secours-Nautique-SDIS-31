@@ -44,8 +44,12 @@
         📦<br>MATÉRIEL<br>
         <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Besoin de matériel</small>
     </button>
-    
-    <a href="operationnel.html" class="menu-btn" style="grid-column: span 2; display: block; font-size: 1rem;">
+    <button onclick="ouvrirMaFiche()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit;">
+    👤<br>MA FICHE<br>
+    <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Mes infos - Visite médicale</small>
+</button>
+           
+           <a href="operationnel.html" class="menu-btn" style="grid-column: span 2; display: block; font-size: 1rem;">
         🌊<br>RESSOURCES<br>
         <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Ressources documentaires, Boite a outils, Autres</small>
     </a>
@@ -136,6 +140,19 @@ window.ouvrirFormation = () => {
     
     // 3. On redirige vers le calendrier
     window.location.href = `calendrier-public.html`;
+};
+        window.ouvrirMaFiche = () => {
+    // 1. On vérifie si un nom est sélectionné
+    if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
+    
+    // 2. On récupère le texte du nom (ex: DUPONT Jean)
+    const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
+    
+    // 3. On l'enregistre pour que la page suivante le reconnaisse
+    localStorage.setItem('agentNomSelected', nomAgent);
+    
+    // 4. On part vers la page fiche (il faudra créer ce fichier après)
+    window.location.href = "fiche-agent.html";
 };
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
