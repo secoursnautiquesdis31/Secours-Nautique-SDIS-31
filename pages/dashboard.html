@@ -6,83 +6,52 @@
     <link rel="stylesheet" href="css/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --white: #FFFFFF; }
-        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        .top-bar { background: var(--navy); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--amber); }
-        .container { flex: 1; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
-        .welcome-msg { margin-bottom: 30px; }
-        .welcome-msg h1 { color: var(--navy); margin: 0; font-size: 2.2rem; text-transform: uppercase; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 20px; }
-        .card { background: white; border-radius: 12px; padding: 30px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: all 0.3s ease; border: 1px solid #EEE; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: var(--amber); }
-        .card-icon { font-size: 3rem; margin-bottom: 15px; }
-        .card-title { font-weight: bold; font-size: 1.2rem; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
-        .card-desc { font-size: 0.9rem; color: #666; margin-top: 10px; line-height: 1.4; }
-        .section-title { grid-column: 1 / -1; margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #DDD; padding-bottom: 5px; }
+        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; }
+        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
+        .header { background: var(--navy); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+        .menu-card { background: white; padding: 30px; border-radius: 12px; text-decoration: none; color: var(--navy); text-align: center; font-weight: bold; border-bottom: 4px solid var(--amber); transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .menu-card:hover { transform: translateY(-5px); background: #fdfdfd; }
+        .section-title { width: 100%; grid-column: 1 / -1; margin-top: 20px; padding: 10px; color: #666; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; border-bottom: 1px solid #ddd; }
     </style>
 </head>
 <body>
 
-<div class="top-bar">
-    <div style="font-weight: bold; letter-spacing: 1px;">SDIS 31 — SECOURS NAUTIQUE</div>
-    <div id="dateDisplay"></div>
+<div class="header">
+    <div style="font-weight: bold;">SDIS 31 — SECOURS NAUTIQUE</div>
+    <div id="dateJour"></div>
 </div>
 
-<div class="container">
-    <div class="welcome-msg">
-        <h1>Console d'Administration</h1>
-        <p>Bienvenue sur votre outil de gestion opérationnelle et administrative.</p>
-    </div>
+<h1 style="color: var(--navy); margin-bottom: 30px;">Console d'Administration</h1>
 
-    <div class="grid">
-        <div class="section-title">Personnel & Formation</div>
-        
-        <a href="rh.html" class="card">
-            <div class="card-icon">👥</div>
-            <div class="card-title">Annuaire RH</div>
-            <div class="card-desc">Gérer les effectifs, spécialités et dossiers agents.</div>
-        </a>
+<div class="menu-grid">
+    <div class="section-title">Gestion Administrative</div>
+    
+    <a href="rh.html" class="menu-card">👥 ANNUAIRE RH</a>
+    
+    <a href="formations.html" class="menu-card">📅 GÉRER LES FORMATIONS</a>
 
-        <a href="formations.html" class="card">
-            <div class="card-icon">📅</div>
-            <div class="card-title">Formations</div>
-            <div class="card-desc">Planifier les sessions et valider les présences.</div>
-        </a>
+    <a href="gestion-inscriptions.html" class="menu-card">📋 SUIVI DES INSCRIPTIONS</a>
 
-        <a href="gestion-inscriptions.html" class="card">
-            <div class="card-icon">📋</div>
-            <div class="card-title">Suivi Inscriptions</div>
-            <div class="card-desc">Vision globale des agents inscrits par formation.</div>
-        </a>
+    <div class="section-title">Logistique</div>
+    
+    <a href="stocks.html" class="menu-card">📦 GESTION DES STOCKS</a>
+    
+    <a href="maintenance.html" class="menu-card">🛠️ MAINTENANCE</a>
 
-        <div class="section-title">Logistique & Matériel</div>
-
-        <a href="stocks.html" class="card">
-            <div class="card-icon">📦</div>
-            <div class="card-title">Gestion Stocks</div>
-            <div class="card-desc">Inventaire EPI, matériel collectif et alertes.</div>
-        </a>
-
-        <a href="maintenance.html" class="card">
-            <div class="card-icon">🛠️</div>
-            <div class="card-title">Maintenance</div>
-            <div class="card-desc">Suivi des embarcations, moteurs et réparations.</div>
-        </a>
-
-        <div class="section-title">Accès Utilisateur</div>
-
-        <a href="espace-public.html" class="card" style="background: #f8f9fa;">
-            <div class="card-icon">🌐</div>
-            <div class="card-title">Mode Consultation</div>
-            <div class="card-desc">Voir l'interface telle qu'un agent la perçoit.</div>
-        </a>
-    </div>
+    <div class="section-title">Utilisateur</div>
+    
+    <a href="espace-public.html" class="menu-card" style="border-bottom-color: #666;">🌐 ACCÈS ESPACE PUBLIC</a>
 </div>
 
 <script>
+    // Nettoyage sécurité
     localStorage.removeItem('modeConsultation');
+
+    // Affichage date
+    const d = new Date();
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('fr-FR', options).toUpperCase();
+    document.getElementById('dateJour').innerText = d.toLocaleDateString('fr-FR', options).toUpperCase();
 </script>
 
 </body>
