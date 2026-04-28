@@ -142,20 +142,16 @@ window.ouvrirFormation = () => {
     window.location.href = `calendrier-public.html`;
 };
 window.ouvrirMaFiche = () => {
-    // 1. On vérifie si un nom est sélectionné
     if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
     
-    // 2. On récupère le texte du nom (ex: DUPONT Jean)
+    const agentId = selectAgent.value;
     const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
     
-    // 3. On l'enregistre pour que la fiche-agent sache qui afficher
     localStorage.setItem('agentNomSelected', nomAgent);
-
-    // 4. On ajoute un petit "marqueur" pour dire que c'est une consultation publique
-    localStorage.setItem('modeConsultation', 'true')  
+    localStorage.setItem('modeConsultation', 'true'); // Marqueur pour le mode lecture
     
-    // 5. On redirige vers la fiche
-    window.location.href = "fiche-agent.html";
+    // On ajoute l'ID dans l'URL pour que la fiche sache qui charger
+    window.location.href = `fiche-agent.html?id=${agentId}`;
 };
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
