@@ -145,7 +145,10 @@
 
                 if (inscription) {
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                    const statutAffiché = inscription.statut || "Inscrit";
+                    
+                    // Transformation visuelle : on affiche "INSCRIT" au lieu de "EN ATTENTE"
+                    let statutAffiché = inscription.statut || "Inscrit";
+                    if (statutAffiché === "en attente") statutAffiché = "Inscrit";
                     
                     let couleurStatut = "#888";
                     if(statutAffiché === "présent") couleurStatut = "var(--green)";
