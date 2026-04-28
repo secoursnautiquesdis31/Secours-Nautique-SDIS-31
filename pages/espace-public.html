@@ -125,12 +125,17 @@
             chargerListeMateriel();
         };
 
-        window.ouvrirFormation = () => {
+window.ouvrirFormation = () => {
     if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
     
-    // On envoie l'ID de l'agent choisi à la page calendrier
-    const agentId = selectAgent.value;
-    window.location.href = `calendrier-public.html?agentId=${agentId}`;
+    // 1. On récupère le texte du nom (ex: "DUPONT Jean")
+    const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
+    
+    // 2. On l'enregistre dans le localStorage pour que le calendrier le lise
+    localStorage.setItem('agentNomSelected', nomAgent);
+    
+    // 3. On redirige vers le calendrier
+    window.location.href = `calendrier-public.html`;
 };
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
