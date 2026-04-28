@@ -57,10 +57,10 @@
         <div class="section-title">Spécialités Détachées</div>
         <div id="specsGrid" style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 30px;"></div>
 
-        <div class="section-title">Historique des Présences</div>
+        <div class="section-title">Mon historique & Inscriptions</div>
         <div style="overflow-x: auto; margin-bottom: 30px;">
             <table>
-                <thead><tr><th>Date</th><th>Désignation</th><th>Lieu</th></tr></thead>
+                <thead><tr><th>Date</th><th>Désignation</th><th>Lieu</th><th>Statut</th></tr></thead>
                 <tbody id="listeFormations"></tbody>
             </table>
         </div>
@@ -102,7 +102,6 @@
     const modePublic = localStorage.getItem('modeConsultation');
     const listeSpecs = ["CEN", "SAV-SEV", "SAL1", "SAL2", "SAL3"];
 
-    // Fonction de coloration des objectifs
     function appliquerCouleurs(acquis, objId, bId) {
         const objectif = parseInt(document.getElementById(objId).value) || 0;
         const element = document.getElementById(bId);
@@ -136,29 +135,45 @@
             histTbody.innerHTML = "";
 
             const fSnap = await getDocs(collection(db, "formations"));
-            fSnap.forEach(fDoc => {
-                const f = fDoc.data();
-                const estPresent = (f.inscrits || []).find(i => i.nom === agentNom && i.statut === "présent");
+            
+            const formationsTriées = fSnap.docs
+                .map(doc => doc.data())
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-                if (estPresent) {
+            formationsTriées.forEach(f => {
+                const inscription = (f.inscrits || []).find(i => i.nom === agentNom);
+
+                if (inscription) {
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                    histTbody.innerHTML += `<tr><td>${dateFmt}</td><td>${f.nom}</td><td>${f.lieu || "---"}</td></tr>`;
+                    const statutAffiché = inscription.statut || "Inscrit";
+                    
+                    let couleurStatut = "#888";
+                    if(statutAffiché === "présent") couleurStatut = "var(--green)";
+                    if(statutAffiché === "absent") couleurStatut = "var(--danger)";
 
-                    const titre = f.nom.toUpperCase();
-                    if (titre.includes("SAV") || titre.includes("SEV")) presences.sav++;
-                    else if (titre.includes("FMPA") || titre.includes("MER")) presences.fmpa++;
-                    else if (titre.includes("CEN")) presences.cen++;
-                    else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) presences.mso++;
+                    histTbody.innerHTML += `
+                        <tr>
+                            <td>${dateFmt}</td>
+                            <td>${f.nom}</td>
+                            <td>${f.lieu || "---"}</td>
+                            <td style="font-weight:bold; color:${couleurStatut}">${statutAffiché.toUpperCase()}</td>
+                        </tr>`;
+
+                    if (inscription.statut === "présent") {
+                        const titre = f.nom.toUpperCase();
+                        if (titre.includes("SAV") || titre.includes("SEV")) presences.sav++;
+                        else if (titre.includes("FMPA") || titre.includes("MER")) presences.fmpa++;
+                        else if (titre.includes("CEN")) presences.cen++;
+                        else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) presences.mso++;
+                    }
                 }
             });
 
-            // Mise à jour des compteurs avec couleur
             appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
             appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
             appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
             appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
 
-            // Écouteurs pour changer la couleur en temps réel si l'admin change l'objectif
             ['q_sav', 'q_fmpa', 'q_cen', 'q_mso'].forEach(id => {
                 document.getElementById(id).oninput = () => {
                     appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
