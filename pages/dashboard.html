@@ -42,18 +42,14 @@
   </main>
 
   <script type="module">
-    import { auth, signOut } from "./auth.js";
+    // On importe la fonction de protection et les utilitaires depuis auth.js
+    import { requireAuth, auth, signOut } from "./auth.js";
 
-    // Gestion de la déconnexion
-    document.getElementById("logoutBtn")?.addEventListener("click", () => {
-        if(confirm("Voulez-vous vous déconnecter ?")) {
-            signOut(auth).then(() => { 
-                window.location.href = "../index.html"; 
-            }).catch((error) => {
-                console.error("Erreur lors de la déconnexion:", error);
-            });
-        }
+    requireAuth((profile) => {
+        console.log("Connecté en tant que :", profile.prenom);
+        
     });
+
   </script>
 </body>
 </html>
