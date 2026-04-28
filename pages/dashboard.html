@@ -37,19 +37,19 @@
     <div class="grid">
         <div class="section-title">Personnel & Formation</div>
         
-        <a href="pages/rh.html" class="card">
+        <a href="rh.html" class="card">
             <div class="card-icon">👥</div>
             <div class="card-title">Annuaire RH</div>
             <div class="card-desc">Gérer les effectifs, spécialités et dossiers agents.</div>
         </a>
 
-        <a href="pages/formations.html" class="card">
+        <a href="formations.html" class="card">
             <div class="card-icon">📅</div>
             <div class="card-title">Formations</div>
             <div class="card-desc">Planifier les sessions et valider les présences.</div>
         </a>
 
-        <a href="pages/gestion-inscriptions.html" class="card" style="border-bottom: 4px solid var(--amber);">
+        <a href="gestion-inscriptions.html" class="card">
             <div class="card-icon">📋</div>
             <div class="card-title">Suivi Inscriptions</div>
             <div class="card-desc">Vision globale des agents inscrits par formation.</div>
@@ -57,13 +57,13 @@
 
         <div class="section-title">Logistique & Matériel</div>
 
-        <a href="pages/stocks.html" class="card">
+        <a href="stocks.html" class="card">
             <div class="card-icon">📦</div>
             <div class="card-title">Gestion Stocks</div>
             <div class="card-desc">Inventaire EPI, matériel collectif et alertes.</div>
         </a>
 
-        <a href="pages/maintenance.html" class="card">
+        <a href="maintenance.html" class="card">
             <div class="card-icon">🛠️</div>
             <div class="card-title">Maintenance</div>
             <div class="card-desc">Suivi des embarcations, moteurs et réparations.</div>
@@ -71,7 +71,7 @@
 
         <div class="section-title">Accès Utilisateur</div>
 
-        <a href="pages/espace-public.html" class="card" style="background: #f8f9fa;">
+        <a href="espace-public.html" class="card" style="background: #f8f9fa;">
             <div class="card-icon">🌐</div>
             <div class="card-title">Mode Consultation</div>
             <div class="card-desc">Voir l'interface telle qu'un agent la perçoit.</div>
@@ -80,10 +80,7 @@
 </div>
 
 <script>
-    // Nettoyage du mode consultation au cas où l'admin y était juste avant
     localStorage.removeItem('modeConsultation');
-
-    // Affichage de la date
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('fr-FR', options).toUpperCase();
 </script>
