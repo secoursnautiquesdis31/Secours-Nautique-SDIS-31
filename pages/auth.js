@@ -244,6 +244,7 @@ document.addEventListener("click", (e) => {
 // ──────────────────────────────────────────────
 export {
   db, auth, storage,
+  signOut, // <--- Vérifie que le 'O' est majuscule ici
   doc, getDoc, collection, addDoc, updateDoc, deleteDoc,
   getDocs, query, where, orderBy, serverTimestamp,
   ref, uploadBytes, getDownloadURL, deleteObject
