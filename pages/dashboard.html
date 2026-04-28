@@ -42,37 +42,38 @@
   </main>
 
 <script type="module">
+  // On importe les outils nécessaires depuis auth.js
   import { requireAuth, auth, signOut } from "./auth.js";
 
-  // 1. On lance la protection de page
+  // 1. Protection de la page
   requireAuth((profile) => {
     console.log("Session vérifiée pour :", profile.email);
   });
 
-  // 2. Fonction de déconnexion robuste
+  // 2. Gestionnaire de déconnexion
   async function handleLogout() {
     if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
       try {
-        await signOut(auth);
+        // On utilise signOut avec la majuscule
+        await signOut(auth); 
         console.log("Déconnexion réussie");
         window.location.replace("../index.html");
       } catch (error) {
-        console.error("Erreur lors de la déconnexion :", error);
-        alert("Erreur de déconnexion. Vérifiez votre console.");
+        console.error("Erreur de déconnexion :", error);
+        alert("Erreur lors de la déconnexion.");
       }
     }
   }
 
-  // 3. On force l'attachement du clic même si la sidebar met du temps à charger
-  const checkButtonInterval = setInterval(() => {
+  // 3. Attachement au bouton (système de surveillance)
+  const checkBtn = setInterval(() => {
     const btn = document.getElementById("logoutBtn");
     if (btn) {
-      // On retire tout ancien écouteur pour éviter les doublons et on met le nôtre
       btn.onclick = handleLogout;
-      clearInterval(checkButtonInterval); // On arrête de chercher une fois trouvé
-      console.log("Bouton de déconnexion activé !");
+      clearInterval(checkBtn);
+      console.log("Bouton déconnexion prêt.");
     }
-  }, 100); // Vérifie toutes les 100ms si le bouton est là
+  }, 100);
 </script>
 </body>
 </html>
