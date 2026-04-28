@@ -1,82 +1,92 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tableau de bord — SDIS 31 Nautique</title>
-  <link rel="stylesheet" href="../main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+    <meta charset="UTF-8">
+    <title>Dashboard — SDIS 31</title>
+    <link rel="stylesheet" href="css/main.css">
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --white: #FFFFFF; }
+        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
+        .top-bar { background: var(--navy); color: white; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid var(--amber); }
+        .container { flex: 1; padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; box-sizing: border-box; }
+        .welcome-msg { margin-bottom: 30px; }
+        .welcome-msg h1 { color: var(--navy); margin: 0; font-size: 2.2rem; text-transform: uppercase; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 20px; }
+        .card { background: white; border-radius: 12px; padding: 30px; text-decoration: none; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; transition: all 0.3s ease; border: 1px solid #EEE; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); border-color: var(--amber); }
+        .card-icon { font-size: 3rem; margin-bottom: 15px; }
+        .card-title { font-weight: bold; font-size: 1.2rem; color: var(--navy); text-transform: uppercase; letter-spacing: 1px; }
+        .card-desc { font-size: 0.9rem; color: #666; margin-top: 10px; line-height: 1.4; }
+        .section-title { grid-column: 1 / -1; margin-top: 20px; font-size: 0.9rem; font-weight: bold; color: #888; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #DDD; padding-bottom: 5px; }
+    </style>
 </head>
-<body class="app-layout">
+<body>
 
-  <aside class="sidebar">
-    <div class="sidebar-header">
-      <h2>SDIS 31</h2>
-      <span>Secours Nautique</span>
+<div class="top-bar">
+    <div style="font-weight: bold; letter-spacing: 1px;">SDIS 31 — SECOURS NAUTIQUE</div>
+    <div id="dateDisplay"></div>
+</div>
+
+<div class="container">
+    <div class="welcome-msg">
+        <h1>Console d'Administration</h1>
+        <p>Bienvenue sur votre outil de gestion opérationnelle et administrative.</p>
     </div>
-    <nav class="sidebar-nav">
-      <a class="nav-item active" href="dashboard.html">Tableau de bord</a>
-      <a class="nav-item" href="formation.html">Formation</a>
-      <a class="nav-item" href="rh.html">RH</a>
-      <a class="nav-item" href="technique.html">Technique</a>
-      <a class="nav-item" href="operationnel.html">Opérationnel</a>
-      <a class="nav-item" href="admin-users.html">Gestion des accès</a>
-    </nav>
-    <button id="logoutBtn" style="margin-top:auto; background:none; border:1px solid white; color:white; padding:10px; border-radius:5px; cursor:pointer;">Déconnexion</button>
-  </aside>
 
-  <main class="main-content">
-    <h1>Bienvenue sur le Tableau de bord</h1>
-    
-    <div class="card" style="background:white; padding:30px; border-radius:12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;">
-      <h3 style="color: #0B1F3A; margin-top: 0;">Plateforme de gestion Nautique</h3>
-      <p style="color: #555; line-height: 1.6;">
-        Utilisez le menu latéral pour accéder aux différentes sections :
-      </p>
-      <ul style="color: #555; line-height: 1.8;">
-        <li><strong>Formation :</strong> Calendrier et suivi des aptitudes.</li>
-        <li><strong>RH :</strong> Annuaire des agents et fiches individuelles.</li>
-        <li><strong>Technique :</strong> Gestion du stock et des EPI.</li>
-      </ul>
+    <div class="grid">
+        <div class="section-title">Personnel & Formation</div>
+        
+        <a href="pages/rh.html" class="card">
+            <div class="card-icon">👥</div>
+            <div class="card-title">Annuaire RH</div>
+            <div class="card-desc">Gérer les effectifs, spécialités et dossiers agents.</div>
+        </a>
+
+        <a href="pages/formations.html" class="card">
+            <div class="card-icon">📅</div>
+            <div class="card-title">Formations</div>
+            <div class="card-desc">Planifier les sessions et valider les présences.</div>
+        </a>
+
+        <a href="pages/gestion-inscriptions.html" class="card" style="border-bottom: 4px solid var(--amber);">
+            <div class="card-icon">📋</div>
+            <div class="card-title">Suivi Inscriptions</div>
+            <div class="card-desc">Vision globale des agents inscrits par formation.</div>
+        </a>
+
+        <div class="section-title">Logistique & Matériel</div>
+
+        <a href="pages/stocks.html" class="card">
+            <div class="card-icon">📦</div>
+            <div class="card-title">Gestion Stocks</div>
+            <div class="card-desc">Inventaire EPI, matériel collectif et alertes.</div>
+        </a>
+
+        <a href="pages/maintenance.html" class="card">
+            <div class="card-icon">🛠️</div>
+            <div class="card-title">Maintenance</div>
+            <div class="card-desc">Suivi des embarcations, moteurs et réparations.</div>
+        </a>
+
+        <div class="section-title">Accès Utilisateur</div>
+
+        <a href="pages/espace-public.html" class="card" style="background: #f8f9fa;">
+            <div class="card-icon">🌐</div>
+            <div class="card-title">Mode Consultation</div>
+            <div class="card-desc">Voir l'interface telle qu'un agent la perçoit.</div>
+        </a>
     </div>
-  </main>
+</div>
 
-<script type="module">
-  // On remet les droits admin dès qu'on arrive sur le tableau de bord
-localStorage.removeItem('modeConsultation');
-  
-  // On importe les outils nécessaires depuis auth.js
-  import { requireAuth, auth, signOut } from "./auth.js";
+<script>
+    // Nettoyage du mode consultation au cas où l'admin y était juste avant
+    localStorage.removeItem('modeConsultation');
 
-  // 1. Protection de la page
-  requireAuth((profile) => {
-    console.log("Session vérifiée pour :", profile.email);
-  });
-
-  // 2. Gestionnaire de déconnexion
-  async function handleLogout() {
-    if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
-      try {
-        // On utilise signOut avec la majuscule
-        await signOut(auth); 
-        console.log("Déconnexion réussie");
-        window.location.href = "../index.html?logout=true";
-      } catch (error) {
-        console.error("Erreur de déconnexion :", error);
-        alert("Erreur lors de la déconnexion.");
-      }
-    }
-  }
-
-  // 3. Attachement au bouton (système de surveillance)
-  const checkBtn = setInterval(() => {
-    const btn = document.getElementById("logoutBtn");
-    if (btn) {
-      btn.onclick = handleLogout;
-      clearInterval(checkBtn);
-      console.log("Bouton déconnexion prêt.");
-    }
-  }, 100);
+    // Affichage de la date
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('dateDisplay').innerText = new Date().toLocaleDateString('fr-FR', options).toUpperCase();
 </script>
+
 </body>
 </html>
