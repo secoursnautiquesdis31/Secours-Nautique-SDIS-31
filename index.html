@@ -8,17 +8,17 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
   <style>
+    /* On force le fond sombre sur l'index malgré le main.css */
     body, html {
-      height: 100%;
+      height: 100% !important;
       margin: 0;
-      background-color: #0d1b2a;
+      background-color: #0d1b2a !important; 
       font-family: 'Barlow', sans-serif;
       display: flex;
       flex-direction: column;
       overflow: hidden;
     }
 
-    /* ZONE DU LOGO (CENTRE) */
     .logo-main-container {
       flex: 1;
       display: flex;
@@ -29,12 +29,11 @@
 
     .logo-img {
       max-width: 80%;
-      max-height: 60vh;
+      max-height: 55vh;
       height: auto;
       object-fit: contain;
     }
 
-    /* ZONE DES BOUTONS (BAS) */
     .bottom-interface {
       width: 100%;
       max-width: 500px;
@@ -56,52 +55,65 @@
       font-family: 'Barlow Condensed', sans-serif;
       font-weight: 600;
       text-transform: uppercase;
-      text-decoration: none;
       cursor: pointer;
-      transition: 0.3s;
-      font-size: 1em;
       border: 2px solid #E8A020;
+      font-size: 1em;
+      transition: 0.3s;
     }
 
     .btn-admin { background: #E8A020; color: #1a1a1a; }
-    .btn-spec { background: transparent; color: #E8A020; }
+    .btn-spec { background: transparent; color: #E8A020; text-decoration: none; display: flex; align-items: center; justify-content: center;}
 
-    /* BOITE DE CONNEXION : MODALE AU CENTRE */
-    #loginBox {
-      display: none; /* Caché par défaut */
-      position: fixed; /* Sort du flux pour être au-dessus */
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%); /* Centrage parfait */
-      background: rgba(255, 255, 255, 0.98);
-      padding: 30px;
-      border-radius: 12px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
-      z-index: 1000; /* Devant tout le reste */
-    }
-
-    /* Overlay : assombrit le fond quand la boîte est ouverte */
+    /* --- LA BOITE MODALE AU CENTRE --- */
     #overlay {
       display: none;
       position: fixed;
-      top: 0;
-      left: 0;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 9998;
+      backdrop-filter: blur(5px);
+    }
+
+    #loginBox {
+      display: none;
+      position: fixed !important;
+      top: 50% !important;
+      left: 50% !important;
+      transform: translate(-50%, -50%) !important;
+      background: white !important; /* Fond blanc pour la lisibilité */
+      padding: 35px;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 380px;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+      z-index: 9999 !important;
+    }
+
+    /* Correction pour les labels qui héritent du blanc de main.css */
+    #loginBox label {
+      color: #333 !important; 
+      display: block;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    #loginBox input {
       width: 100%;
-      height: 100%;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(4px); /* Floute légèrement le logo derrière */
-      z-index: 999;
+      padding: 12px;
+      border: 1px solid #ccc !important;
+      border-radius: 6px;
+      box-sizing: border-box;
+      background: #f9f9f9;
+      color: #333 !important;
     }
 
     .back-btn {
-      display: inline-block;
-      margin-top: 15px;
-      color: #666;
-      font-size: 0.9em;
+      display: block;
+      margin-top: 20px;
+      color: #888;
       cursor: pointer;
       text-decoration: underline;
+      font-size: 0.9em;
     }
   </style>
 </head>
@@ -110,7 +122,7 @@
   <div id="overlay" onclick="hideLogin()"></div>
 
   <div class="logo-main-container">
-    <img src="Logo Secours Nautique.JPG" alt="Logo Secours Nautique" class="logo-img">
+    <img src="Logo Secours Nautique.JPG" alt="Logo" class="logo-img">
   </div>
 
   <div class="bottom-interface">
@@ -121,21 +133,25 @@
   </div>
 
   <div id="loginBox">
-    <h2 style="color: #333; margin-top: 0; font-family: 'Barlow Condensed'; text-align: center;">Connexion Admin</h2>
-    <form id="loginForm" style="text-align: left;">
+    <h2 style="color: #0B1F3A; margin: 0 0 25px 0; text-align: center; font-family: 'Barlow Condensed'; font-size: 1.8em;">CONNEXION</h2>
+    
+    <form id="loginForm">
       <div style="margin-bottom: 15px;">
-        <label for="email" style="color:#333; display: block; font-weight: 500;">Email</label>
-        <input type="email" id="email" style="width:100%; padding:12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;" placeholder="prenom.nom@sdis31.fr" required>
+        <label>Email Professionnel</label>
+        <input type="email" id="email" placeholder="prenom.nom@sdis31.fr" required>
       </div>
-      <div style="margin-bottom: 20px;">
-        <label for="password" style="color:#333; display: block; font-weight: 500;">Mot de passe</label>
-        <input type="password" id="password" style="width:100%; padding:12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;" placeholder="••••••••" required>
+      <div style="margin-bottom: 25px;">
+        <label>Mot de passe</label>
+        <input type="password" id="password" placeholder="••••••••" required>
       </div>
-      <div id="loginError" style="display:none; color: #d9534f; margin-bottom: 15px; font-size: 0.9em; font-weight: bold;"></div>
-      <button type="submit" style="width:100%; background:#E8A020; color: #1a1a1a; border:none; padding:14px; font-weight:bold; cursor:pointer; border-radius: 6px; font-family: 'Barlow Condensed'; font-size: 1.1em; text-transform: uppercase;">Se connecter</button>
+      
+      <div id="loginError" style="color: #D94040; display: none; margin-bottom: 15px; font-weight: bold; text-align: center;"></div>
+      
+      <button type="submit" style="width:100%; background: #E8A020; color: #0B1F3A; border: none; padding: 15px; font-weight: 700; border-radius: 8px; cursor: pointer; text-transform: uppercase; font-family: 'Barlow Condensed'; font-size: 1.1em;">Se connecter</button>
     </form>
+    
     <div style="text-align: center;">
-      <span class="back-btn" onclick="hideLogin()">Annuler et retourner à l'accueil</span>
+      <span class="back-btn" onclick="hideLogin()">Retour à l'accueil</span>
     </div>
   </div>
 
@@ -155,7 +171,6 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
-    // Fonctions d'affichage modifiées
     window.showLogin = () => {
       document.getElementById('loginBox').style.display = 'block';
       document.getElementById('overlay').style.display = 'block';
@@ -170,15 +185,13 @@
         e.preventDefault();
         const errDiv = document.getElementById("loginError");
         errDiv.style.display = "none";
-        const email = document.getElementById("email").value.trim();
-        const pass = document.getElementById("password").value;
-
+        
         try {
-            await signInWithEmailAndPassword(auth, email, pass);
+            await signInWithEmailAndPassword(auth, document.getElementById("email").value, document.getElementById("password").value);
             window.location.href = "pages/dashboard.html";
         } catch (err) {
             errDiv.style.display = "block";
-            errDiv.textContent = "Identifiants incorrects.";
+            errDiv.textContent = "Identifiants incorrects";
         }
     });
   </script>
