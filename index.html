@@ -11,7 +11,7 @@
     body, html {
       height: 100%;
       margin: 0;
-      background-color: #0d1b2a; /* Ton fond bleu foncé */
+      background-color: #0d1b2a;
       font-family: 'Barlow', sans-serif;
       display: flex;
       flex-direction: column;
@@ -20,7 +20,7 @@
 
     /* ZONE DU LOGO (CENTRE) */
     .logo-main-container {
-      flex: 1; /* Prend tout l'espace disponible au milieu */
+      flex: 1;
       display: flex;
       justify-content: center;
       align-items: center;
@@ -29,7 +29,7 @@
 
     .logo-img {
       max-width: 80%;
-      max-height: 60vh; /* Empêche le logo d'être trop grand */
+      max-height: 60vh;
       height: auto;
       object-fit: contain;
     }
@@ -64,23 +64,42 @@
     }
 
     .btn-admin { background: #E8A020; color: #1a1a1a; }
-    .btn-spec { background: transparent; color: #E8A020; } /* Inversion pour style pro */
+    .btn-spec { background: transparent; color: #E8A020; }
 
-    /* BOITE DE CONNEXION */
+    /* BOITE DE CONNEXION : MODALE AU CENTRE */
     #loginBox {
-      display: none;
+      display: none; /* Caché par défaut */
+      position: fixed; /* Sort du flux pour être au-dessus */
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%); /* Centrage parfait */
       background: rgba(255, 255, 255, 0.98);
-      padding: 25px;
+      padding: 30px;
       border-radius: 12px;
-      margin: 0 20px 20px 20px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.8);
+      z-index: 1000; /* Devant tout le reste */
+    }
+
+    /* Overlay : assombrit le fond quand la boîte est ouverte */
+    #overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(4px); /* Floute légèrement le logo derrière */
+      z-index: 999;
     }
 
     .back-btn {
-      display: block;
-      margin-top: 10px;
+      display: inline-block;
+      margin-top: 15px;
       color: #666;
-      font-size: 0.8em;
+      font-size: 0.9em;
       cursor: pointer;
       text-decoration: underline;
     }
@@ -88,34 +107,36 @@
 </head>
 <body>
 
+  <div id="overlay" onclick="hideLogin()"></div>
+
   <div class="logo-main-container">
     <img src="Logo Secours Nautique.JPG" alt="Logo Secours Nautique" class="logo-img">
   </div>
 
   <div class="bottom-interface">
-    
     <div id="choiceScreen" class="choice-buttons">
       <button onclick="showLogin()" class="btn-choice btn-admin">Accès Administrateur</button>
       <a href="https://secoursnautiquesdis31.github.io/Secours-Nautique-SDIS-31/pages/espace-public.html" class="btn-choice btn-spec">Accès Spécialiste</a>
     </div>
+  </div>
 
-    <div id="loginBox">
-      <h2 style="color: #333; margin-top: 0; font-family: 'Barlow Condensed'">Connexion Admin</h2>
-      <form id="loginForm" class="login-form" style="text-align: left;">
-        <div class="form-group">
-          <label for="email" style="color:#333">Email</label>
-          <input type="email" id="email" style="width:100%; padding:10px; border: 1px solid #ccc; border-radius: 4px; margin: 5px 0;" placeholder="prenom.nom@sdis31.fr" required>
-        </div>
-        <div class="form-group">
-          <label for="password" style="color:#333">Mot de passe</label>
-          <input type="password" id="password" style="width:100%; padding:10px; border: 1px solid #ccc; border-radius: 4px; margin: 5px 0;" placeholder="••••••••" required>
-        </div>
-        <div id="loginError" class="error-msg" style="display:none; color: red; margin: 10px 0;"></div>
-        <button type="submit" style="width:100%; background:#E8A020; border:none; padding:12px; font-weight:bold; cursor:pointer; border-radius: 4px;">SE CONNECTER</button>
-      </form>
-      <span class="back-btn" onclick="hideLogin()">Retour</span>
+  <div id="loginBox">
+    <h2 style="color: #333; margin-top: 0; font-family: 'Barlow Condensed'; text-align: center;">Connexion Admin</h2>
+    <form id="loginForm" style="text-align: left;">
+      <div style="margin-bottom: 15px;">
+        <label for="email" style="color:#333; display: block; font-weight: 500;">Email</label>
+        <input type="email" id="email" style="width:100%; padding:12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;" placeholder="prenom.nom@sdis31.fr" required>
+      </div>
+      <div style="margin-bottom: 20px;">
+        <label for="password" style="color:#333; display: block; font-weight: 500;">Mot de passe</label>
+        <input type="password" id="password" style="width:100%; padding:12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; margin-top: 5px;" placeholder="••••••••" required>
+      </div>
+      <div id="loginError" style="display:none; color: #d9534f; margin-bottom: 15px; font-size: 0.9em; font-weight: bold;"></div>
+      <button type="submit" style="width:100%; background:#E8A020; color: #1a1a1a; border:none; padding:14px; font-weight:bold; cursor:pointer; border-radius: 6px; font-family: 'Barlow Condensed'; font-size: 1.1em; text-transform: uppercase;">Se connecter</button>
+    </form>
+    <div style="text-align: center;">
+      <span class="back-btn" onclick="hideLogin()">Annuler et retourner à l'accueil</span>
     </div>
-
   </div>
 
   <script type="module">
@@ -134,13 +155,15 @@
     const app = initializeApp(firebaseConfig);
     const auth = getAuth(app);
 
+    // Fonctions d'affichage modifiées
     window.showLogin = () => {
-      document.getElementById('choiceScreen').style.display = 'none';
       document.getElementById('loginBox').style.display = 'block';
+      document.getElementById('overlay').style.display = 'block';
     };
+    
     window.hideLogin = () => {
-      document.getElementById('choiceScreen').style.display = 'flex';
       document.getElementById('loginBox').style.display = 'none';
+      document.getElementById('overlay').style.display = 'none';
     };
 
     document.getElementById("loginForm").addEventListener("submit", async (e) => {
