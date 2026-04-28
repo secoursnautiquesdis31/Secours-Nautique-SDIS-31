@@ -1,58 +1,82 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Dashboard — SDIS 31</title>
-    <link rel="stylesheet" href="css/main.css">
-    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; }
-        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; margin: 0; padding: 20px; }
-        .header { background: var(--navy); color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
-        .menu-card { background: white; padding: 30px; border-radius: 12px; text-decoration: none; color: var(--navy); text-align: center; font-weight: bold; border-bottom: 4px solid var(--amber); transition: 0.3s; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-        .menu-card:hover { transform: translateY(-5px); background: #fdfdfd; }
-        .section-title { width: 100%; grid-column: 1 / -1; margin-top: 20px; padding: 10px; color: #666; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; border-bottom: 1px solid #ddd; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord — SDIS 31 Nautique</title>
+  <link rel="stylesheet" href="../main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="app-layout">
 
-<div class="header">
-    <div style="font-weight: bold;">SDIS 31 — SECOURS NAUTIQUE</div>
-    <div id="dateJour"></div>
-</div>
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <h2>SDIS 31</h2>
+      <span>Secours Nautique</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active" href="dashboard.html">Tableau de bord</a>
+      <a class="nav-item" href="formation.html">Formation</a>
+      <a class="nav-item" href="gestion-inscriptions.html" style="background: rgba(232, 160, 32, 0.1); border-left: 3px solid #E8A020;">Suivi Inscriptions</a>
+      
+      <a class="nav-item" href="rh.html">RH</a>
+      <a class="nav-item" href="technique.html">Technique</a>
+      <a class="nav-item" href="operationnel.html">Opérationnel</a>
+      <a class="nav-item" href="admin-users.html">Gestion des accès</a>
+    </nav>
+    <button id="logoutBtn" style="margin-top:auto; background:none; border:1px solid white; color:white; padding:10px; border-radius:5px; cursor:pointer;">Déconnexion</button>
+  </aside>
 
-<h1 style="color: var(--navy); margin-bottom: 30px;">Console d'Administration</h1>
-
-<div class="menu-grid">
-    <div class="section-title">Gestion Administrative</div>
+  <main class="main-content">
+    <h1>Bienvenue sur le Tableau de bord</h1>
     
-    <a href="rh.html" class="menu-card">👥 ANNUAIRE RH</a>
-    
-    <a href="formations.html" class="menu-card">📅 GÉRER LES FORMATIONS</a>
+    <div class="card" style="background:white; padding:30px; border-radius:12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 600px;">
+      <h3 style="color: #0B1F3A; margin-top: 0;">Plateforme de gestion Nautique</h3>
+      <p style="color: #555; line-height: 1.6;">
+        Utilisez le menu latéral pour accéder aux différentes sections :
+      </p>
+      <ul style="color: #555; line-height: 1.8;">
+        <li><strong>Formation :</strong> Calendrier et suivi des aptitudes.</li>
+        <li><strong>RH :</strong> Annuaire des agents et fiches individuelles.</li>
+        <li><strong>Technique :</strong> Gestion du stock et des EPI.</li>
+      </ul>
+    </div>
+  </main>
 
-    <a href="gestion-inscriptions.html" class="menu-card">📋 SUIVI DES INSCRIPTIONS</a>
+<script type="module">
+  // Sécurité mode consultation
+  localStorage.removeItem('modeConsultation');
 
-    <div class="section-title">Logistique</div>
-    
-    <a href="stocks.html" class="menu-card">📦 GESTION DES STOCKS</a>
-    
-    <a href="maintenance.html" class="menu-card">🛠️ MAINTENANCE</a>
+  import { requireAuth, auth, signOut } from "./auth.js";
 
-    <div class="section-title">Utilisateur</div>
-    
-    <a href="espace-public.html" class="menu-card" style="border-bottom-color: #666;">🌐 ACCÈS ESPACE PUBLIC</a>
-</div>
+  // 1. On lance la protection de page
+  requireAuth((profile) => {
+    console.log("Session vérifiée pour :", profile.email);
+  });
 
-<script>
-    // Nettoyage sécurité
-    localStorage.removeItem('modeConsultation');
+  // 2. Fonction de déconnexion robuste
+  async function handleLogout() {
+    if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
+      try {
+        await signOut(auth);
+        console.log("Déconnexion réussie");
+        window.location.replace("../index.html");
+      } catch (error) {
+        console.error("Erreur lors de la déconnexion :", error);
+        alert("Erreur de déconnexion. Vérifiez votre console.");
+      }
+    }
+  }
 
-    // Affichage date
-    const d = new Date();
-    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    document.getElementById('dateJour').innerText = d.toLocaleDateString('fr-FR', options).toUpperCase();
+  // 3. On force l'attachement du clic même si la sidebar met du temps à charger
+  const checkButtonInterval = setInterval(() => {
+    const btn = document.getElementById("logoutBtn");
+    if (btn) {
+      btn.onclick = handleLogout;
+      clearInterval(checkButtonInterval);
+      console.log("Bouton de déconnexion activé !");
+    }
+  }, 100);
 </script>
-
 </body>
 </html>
