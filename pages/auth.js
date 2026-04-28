@@ -96,32 +96,44 @@ export function can(action) {
 // Appelé en tête de chaque page protégée
 // ──────────────────────────────────────────────
 export function requireAuth(onReady) {
-  showLoader();
-  const unsub = onAuthStateChanged(auth, async (user) => {
-    unsub();
+  console.log("Vérification de l'accès...");
+  
+  // On ne met pas de unsub() tout de suite pour laisser Firebase respirer
+  onAuthStateChanged(auth, async (user) => {
     if (!user) {
+      console.warn("Aucun utilisateur connecté. Redirection...");
       window.location.href = "../index.html";
       return;
     }
+
     try {
-      const snap = await getDoc(doc(db, "users", user.uid));
-      if (!snap.exists()) {
+      console.log("Utilisateur Firebase détecté :", user.uid);
+      
+      // On cherche le document dans Firestore
+      // VERIFIE BIEN : Ta collection s'appelle "users" (minuscule) ?
+      const userDocRef = doc(db, "users", user.uid);
+      const snap = await getDoc(userDocRef);
+
+      if (snap.exists()) {
+        currentUser = user;
+        currentProfile = { uid: user.uid, ...snap.data() };
+        console.log("Profil trouvé ! Bienvenue", currentProfile.email);
+        
+        hideLoader();
+        buildSidebar();
+        onReady(currentProfile);
+      } else {
+        // C'EST ICI QUE CA BLOQUE SOUVENT
+        console.error("ERREUR : Le document n'existe pas dans la collection 'users' pour l'ID :", user.uid);
+        alert("Accès refusé : Votre compte n'est pas enregistré dans la base de données Firestore.");
         await signOut(auth);
         window.location.href = "../index.html";
-        return;
       }
-      currentUser    = user;
-      currentProfile = { uid: user.uid, email: user.email, ...snap.data() };
-      hideLoader();
-      buildSidebar();
-      onReady(currentProfile);
     } catch (err) {
-      console.error("Auth error:", err);
-      window.location.href = "../index.html";
+      console.error("Erreur lors de la récupération du profil :", err);
     }
   });
 }
-
 // ──────────────────────────────────────────────
 // SIDEBAR DYNAMIQUE
 // ──────────────────────────────────────────────
