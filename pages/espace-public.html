@@ -36,11 +36,10 @@
         </div>
 
        <div class="menu-grid">
-    <a href="calendrier-public.html" class="menu-btn" style="display: block; font-size: 1rem;">
-        📅<br>FORMATION<br>
-        <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Calendrier - Inscription</small>
-    </a>
-    
+   <button onclick="ouvrirFormation()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit;">
+    📅<br>FORMATION<br>
+    <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Calendrier - Inscription</small>
+</button>    
     <button class="menu-btn" onclick="ouvrirDemande()" style="font-size: 1rem; width: 100%; font-family: inherit;">
         📦<br>MATÉRIEL<br>
         <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Besoin de matériel</small>
@@ -126,6 +125,13 @@
             chargerListeMateriel();
         };
 
+        window.ouvrirFormation = () => {
+    if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
+    
+    // On envoie l'ID de l'agent choisi à la page calendrier
+    const agentId = selectAgent.value;
+    window.location.href = `calendrier-public.html?agentId=${agentId}`;
+};
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
             
