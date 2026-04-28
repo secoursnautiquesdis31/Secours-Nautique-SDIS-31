@@ -41,34 +41,16 @@
     </div>
   </main>
 
- <script type="module">
-  // Importation des outils depuis auth.js
-  import { requireAuth, auth, signOut } from "./auth.js";
+<script type="module">
+  import { requireAuth } from "./auth.js";
 
-  // 1. Initialisation de la protection de page
+  // requireAuth va :
+  // 1. Vérifier si l'utilisateur est connecté
+  // 2. Charger son profil Firestore
+  // 3. Appeler buildSidebar() qui va activer le bouton #logoutBtn
   requireAuth((profile) => {
-    console.log("Session active pour :", profile.email);
+    console.log("Dashboard chargé pour :", profile.prenom);
   });
-
-  // 2. Sécurité supplémentaire pour le bouton de déconnexion
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async (e) => {
-      e.preventDefault(); // Empêche tout comportement par défaut
-      
-      if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
-        try {
-          await signOut(auth);
-          console.log("Déconnexion réussie");
-          // Redirection vers l'index situé au dossier parent
-          window.location.replace("../index.html");
-        } catch (error) {
-          console.error("Erreur déconnexion:", error);
-          alert("Erreur lors de la déconnexion.");
-        }
-      }
-    });
-  }
 </script>
 </body>
 </html>
