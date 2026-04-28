@@ -57,7 +57,7 @@
         // On utilise signOut avec la majuscule
         await signOut(auth); 
         console.log("Déconnexion réussie");
-        window.location.replace("../index.html");
+        window.location.href = "../index.html?logout=true";
       } catch (error) {
         console.error("Erreur de déconnexion :", error);
         alert("Erreur lors de la déconnexion.");
