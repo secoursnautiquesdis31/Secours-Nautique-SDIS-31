@@ -41,22 +41,34 @@
     </div>
   </main>
 
-  <script type="module">
-    // On importe la fonction de protection et les utilitaires depuis auth.js
-    import { requireAuth, auth, signOut } from "./auth.js";
+ <script type="module">
+  // Importation des outils depuis auth.js
+  import { requireAuth, auth, signOut } from "./auth.js";
 
-    // 1. On protège la page : si l'utilisateur n'est pas connecté, 
-    // il sera redirigé automatiquement vers l'index.
-    requireAuth((profile) => {
-        console.log("Connecté en tant que :", profile.prenom);
-        
-        // Ici tu peux ajouter du code qui s'exécute une fois 
-        // que l'utilisateur est identifié (ex: afficher son nom)
+  // 1. Initialisation de la protection de page
+  requireAuth((profile) => {
+    console.log("Session active pour :", profile.email);
+  });
+
+  // 2. Sécurité supplémentaire pour le bouton de déconnexion
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async (e) => {
+      e.preventDefault(); // Empêche tout comportement par défaut
+      
+      if (confirm("Voulez-vous vraiment vous déconnecter ?")) {
+        try {
+          await signOut(auth);
+          console.log("Déconnexion réussie");
+          // Redirection vers l'index situé au dossier parent
+          window.location.replace("../index.html");
+        } catch (error) {
+          console.error("Erreur déconnexion:", error);
+          alert("Erreur lors de la déconnexion.");
+        }
+      }
     });
-
-    // NOTE : Le bouton logout est déjà géré par buildSidebar() dans auth.js
-    // Mais par sécurité, si tu as un bouton avec l'ID "logoutBtn", 
-    // auth.js s'en occupe tout seul !
-  </script>
+  }
+</script>
 </body>
 </html>
