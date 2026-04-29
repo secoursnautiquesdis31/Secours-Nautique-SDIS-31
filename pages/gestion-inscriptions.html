@@ -29,10 +29,12 @@
         .formation-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--navy); }
         .info-tags { font-size: 0.85rem; color: #666; display: flex; gap: 15px; }
 
-        /* Couleurs dynamiques basées sur tes types de formation */
-        .border-mso { border-left-color: #E2725B !important; }
-        .border-recyclage { border-left-color: #90EE90 !important; }
-        .border-fmpa { border-left-color: #87CEFA !important; }
+        /* Couleurs dynamiques mises à jour */
+        .border-sav { border-left-color: #2A9D5C !important; } /* Vert SAV SEV */
+        .border-mer { border-left-color: #0077BE !important; } /* Bleu Mer */
+        .border-cen { border-left-color: #E8A020 !important; } /* Ambre CEN */
+        .border-mso { border-left-color: #E2725B !important; } /* Terracotta MSO */
+        .border-tests { border-left-color: #D94040 !important; } /* Rouge Tests */
 
         /* Table des inscrits */
         .details-content { display: none; background: #FAFAFA; border-top: 1px solid #EEE; }
@@ -77,7 +79,6 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
-    // Fonction pour ouvrir/fermer les détails
     window.toggleDetails = (id) => {
         const content = document.getElementById('details-' + id);
         content.style.display = content.style.display === 'block' ? 'none' : 'block';
@@ -99,12 +100,15 @@
                 const dateAffichage = (dateFmt === dateFinFmt) ? dateFmt : `Du ${dateFmt} au ${dateFinFmt}`;
                 const inscrits = f.inscrits || [];
 
-                // Détermination de la classe de couleur
+                // --- NOUVELLE LOGIQUE DE COULEUR ---
                 let colorClass = "";
                 const nomMaj = f.nom.toUpperCase();
-                if (nomMaj.includes("MSO")) colorClass = "border-mso";
-                else if (nomMaj.includes("RECYCLAGE SAV SEV")) colorClass = "border-recyclage";
-                else if (nomMaj.includes("FMPA MER")) colorClass = "border-fmpa";
+                
+                if (nomMaj.includes("FMPA SAV SEV")) colorClass = "border-sav";
+                else if (nomMaj.includes("FMPA MER")) colorClass = "border-mer";
+                else if (nomMaj.includes("FMPA CEN")) colorClass = "border-cen";
+                else if (nomMaj.includes("MSO") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-mso";
+                else if (nomMaj.includes("TESTS ANNUELS")) colorClass = "border-tests";
 
                 let htmlTable = `
                     <div class="details-content" id="details-${f.id}">
