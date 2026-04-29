@@ -44,12 +44,17 @@
       
       <div id="formSection" style="display:none;">
           <input type="hidden" id="selectedDate">
-          <input type="text" id="formNom" placeholder="Nom de la formation" style="width:100%; padding:10px; margin-bottom:10px;">
-          <input type="text" id="formLieu" placeholder="Lieu" style="width:100%; padding:10px; margin-bottom:10px;">
+          <input type="text" id="formNom" placeholder="Nom de la formation" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+          
+          <label style="display:block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Date de fin :</label>
+          <input type="date" id="formDateFin" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+          
+          <input type="text" id="formLieu" placeholder="Lieu" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">CRÉER LA SESSION</button>
       </div>
       
       <div id="detailSection" style="display:none;">
+          <p id="detDates" style="font-size: 0.85rem; color: #666; font-style: italic;"></p>
           <p id="detLieu"></p>
           <hr>
           <strong>Liste des inscrits :</strong>
@@ -65,7 +70,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -81,53 +86,63 @@
     let calendar;
     let agentConnecte = "";
 
-    // FONCTION FERMER
     const fermerModal = () => { document.getElementById('modalEvent').style.display = 'none'; };
     document.getElementById('btnFermerManual').onclick = fermerModal;
 
-    // FONCTION VALIDER (ADMIN)
     window.validerAgent = async (formationId, nomAgent) => {
-    if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
-    
-    const ref = doc(db, "formations", formationId);
-    const snap = await getDoc(ref);
-    const fData = snap.data();
-    let inscrits = fData.inscrits || [];
-    
-    // On met à jour l'inscrit en gardant son nom et en passant son statut à présent
-    inscrits = inscrits.map(i => {
-        let n = (typeof i === 'object') ? i.nom : i;
-        return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
-    });
+        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+        const ref = doc(db, "formations", formationId);
+        const snap = await getDoc(ref);
+        const fData = snap.data();
+        let inscrits = fData.inscrits || [];
+        inscrits = inscrits.map(i => {
+            let n = (typeof i === 'object') ? i.nom : i;
+            return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
+        });
+        await updateDoc(ref, { inscrits: inscrits });
+        alert("Validé !");
+        calendar.refetchEvents();
+        fermerModal();
+    };
 
-    await updateDoc(ref, { inscrits: inscrits });
-    alert("Validé !");
-    calendar.refetchEvents();
-    fermerModal();
-};
     async function init() {
-        // Charger agents
         const uSnap = await getDocs(collection(db, "users"));
         const sel = document.getElementById('selectAgentSession');
         sel.innerHTML = '<option value="">-- Agent --</option>';
         uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
         sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
 
-        // Initialiser Calendrier
         const calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
             initialView: 'dayGridMonth',
             locale: 'fr',
+            firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
             events: async (info, success) => {
                 const snap = await getDocs(collection(db, "formations"));
-                success(snap.docs.map(d => ({ id: d.id, title: d.data().nom, start: d.data().date, extendedProps: d.data() })));
+                success(snap.docs.map(d => {
+                    const data = d.data();
+                    
+                    // --- LOGIQUE VISUELLE +1 JOUR ---
+                    let visuelFin = new Date(data.dateFin || data.date);
+                    visuelFin.setDate(visuelFin.getDate() + 1);
+                    const isoFin = visuelFin.toISOString().split('T')[0];
+
+                    return { 
+                        id: d.id, 
+                        title: data.nom, 
+                        start: data.date, 
+                        end: isoFin, 
+                        extendedProps: data // On garde les vraies données ici
+                    };
+                }));
             },
             dateClick: (info) => {
                 document.getElementById('modalTitle').innerText = "Nouvelle Session";
                 document.getElementById('formSection').style.display = "block";
                 document.getElementById('detailSection').style.display = "none";
                 document.getElementById('selectedDate').value = info.dateStr;
+                document.getElementById('formDateFin').value = info.dateStr;
                 document.getElementById('modalEvent').style.display = 'block';
             },
             eventClick: (info) => {
@@ -137,19 +152,21 @@
                 document.getElementById('formSection').style.display = "none";
                 document.getElementById('detailSection').style.display = "block";
                 document.getElementById('detLieu').innerText = "📍 " + data.lieu;
+                
+                // Affichage propre des dates réelles
+                const d1 = new Date(data.date).toLocaleDateString('fr-FR');
+                const d2 = new Date(data.dateFin || data.date).toLocaleDateString('fr-FR');
+                document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
 
-                // Liste Inscrits avec Bouton Validation
                 const zone = document.getElementById('detInscrits');
                 zone.innerHTML = "";
                 const inscrits = data.inscrits || [];
-                
                 if(inscrits.length === 0) zone.innerHTML = "Aucun inscrit.";
                 
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
                     let statut = (typeof i === 'object') ? i.statut : "inscrit";
                     let estP = (statut === "présent");
-
                     zone.innerHTML += `
                         <div class="admin-row">
                             <span>${nom} ${estP ? '✅' : ''}</span>
@@ -157,7 +174,6 @@
                         </div>`;
                 });
 
-                // Boutons inscription
                 const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
                 const inscrit = agentConnecte && noms.includes(agentConnecte);
                 document.getElementById('btnInscrire').style.display = inscrit ? "none" : "block";
@@ -183,8 +199,15 @@
         const nom = document.getElementById('formNom').value;
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
+        const dateFin = document.getElementById('formDateFin').value;
         if(nom && lieu) {
-            await addDoc(collection(db, "formations"), { nom, lieu, date, inscrits: [] });
+            await addDoc(collection(db, "formations"), { 
+                nom, 
+                lieu, 
+                date, 
+                dateFin: dateFin || date, // Stocke la vraie date de fin choisie
+                inscrits: [] 
+            });
             calendar.refetchEvents(); fermerModal();
         }
     };
