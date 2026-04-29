@@ -48,7 +48,12 @@
     👤<br>MA FICHE<br>
     <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Mes infos - Visite médicale</small>
 </button>
-           
+
+    <button onclick="ouvrirCarte()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit; background-color: #fdfaf3; border: 1px solid var(--amber);">
+    📍<br>CARTOGRAPHIE<br>
+    <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Points GPS - Mises à l'eau</small>
+</button>
+            
            <a href="operationnel.html" class="menu-btn" style="grid-column: span 2; display: block; font-size: 1rem;">
         🌊<br>RESSOURCES<br>
         <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Ressources documentaires, Boite a outils, Autres</small>
@@ -106,8 +111,6 @@
                 snap.forEach(doc => {
                     const item = doc.data();
                     
-                    // --- MODIFICATION : ON IGNORE LE STOCK ---
-                    // On vérifie UNIQUEMENT si l'oeil est ouvert (visible !== false)
                     if(item.visible !== false) {
                         let opt = document.createElement('option');
                         const t = item.taille ? ` (${item.taille})` : "";
@@ -135,28 +138,25 @@
 
 window.ouvrirFormation = () => {
     if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
-    
-    // 1. On récupère le texte du nom (ex: "DUPONT Jean")
     const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
-    
-    // 2. On l'enregistre dans le localStorage pour que le calendrier le lise
     localStorage.setItem('agentNomSelected', nomAgent);
-    
-    // 3. On redirige vers le calendrier
     window.location.href = `calendrier-public.html`;
 };
+
 window.ouvrirMaFiche = () => {
     if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
-    
     const agentId = selectAgent.value;
     const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
-    
     localStorage.setItem('agentNomSelected', nomAgent);
-    localStorage.setItem('modeConsultation', 'true'); // Marqueur pour le mode lecture
-    
-    // On ajoute l'ID dans l'URL pour que la fiche sache qui charger
+    localStorage.setItem('modeConsultation', 'true');
     window.location.href = `fiche-agent.html?id=${agentId}`;
 };
+
+// FONCTION POUR OUVRIR LA CARTE
+window.ouvrirCarte = () => {
+    window.location.href = `carte.html`;
+};
+
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
             
