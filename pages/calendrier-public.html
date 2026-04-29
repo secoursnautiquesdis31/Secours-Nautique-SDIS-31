@@ -15,6 +15,7 @@
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
+    /* --- MISE À JOUR DU STYLE POUR LE LIEU À DROITE --- */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -22,6 +23,29 @@
         color: white !important; 
         font-size: 0.75rem !important; 
     }
+
+    .event-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px;
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .fc-event-title-custom {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .fc-event-location-custom {
+        font-weight: normal;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    /* ------------------------------------------------ */
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; font-weight: bold; color: var(--navy); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
@@ -94,21 +118,20 @@
                     const evts = snap.docs.map(d => {
                         const data = d.data();
                         
-                        // --- MISE À JOUR DE LA LOGIQUE DE COULEUR ---
-                        let eventColor = "#0B1F3A"; // Navy par défaut
+                        let eventColor = "#0B1F3A"; 
                         let txtColor = "white";
                         const nomMaj = data.nom.toUpperCase();
                         
                         if (nomMaj.includes("FMPA SAV SEV")) {
-                            eventColor = "#2A9D5C"; // Vert (Savoir-faire)
+                            eventColor = "#2A9D5C"; 
                         } else if (nomMaj.includes("FMPA MER")) {
-                            eventColor = "#0077BE"; // Bleu Mer
+                            eventColor = "#0077BE"; 
                         } else if (nomMaj.includes("FMPA CEN")) {
-                            eventColor = "#E8A020"; // Ambre (CEN)
+                            eventColor = "#E8A020"; 
                         } else if (nomMaj.includes("MSO") || nomMaj.includes("ENTRAINEMENT")) {
-                            eventColor = "#E2725B"; // Terracotta (MSO)
+                            eventColor = "#E2725B"; 
                         } else if (nomMaj.includes("TESTS ANNUELS")) {
-                            eventColor = "#D94040"; // Rouge
+                            eventColor = "#D94040"; 
                         }
 
                         let visuelFin = new Date(data.dateFin || data.date);
@@ -134,6 +157,23 @@
                     success(evts);
                 } catch (e) { console.error(e); failure(e); }
             },
+            // --- AJOUT DE LA LOGIQUE D'AFFICHAGE DU LIEU À DROITE ---
+            eventContent: function(arg) {
+                let title = arg.event.title;
+                let lieu = arg.event.extendedProps.lieu || "";
+                
+                let container = document.createElement('div');
+                container.className = 'event-wrapper';
+                
+                let html = `<span class="fc-event-title-custom">${title}</span>`;
+                if (lieu) {
+                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
+                }
+                
+                container.innerHTML = html;
+                return { domNodes: [container] };
+            },
+            // -------------------------------------------------------
             eventClick: (info) => ouvrirDetails(info.event)
         });
         calendar.render();
@@ -144,7 +184,7 @@
         const id = event.id;
         const inscrits = data.inscrits || [];
         document.getElementById('modalTitle').innerText = data.nom;
-        document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
+        document.getElementById('detLieu').innerText = "📍 Lieu : " + (data.lieu || "Non précisé");
         document.getElementById('detInscrits').innerText = inscrits.length + " inscrit(s).";
         const d1 = new Date(data.dateDebutReelle).toLocaleDateString('fr-FR');
         const d2 = new Date(data.dateFinReelle).toLocaleDateString('fr-FR');
