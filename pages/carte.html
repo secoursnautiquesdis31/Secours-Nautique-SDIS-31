@@ -2,67 +2,30 @@
 <html lang="fr">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cartographie — SDIS 31</title>
     <link rel="stylesheet" href="../main.css">
     <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        .map-container { width: 100%; height: 100vh; border: none; }
+        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; background-color: #f0f2f5; }
+        .map-container { width: 100%; height: 100vh; border: none; display: block; }
         .btn-retour {
-            position: fixed; top: 10px; left: 10px; z-index: 1000;
-            background: #0B1F3A; color: white; padding: 8px 15px;
-            text-decoration: none; border-radius: 5px; font-family: sans-serif;
-            border: 1px solid #E8A020;
+            position: fixed; top: 15px; left: 15px; z-index: 1000;
+            background: #0B1F3A; color: white; padding: 10px 20px;
+            text-decoration: none; border-radius: 8px; font-family: sans-serif;
+            font-weight: bold; border: 2px solid #E8A020;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
+        .btn-retour:hover { background: #E8A020; color: #0B1F3A; }
     </style>
 </head>
 <body>
-    <a href="javascript:history.back()" class="btn-retour">⬅ Retour</a>
+
+    <a href="javascript:history.back()" class="btn-retour">⬅ RETOUR</a>
     
-    <iframe src="<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Cartographie — SDIS 31</title>
-    <link rel="stylesheet" href="../main.css">
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        .map-container { width: 100%; height: 100vh; border: none; }
-        .btn-retour {
-            position: fixed; top: 10px; left: 10px; z-index: 1000;
-            background: #0B1F3A; color: white; padding: 8px 15px;
-            text-decoration: none; border-radius: 5px; font-family: sans-serif;
-            border: 1px solid #E8A020;
-        }
-    </style>
-</head>
-<body>
-    <a href="javascript:history.back()" class="btn-retour">⬅ Retour</a>
-    
-    <iframe src="<!DOCTYPE html>
-<html lang="fr">
-<head>
-    <meta charset="UTF-8">
-    <title>Cartographie — SDIS 31</title>
-    <link rel="stylesheet" href="../main.css">
-    <style>
-        body, html { margin: 0; padding: 0; height: 100%; overflow: hidden; }
-        .map-container { width: 100%; height: 100vh; border: none; }
-        .btn-retour {
-            position: fixed; top: 10px; left: 10px; z-index: 1000;
-            background: #0B1F3A; color: white; padding: 8px 15px;
-            text-decoration: none; border-radius: 5px; font-family: sans-serif;
-            border: 1px solid #E8A020;
-        }
-    </style>
-</head>
-<body>
-    <a href="javascript:history.back()" class="btn-retour">⬅ Retour</a>
-    
-    <iframe src="https://www.google.com/maps/d/u/4/embed?mid=1vPIHdlVDNgMhICfhIWUqYS4Rqx7PQO0&ehbc=2E312F" width="640" height="480"><"
-      class="map-container"></iframe>
-</body>
-</html> class="map-container"></iframe>
-</body>
-</html> class="map-container"></iframe>
+    <iframe 
+        src="https://www.google.com/maps/d/u/4/embed?mid=1vPIHdlVDNgMhICfhIWUqYS4Rqx7PQO0&ehbc=2E312F" 
+        class="map-container">
+    </iframe>
+
 </body>
 </html>
