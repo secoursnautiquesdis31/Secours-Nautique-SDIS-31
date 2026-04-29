@@ -16,7 +16,6 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    /* MODIF : Suppression du background-color !important pour laisser passer les couleurs JS */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -32,6 +31,8 @@
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
     .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+    
+    select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #CCC; border-radius: 4px; box-sizing: border-box; font-family: 'Barlow'; }
   </style>
 </head>
 <body>
@@ -53,12 +54,26 @@
       
       <div id="formSection" style="display:none;">
           <input type="hidden" id="selectedDate">
-          <input type="text" id="formNom" placeholder="Nom de la formation" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+          
+          <label style="font-size: 0.8rem; font-weight: bold;">Intitulé :</label>
+          <select id="formNom">
+              <option value="">-- Sélectionner --</option>
+              <option value="MSO">MSO</option>
+              <option value="FMPA SAV SEV">FMPA SAV SEV</option>
+              <option value="FMPA Mer">FMPA Mer</option>
+              <option value="FI CEN">FI CEN</option>
+              <option value="FI SAV SEV">FI SAV SEV</option>
+              <option value="FI MSN">FI MSN</option>
+              <option value="Entrainement">Entrainement</option>
+              <option value="AUTRE">AUTRE (Saisie manuelle)</option>
+          </select>
+
+          <input type="text" id="formNomManuel" placeholder="Nom de la formation" style="display:none;">
           
           <label style="display:block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Date de fin :</label>
-          <input type="date" id="formDateFin" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+          <input type="date" id="formDateFin">
           
-          <input type="text" id="formLieu" placeholder="Lieu" style="width:100%; padding:10px; margin-bottom:10px; box-sizing: border-box;">
+          <input type="text" id="formLieu" placeholder="Lieu">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">CRÉER LA SESSION</button>
       </div>
       
@@ -97,6 +112,11 @@
     const fermerModal = () => { document.getElementById('modalEvent').style.display = 'none'; };
     document.getElementById('btnFermerManual').onclick = fermerModal;
 
+    // Gestion de l'affichage du champ manuel
+    document.getElementById('formNom').onchange = function() {
+        document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
+    };
+
     window.validerAgent = async (formationId, nomAgent) => {
         if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
         const ref = doc(db, "formations", formationId);
@@ -130,20 +150,20 @@
                 const snap = await getDocs(collection(db, "formations"));
                 success(snap.docs.map(d => {
                     const data = d.data();
-                    
-                    // --- LOGIQUE DE COULEUR ---
                     let eventColor = "#0B1F3A"; 
                     let txtColor = "white";
                     const nomMaj = data.nom.toUpperCase();
                     
                     if (nomMaj.includes("MSO")) {
-                        eventColor = "#E2725B"; // Terracotta
-                    } else if (nomMaj.includes("RECYCLAGE SAV SEV")) {
-                        eventColor = "#90EE90"; // Vert clair
+                        eventColor = "#E2725B"; 
+                    } else if (nomMaj.includes("SAV SEV")) {
+                        eventColor = "#90EE90"; 
                         txtColor = "black";
-                    } else if (nomMaj.includes("FMPA MER")) {
-                        eventColor = "#87CEFA"; // Bleu clair
+                    } else if (nomMaj.includes("MER")) {
+                        eventColor = "#87CEFA"; 
                         txtColor = "black";
+                    } else if (nomMaj.includes("ENTRAINEMENT")) {
+                        eventColor = "#A9A9A9";
                     }
 
                     let visuelFin = new Date(data.dateFin || data.date);
@@ -165,6 +185,8 @@
                 document.getElementById('modalTitle').innerText = "Nouvelle Session";
                 document.getElementById('formSection').style.display = "block";
                 document.getElementById('detailSection').style.display = "none";
+                document.getElementById('formNom').value = "";
+                document.getElementById('formNomManuel').style.display = "none";
                 document.getElementById('selectedDate').value = info.dateStr;
                 document.getElementById('formDateFin').value = info.dateStr;
                 document.getElementById('modalEvent').style.display = 'block';
@@ -218,19 +240,25 @@
     }
 
     document.getElementById('btnSave').onclick = async () => {
-        const nom = document.getElementById('formNom').value;
+        const sel = document.getElementById('formNom').value;
+        const man = document.getElementById('formNomManuel').value;
+        const nomFinal = (sel === "AUTRE") ? man : sel;
+        
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
         const dateFin = document.getElementById('formDateFin').value;
-        if(nom && lieu) {
+
+        if(nomFinal && lieu) {
             await addDoc(collection(db, "formations"), { 
-                nom, 
+                nom: nomFinal, 
                 lieu, 
                 date, 
                 dateFin: dateFin || date, 
                 inscrits: [] 
             });
             calendar.refetchEvents(); fermerModal();
+        } else {
+            alert("Veuillez remplir le nom et le lieu.");
         }
     };
 
