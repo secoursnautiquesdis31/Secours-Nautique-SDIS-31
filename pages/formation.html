@@ -118,26 +118,38 @@
             locale: 'fr',
             firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
-            events: async (info, success) => {
-                const snap = await getDocs(collection(db, "formations"));
-                success(snap.docs.map(d => {
-                    const data = d.data();
-                    
-                    // --- LOGIQUE VISUELLE +1 JOUR ---
-                    let visuelFin = new Date(data.dateFin || data.date);
-                    visuelFin.setDate(visuelFin.getDate() + 1);
-                    const isoFin = visuelFin.toISOString().split('T')[0];
+           events: async (info, success) => {
+    const snap = await getDocs(collection(db, "formations"));
+    success(snap.docs.map(d => {
+        const data = d.data();
+        
+        // --- LOGIQUE DE COULEUR ---
+        let eventColor = "#0B1F3A"; // Couleur Navy par défaut
+        const nom = data.nom.toUpperCase(); // On met en majuscule pour comparer sans erreur
+        
+        if (nom.includes("MSO")) {
+            eventColor = "#E2725B"; // Terracotta
+        } else if (nom.includes("RECYCLAGE SAV SEV")) {
+            eventColor = "#90EE90"; // Vert clair (LightGreen)
+        } else if (nom.includes("FMPA MER")) {
+            eventColor = "#87CEFA"; // Bleu clair (LightSkyBlue)
+        }
 
-                    return { 
-                        id: d.id, 
-                        title: data.nom, 
-                        start: data.date, 
-                        end: isoFin, 
-                        extendedProps: data // On garde les vraies données ici
-                    };
-                }));
-            },
-            dateClick: (info) => {
+        let visuelFin = new Date(data.dateFin || data.date);
+        visuelFin.setDate(visuelFin.getDate() + 1);
+        const isoFin = visuelFin.toISOString().split('T')[0];
+
+        return { 
+            id: d.id, 
+            title: data.nom, 
+            start: data.date, 
+            end: isoFin, 
+            color: eventColor, // On applique la couleur ici
+            extendedProps: data 
+        };
+    }));
+},
+          dateClick: (info) => {
                 document.getElementById('modalTitle').innerText = "Nouvelle Session";
                 document.getElementById('formSection').style.display = "block";
                 document.getElementById('detailSection').style.display = "none";
