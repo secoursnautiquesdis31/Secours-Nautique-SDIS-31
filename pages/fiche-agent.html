@@ -13,9 +13,9 @@
         .content { padding: 30px; }
         .section-title { border-bottom: 2px solid #EEE; padding: 15px 0; margin-bottom: 20px; color: var(--navy); text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; font-weight: bold; }
         .quota-container { background: #F0F4F8; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 5px solid var(--amber); }
-        .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .quota-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; }
         .quota-item { background: white; padding: 10px; border-radius: 6px; border: 1px solid #DDD; display: flex; justify-content: space-between; align-items: center; }
-        .quota-item label { font-size: 0.8rem; font-weight: bold; color: #555; }
+        .quota-item label { font-size: 0.75rem; font-weight: bold; color: #555; }
         .quota-item input { width: 45px; padding: 5px; text-align: center; border: 1px solid #CCC; border-radius: 4px; font-weight: bold; color: var(--navy); }
         .btn-save-quotas { width: 100%; margin-top: 15px; background: var(--navy); color: white; border: 2px solid var(--amber); padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
         .btn-save-quotas:hover { background: var(--amber); color: var(--navy); }
@@ -46,10 +46,11 @@
         <div class="section-title">Objectifs & Acquis (Calendrier)</div>
         <div class="quota-container">
             <div class="quota-grid">
-                <div class="quota-item"><label>SAV SEV</label><div><b id="count_sav">0</b> / <input type="number" id="q_sav"></div></div>
+                <div class="quota-item"><label>FMPA SAV SEV</label><div><b id="count_sav">0</b> / <input type="number" id="q_sav"></div></div>
                 <div class="quota-item"><label>FMPA Mer</label><div><b id="count_fmpa">0</b> / <input type="number" id="q_fmpa"></div></div>
-                <div class="quota-item"><label>CEN</label><div><b id="count_cen">0</b> / <input type="number" id="q_cen"></div></div>
+                <div class="quota-item"><label>FMPA CEN</label><div><b id="count_cen">0</b> / <input type="number" id="q_cen"></div></div>
                 <div class="quota-item"><label>MSO / ENT</label><div><b id="count_mso">0</b> / <input type="number" id="q_mso"></div></div>
+                <div class="quota-item"><label>TESTS ANNUELS</label><div><b id="count_tests">0</b> / <input type="number" id="q_tests"></div></div>
             </div>
             <button id="btnSaveQuotas" class="btn-save-quotas">💾 ENREGISTRER LES OBJECTIFS</button>
         </div>
@@ -124,13 +125,15 @@
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
             
-            const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+            // Récupération des quotas avec ajout des TESTS ANNUELS
+            const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
             document.getElementById('q_sav').value = obj.sav || 0;
             document.getElementById('q_fmpa').value = obj.fmpa || 0;
             document.getElementById('q_cen').value = obj.cen || 0;
             document.getElementById('q_mso').value = obj.mso || 0;
+            document.getElementById('q_tests').value = obj.tests || 0;
 
-            let presences = { sav: 0, fmpa: 0, cen: 0, mso: 0 };
+            let presences = { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
             const histTbody = document.getElementById('listeFormations');
             histTbody.innerHTML = "";
 
@@ -145,8 +148,6 @@
 
                 if (inscription) {
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
-                    
-                    // Transformation visuelle : on affiche "INSCRIT" au lieu de "EN ATTENTE"
                     let statutAffiché = inscription.statut || "Inscrit";
                     if (statutAffiché === "en attente") statutAffiché = "Inscrit";
                     
@@ -164,10 +165,12 @@
 
                     if (inscription.statut === "présent") {
                         const titre = f.nom.toUpperCase();
-                        if (titre.includes("SAV") || titre.includes("SEV")) presences.sav++;
-                        else if (titre.includes("FMPA") || titre.includes("MER")) presences.fmpa++;
-                        else if (titre.includes("CEN")) presences.cen++;
-                        else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) presences.mso++;
+                        // NOUVELLE LOGIQUE DE TRI RH
+                        if (titre.includes("FMPA SAV SEV")) presences.sav++;
+                        else if (titre.includes("FMPA MER")) presences.fmpa++;
+                        else if (titre.includes("FMPA CEN")) presences.cen++;
+                        else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) presences.mso++;
+                        else if (titre.includes("TESTS ANNUELS")) presences.tests++;
                     }
                 }
             });
@@ -176,16 +179,19 @@
             appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
             appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
             appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
+            appliquerCouleurs(presences.tests, 'q_tests', 'count_tests');
 
-            ['q_sav', 'q_fmpa', 'q_cen', 'q_mso'].forEach(id => {
+            ['q_sav', 'q_fmpa', 'q_cen', 'q_mso', 'q_tests'].forEach(id => {
                 document.getElementById(id).oninput = () => {
                     appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
                     appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
                     appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
                     appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
+                    appliquerCouleurs(presences.tests, 'q_tests', 'count_tests');
                 };
             });
 
+            // Spécialités
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             const agentSpecs = agent.specialites || [];
@@ -202,6 +208,7 @@
                 grid.appendChild(btn);
             });
 
+            // EPI
             const epiList = document.getElementById('epiList');
             epiList.innerHTML = "";
             (agent.epi || []).forEach(item => {
@@ -214,6 +221,7 @@
                 epiList.appendChild(div);
             });
 
+            // Droits d'affichage Public
             if (modePublic === 'true') {
                 const homeBtn = document.getElementById('btnHome');
                 if(homeBtn) homeBtn.href = "espace-public.html";
@@ -239,7 +247,8 @@
             sav: parseInt(document.getElementById('q_sav').value) || 0,
             fmpa: parseInt(document.getElementById('q_fmpa').value) || 0,
             cen: parseInt(document.getElementById('q_cen').value) || 0,
-            mso: parseInt(document.getElementById('q_mso').value) || 0
+            mso: parseInt(document.getElementById('q_mso').value) || 0,
+            tests: parseInt(document.getElementById('q_tests').value) || 0
         };
         await updateDoc(doc(db, "users", agentId), { quotas: nouveauxQuotas });
         alert("🎯 Objectifs enregistrés !");
