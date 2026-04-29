@@ -16,12 +16,35 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
+    /* Style pour l'alignement sur une ligne */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
         color: white !important; 
         font-size: 0.75rem !important; 
         border: none !important; 
+    }
+
+    .event-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px; /* Espace entre le nom et le lieu */
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .fc-event-title-custom {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .fc-event-location-custom {
+        font-weight: normal;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Coupe le lieu si trop long */
     }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
@@ -112,7 +135,6 @@
     const fermerModal = () => { document.getElementById('modalEvent').style.display = 'none'; };
     document.getElementById('btnFermerManual').onclick = fermerModal;
 
-    // Gestion de l'affichage du champ manuel
     document.getElementById('formNom').onchange = function() {
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
@@ -150,26 +172,15 @@
                 const snap = await getDocs(collection(db, "formations"));
                 success(snap.docs.map(d => {
                     const data = d.data();
-                let eventColor = "#0B1F3A"; // PAR DÉFAUT : Navy (pour FI CEN, FI SAV SEV, FI MSN)
-                let txtColor = "white";
-                const nomMaj = data.nom.toUpperCase();
+                    let eventColor = "#0B1F3A"; 
+                    let txtColor = "white";
+                    const nomMaj = data.nom.toUpperCase();
 
-                if (nomMaj.includes("MSO")) {
-                 eventColor = "#E2725B"; // Terracotta
-} 
-else if (nomMaj.includes("FMPA SAV SEV")) {
-    eventColor = "#90EE90"; // Vert clair
-    txtColor = "black";
-} 
-else if (nomMaj.includes("FMPA MER")) {
-    eventColor = "#87CEFA"; // Bleu clair
-    txtColor = "black";
-} 
-else if (nomMaj.includes("ENTRAINEMENT")) {
-    eventColor = "#FFD700"; // Jaune (Gold)
-    txtColor = "black";
-}
-                  
+                    if (nomMaj.includes("MSO")) { eventColor = "#E2725B"; } 
+                    else if (nomMaj.includes("FMPA SAV SEV")) { eventColor = "#90EE90"; txtColor = "black"; } 
+                    else if (nomMaj.includes("FMPA MER")) { eventColor = "#87CEFA"; txtColor = "black"; } 
+                    else if (nomMaj.includes("ENTRAINEMENT")) { eventColor = "#FFD700"; txtColor = "black"; }
+                    
                     let visuelFin = new Date(data.dateFin || data.date);
                     visuelFin.setDate(visuelFin.getDate() + 1);
                     const isoFin = visuelFin.toISOString().split('T')[0];
@@ -184,6 +195,22 @@ else if (nomMaj.includes("ENTRAINEMENT")) {
                         extendedProps: data 
                     };
                 }));
+            },
+            // Affichage de l'intitulé et du lieu côte à côte
+            eventContent: function(arg) {
+                let title = arg.event.title;
+                let lieu = arg.event.extendedProps.lieu || "";
+                
+                let container = document.createElement('div');
+                container.className = 'event-wrapper';
+                
+                let html = `<span class="fc-event-title-custom">${title}</span>`;
+                if (lieu) {
+                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
+                }
+                
+                container.innerHTML = html;
+                return { domNodes: [container] };
             },
             dateClick: (info) => {
                 document.getElementById('modalTitle').innerText = "Nouvelle Session";
@@ -201,7 +228,7 @@ else if (nomMaj.includes("ENTRAINEMENT")) {
                 document.getElementById('modalTitle').innerText = data.nom;
                 document.getElementById('formSection').style.display = "none";
                 document.getElementById('detailSection').style.display = "block";
-                document.getElementById('detLieu').innerText = "📍 " + data.lieu;
+                document.getElementById('detLieu').innerText = "📍 " + (data.lieu || "Non précisé");
                 
                 const d1 = new Date(data.date).toLocaleDateString('fr-FR');
                 const d2 = new Date(data.dateFin || data.date).toLocaleDateString('fr-FR');
