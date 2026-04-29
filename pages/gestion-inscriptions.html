@@ -12,7 +12,6 @@
         h1 { color: var(--navy); border-bottom: 3px solid var(--amber); padding-bottom: 10px; margin-bottom: 5px; }
         .subtitle { color: #666; margin-bottom: 30px; }
 
-        /* Style des blocs de formation */
         .formation-block { margin-bottom: 15px; border-radius: 8px; border: 1px solid #EEE; overflow: hidden; transition: transform 0.2s; }
         .formation-block:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
         
@@ -23,26 +22,24 @@
             align-items: center; 
             cursor: pointer;
             background: #FFF;
-            border-left: 6px solid var(--navy); /* Couleur par défaut */
+            border-left: 6px solid var(--navy);
         }
 
         .formation-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--navy); }
         .info-tags { font-size: 0.85rem; color: #666; display: flex; gap: 15px; }
 
-        /* Couleurs dynamiques mises à jour */
+        /* Couleurs corrigées */
         .border-sav { border-left-color: #2A9D5C !important; } /* Vert SAV SEV */
         .border-mer { border-left-color: #0077BE !important; } /* Bleu Mer */
-        .border-cen { border-left-color: #E8A020 !important; } /* Ambre CEN */
+        .border-cen { border-left-color: #E8A020 !important; } /* Ambre CEN & Entrainement */
         .border-mso { border-left-color: #E2725B !important; } /* Terracotta MSO */
         .border-tests { border-left-color: #D94040 !important; } /* Rouge Tests */
 
-        /* Table des inscrits */
         .details-content { display: none; background: #FAFAFA; border-top: 1px solid #EEE; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { text-align: left; padding: 12px 20px; color: #888; font-weight: normal; border-bottom: 1px solid #EEE; }
         td { padding: 10px 20px; border-bottom: 1px solid #F0F0F0; }
 
-        /* Badges de statut */
         .statut-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
         .badge-inscrit { background: #E9ECEF; color: #495057; }
         .badge-present { background: #D1E7DD; color: #0F5132; }
@@ -100,14 +97,14 @@
                 const dateAffichage = (dateFmt === dateFinFmt) ? dateFmt : `Du ${dateFmt} au ${dateFinFmt}`;
                 const inscrits = f.inscrits || [];
 
-                // --- NOUVELLE LOGIQUE DE COULEUR ---
+                // --- LOGIQUE DE COULEUR CORRIGÉE ---
                 let colorClass = "";
                 const nomMaj = f.nom.toUpperCase();
                 
                 if (nomMaj.includes("FMPA SAV SEV")) colorClass = "border-sav";
                 else if (nomMaj.includes("FMPA MER")) colorClass = "border-mer";
-                else if (nomMaj.includes("FMPA CEN")) colorClass = "border-cen";
-                else if (nomMaj.includes("MSO") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-mso";
+                else if (nomMaj.includes("FMPA CEN") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-cen"; // Ambre
+                else if (nomMaj.includes("MSO")) colorClass = "border-mso"; // Terracotta
                 else if (nomMaj.includes("TESTS ANNUELS")) colorClass = "border-tests";
 
                 let htmlTable = `
