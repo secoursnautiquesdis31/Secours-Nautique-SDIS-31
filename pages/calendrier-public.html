@@ -15,7 +15,6 @@
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    /* MODIFICATION ICI : On enlève le background-color !important */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -95,19 +94,21 @@
                     const evts = snap.docs.map(d => {
                         const data = d.data();
                         
-                        // --- LOGIQUE DE COULEUR ---
+                        // --- MISE À JOUR DE LA LOGIQUE DE COULEUR ---
                         let eventColor = "#0B1F3A"; // Navy par défaut
                         let txtColor = "white";
                         const nomMaj = data.nom.toUpperCase();
                         
-                        if (nomMaj.includes("MSO")) {
-                            eventColor = "#E2725B"; // Terracotta
-                        } else if (nomMaj.includes("RECYCLAGE SAV SEV")) {
-                            eventColor = "#90EE90"; // Vert clair
-                            txtColor = "black";    // Texte noir pour lisibilité sur vert
+                        if (nomMaj.includes("FMPA SAV SEV")) {
+                            eventColor = "#2A9D5C"; // Vert (Savoir-faire)
                         } else if (nomMaj.includes("FMPA MER")) {
-                            eventColor = "#87CEFA"; // Bleu clair
-                            txtColor = "black";    // Texte noir pour lisibilité sur bleu clair
+                            eventColor = "#0077BE"; // Bleu Mer
+                        } else if (nomMaj.includes("FMPA CEN")) {
+                            eventColor = "#E8A020"; // Ambre (CEN)
+                        } else if (nomMaj.includes("MSO") || nomMaj.includes("ENTRAINEMENT")) {
+                            eventColor = "#E2725B"; // Terracotta (MSO)
+                        } else if (nomMaj.includes("TESTS ANNUELS")) {
+                            eventColor = "#D94040"; // Rouge
                         }
 
                         let visuelFin = new Date(data.dateFin || data.date);
@@ -138,7 +139,6 @@
         calendar.render();
     }
 
-    // Le reste de tes fonctions (ouvrirDetails, inscrire, desinscrire) est conservé à l'identique
     function ouvrirDetails(event) {
         const data = event.extendedProps;
         const id = event.id;
