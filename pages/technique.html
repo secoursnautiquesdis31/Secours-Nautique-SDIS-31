@@ -31,6 +31,10 @@
         .demande-card { background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px; border-left: 5px solid var(--amber); display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
         .btn-valider { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-refuser { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
+
+        /* Style spécifique pour l'icône de visibilité */
+        .vis-btn { cursor: pointer; font-size: 1.2rem; text-align: center; user-select: none; }
+        .vis-off { opacity: 0.2; grayscale: 1; }
     </style>
 </head>
 <body>
@@ -71,6 +75,10 @@
             <label><small>Seuil Alerte</small></label>
             <input type="number" id="newSeuil" value="1">
         </div>
+        <div style="flex:0.5; text-align:center">
+            <label><small>Visible</small></label>
+            <input type="checkbox" id="newVisible" checked>
+        </div>
         <button class="btn-add" id="btnAddManual">➕ AJOUTER</button>
     </div>
 
@@ -92,6 +100,7 @@
     <table>
       <thead>
         <tr>
+          <th style="width: 40px">👁️</th>
           <th>Matériel</th>
           <th>Taille</th>
           <th>Stock</th>
@@ -101,7 +110,7 @@
         </tr>
       </thead>
       <tbody id="stockBody">
-        <tr><td colspan="6" style="text-align:center; padding:30px;">Connexion à Firestore...</td></tr>
+        <tr><td colspan="7" style="text-align:center; padding:30px;">Connexion à Firestore...</td></tr>
       </tbody>
     </table>
 </div>
@@ -198,9 +207,13 @@
         items.sort((a,b) => (a.type || "").localeCompare(b.type || "")).forEach(item => {
             const q = parseInt(item.quantite || 0);
             const s = parseInt(item.seuil || 0);
+            const isVisible = item.visible !== false; // Visible par défaut
             const cl = q === 0 ? "bg-red" : (q <= s ? "bg-orange" : "bg-green");
             const tr = document.createElement('tr');
             tr.innerHTML = `
+                <td class="vis-btn ${isVisible ? '' : 'vis-off'}" onclick="toggleVis('${item.id}', ${isVisible})">
+                    ${isVisible ? '👁️' : '👁️‍🗨️'}
+                </td>
                 <td><input class="cell-edit" value="${item.type || ''}" onchange="upd('${item.id}','type',this.value)"></td>
                 <td><input class="cell-edit" value="${item.taille || ''}" onchange="upd('${item.id}','taille',this.value)"></td>
                 <td>
@@ -214,6 +227,11 @@
             stockBody.appendChild(tr);
         });
     }
+
+    window.toggleVis = async (id, currentStatus) => {
+        await updateDoc(doc(db, "stocks", id), { visible: !currentStatus });
+        charger();
+    };
 
     function updateStats(items) {
         document.getElementById('statTotal').innerText = items.length;
@@ -229,9 +247,10 @@
         const taille = document.getElementById('newTaille').value.trim();
         const qty = parseInt(document.getElementById('newQty').value) || 0;
         const seuil = parseInt(document.getElementById('newSeuil').value) || 0;
+        const visible = document.getElementById('newVisible').checked;
         if(!type) return alert("Nom requis");
         const id = (type + "_" + taille).toLowerCase().replace(/[^a-z0-9]/g, '_');
-        await setDoc(doc(db, "stocks", id), { type, taille, quantite: qty, seuil, peremption: "" });
+        await setDoc(doc(db, "stocks", id), { type, taille, quantite: qty, seuil, peremption: "", visible: visible });
         document.getElementById('newType').value = "";
         document.getElementById('newTaille').value = "";
         charger();
@@ -273,7 +292,7 @@
                 const type = col[0].trim();
                 const id = (type + "_" + (col[2]||'')).toLowerCase().replace(/[^a-z0-9]/g, '_');
                 await setDoc(doc(db, "stocks", id), {
-                    type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||""
+                    type, taille: col[2]||"", quantite: parseInt(col[3])||0, seuil: parseInt(col[4])||0, peremption: col[5]||"", visible: true
                 });
             }
             charger();
