@@ -3,29 +3,50 @@
 <head>
     <meta charset="UTF-8">
     <title>Suivi Global des Inscriptions — SDIS 31</title>
-    <link rel="stylesheet" href="../css/main.css">
     <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        :root { --navy: #0B1F3A; --amber: #E8A020; --danger: #D94040; --green: #2A9D5C; }
-        body { font-family: 'Barlow', sans-serif; background: #F4F6F8; padding: 20px; }
-        .admin-card { max-width: 1000px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        h1 { color: var(--navy); border-bottom: 3px solid var(--amber); padding-bottom: 10px; }
+        :root { --navy: #0B1F3A; --amber: #E8A020; --bg: #F4F6F8; }
+        body { font-family: 'Barlow', sans-serif; background: var(--bg); padding: 20px; color: #333; }
         
-        .formation-block { margin-bottom: 30px; border: 1px solid #DDD; border-radius: 8px; overflow: hidden; }
-        .formation-header { background: var(--navy); color: white; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
-        .formation-header h3 { margin: 0; font-size: 1.1rem; }
-        
-        table { width: 100%; border-collapse: collapse; background: white; }
-        th { background: #F8F9FA; text-align: left; padding: 12px; border-bottom: 2px solid #EEE; font-size: 0.85rem; color: #555; }
-        td { padding: 10px 12px; border-bottom: 1px solid #F0F0F0; }
-        
-        .statut-badge { padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-        .badge-inscrit { background: #EEE; color: #666; }
-        .badge-present { background: #D1E7DD; color: #0F5132; }
-        .badge-absent { background: #F8D7DA; color: #842029; }
+        .admin-card { max-width: 900px; margin: 0 auto; background: white; border-radius: 12px; padding: 30px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        h1 { color: var(--navy); border-bottom: 3px solid var(--amber); padding-bottom: 10px; margin-bottom: 5px; }
+        .subtitle { color: #666; margin-bottom: 30px; }
 
-        .no-inscrit { padding: 15px; color: #888; font-style: italic; text-align: center; }
-        .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--navy); font-weight: bold; }
+        /* Style des blocs de formation */
+        .formation-block { margin-bottom: 15px; border-radius: 8px; border: 1px solid #EEE; overflow: hidden; transition: transform 0.2s; }
+        .formation-block:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        
+        .formation-header { 
+            padding: 15px 20px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            cursor: pointer;
+            background: #FFF;
+            border-left: 6px solid var(--navy); /* Couleur par défaut */
+        }
+
+        .formation-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--navy); }
+        .info-tags { font-size: 0.85rem; color: #666; display: flex; gap: 15px; }
+
+        /* Couleurs dynamiques basées sur tes types de formation */
+        .border-mso { border-left-color: #E2725B !important; }
+        .border-recyclage { border-left-color: #90EE90 !important; }
+        .border-fmpa { border-left-color: #87CEFA !important; }
+
+        /* Table des inscrits */
+        .details-content { display: none; background: #FAFAFA; border-top: 1px solid #EEE; }
+        table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+        th { text-align: left; padding: 12px 20px; color: #888; font-weight: normal; border-bottom: 1px solid #EEE; }
+        td { padding: 10px 20px; border-bottom: 1px solid #F0F0F0; }
+
+        /* Badges de statut */
+        .statut-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .badge-inscrit { background: #E9ECEF; color: #495057; }
+        .badge-present { background: #D1E7DD; color: #0F5132; }
+
+        .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--navy); font-weight: bold; font-size: 0.9rem; }
+        .count-badge { background: #EEE; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
     </style>
 </head>
 <body>
@@ -33,7 +54,7 @@
 <div class="admin-card">
     <a href="dashboard.html" class="btn-back">← Retour au Dashboard</a>
     <h1>Récapitulatif des Inscriptions</h1>
-    <p>Liste de toutes les formations et des personnels inscrits.</p>
+    <p class="subtitle">Cliquez sur une formation pour voir le détail des personnels.</p>
 
     <div id="containerInscriptions">
         <p style="text-align:center; padding:50px;">Chargement des données...</p>
@@ -56,71 +77,75 @@
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
 
+    // Fonction pour ouvrir/fermer les détails
+    window.toggleDetails = (id) => {
+        const content = document.getElementById('details-' + id);
+        content.style.display = content.style.display === 'block' ? 'none' : 'block';
+    };
+
     async function chargerInscriptions() {
         const container = document.getElementById('containerInscriptions');
         try {
             const fSnap = await getDocs(collection(db, "formations"));
             container.innerHTML = "";
 
-            // Tri par date (plus récentes en premier)
             const formations = fSnap.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
 
-            if (formations.length === 0) {
-                container.innerHTML = "<p>Aucune formation trouvée.</p>";
-                return;
-            }
-
             formations.forEach(f => {
-                const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "Date inconnue";
+                const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "??";
+                const dateFinFmt = f.dateFin ? new Date(f.dateFin).toLocaleDateString('fr-FR') : dateFmt;
+                const dateAffichage = (dateFmt === dateFinFmt) ? dateFmt : `Du ${dateFmt} au ${dateFinFmt}`;
                 const inscrits = f.inscrits || [];
 
-                let htmlInscrits = "";
-                if (inscrits.length > 0) {
-                    htmlInscrits = `
+                // Détermination de la classe de couleur
+                let colorClass = "";
+                const nomMaj = f.nom.toUpperCase();
+                if (nomMaj.includes("MSO")) colorClass = "border-mso";
+                else if (nomMaj.includes("RECYCLAGE SAV SEV")) colorClass = "border-recyclage";
+                else if (nomMaj.includes("FMPA MER")) colorClass = "border-fmpa";
+
+                let htmlTable = `
+                    <div class="details-content" id="details-${f.id}">
+                        ${inscrits.length > 0 ? `
                         <table>
                             <thead>
-                                <tr>
-                                    <th>Nom de l'agent</th>
-                                    <th>Statut</th>
-                                </tr>
+                                <tr><th>Nom de l'agent</th><th>Statut</th></tr>
                             </thead>
                             <tbody>
-                                ${inscrits.map(i => {
-                                    let classeBadge = "badge-inscrit";
-                                    let texteBadge = "Inscrit";
-                                    if(i.statut === "présent") { classeBadge = "badge-present"; texteBadge = "Présent"; }
-                                    if(i.statut === "absent") { classeBadge = "badge-absent"; texteBadge = "Absent"; }
-                                    
-                                    return `
-                                        <tr>
-                                            <td><strong>${i.nom}</strong></td>
-                                            <td><span class="statut-badge ${classeBadge}">${texteBadge}</span></td>
-                                        </tr>
-                                    `;
-                                }).join('')}
+                                ${inscrits.map(i => `
+                                    <tr>
+                                        <td><strong>${i.nom}</strong></td>
+                                        <td><span class="statut-badge ${i.statut === 'présent' ? 'badge-present' : 'badge-inscrit'}">
+                                            ${i.statut === 'présent' ? 'PRÉSENT' : 'INSCRIT'}
+                                        </span></td>
+                                    </tr>
+                                `).join('')}
                             </tbody>
-                        </table>
-                    `;
-                } else {
-                    htmlInscrits = `<div class="no-inscrit">Aucun inscrit pour le moment</div>`;
-                }
+                        </table>` : '<div style="padding:20px; color:#999; text-align:center;">Aucun inscrit</div>'}
+                    </div>`;
 
                 container.innerHTML += `
                     <div class="formation-block">
-                        <div class="formation-header">
-                            <h3>${f.nom}</h3>
-                            <span>📅 ${dateFmt} — 📍 ${f.lieu || 'Non précisé'}</span>
+                        <div class="formation-header ${colorClass}" onclick="toggleDetails('${f.id}')">
+                            <div>
+                                <h3>${f.nom} <span class="count-badge">${inscrits.length}</span></h3>
+                            </div>
+                            <div class="info-tags">
+                                <span>📅 ${dateAffichage}</span>
+                                <span>📍 ${f.lieu || '??'}</span>
+                                <span>▼</span>
+                            </div>
                         </div>
-                        ${htmlInscrits}
+                        ${htmlTable}
                     </div>
                 `;
             });
 
         } catch (error) {
             console.error(error);
-            container.innerHTML = "<p style='color:red;'>Erreur lors du chargement des données.</p>";
+            container.innerHTML = "<p>Erreur de chargement.</p>";
         }
     }
 
