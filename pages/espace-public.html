@@ -102,9 +102,13 @@
             try {
                 const snap = await getDocs(collection(db, "stocks")); 
                 selectMat.innerHTML = '<option value="">-- Choisir un article --</option>';
+                
                 snap.forEach(doc => {
                     const item = doc.data();
-                    if(item.quantite > 0) {
+                    
+                    // --- MODIFICATION : ON IGNORE LE STOCK ---
+                    // On vérifie UNIQUEMENT si l'oeil est ouvert (visible !== false)
+                    if(item.visible !== false) {
                         let opt = document.createElement('option');
                         const t = item.taille ? ` (${item.taille})` : "";
                         opt.value = item.type + "##" + (item.taille || "");
@@ -114,7 +118,7 @@
                 });
             } catch(e) { console.error(e); }
         }
-
+        
         selectAgent.onchange = () => {
             const nom = selectAgent.options[selectAgent.selectedIndex].text;
             if(selectAgent.value !== "") {
