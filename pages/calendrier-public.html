@@ -14,7 +14,15 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
-    .fc-event { cursor: pointer; padding: 2px 5px; border: none !important; background-color: var(--navy) !important; color: white !important; font-size: 0.75rem !important; }
+    
+    /* MODIFICATION ICI : On enlève le background-color !important */
+    .fc-event { 
+        cursor: pointer; 
+        padding: 2px 5px; 
+        border: none !important; 
+        color: white !important; 
+        font-size: 0.75rem !important; 
+    }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; font-weight: bold; color: var(--navy); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
@@ -40,14 +48,10 @@
     <div class="modal-content">
       <h2 id="modalTitle" style="margin-top:0; color: var(--navy);">Formation</h2>
       <p id="detDates" class="date-info"></p> <p id="detLieu" style="font-weight: bold; color: #555;"></p>
-      
       <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
-      
       <div id="detInscrits" style="margin: 10px 0; font-size: 0.9rem; color: #666;"></div>
-      
       <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
       <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
-      
       <button onclick="fermerModal()" style="width:100%; background:none; border:none; color:gray; cursor:pointer; margin-top:15px;">Fermer</button>
     </div>
   </div>
@@ -85,75 +89,73 @@
             firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
             buttonText: { today: "Aujourd'hui", month: "Mois", year: "Année" },
-           events: async (info, success, failure) => {
-    try {
-        const snap = await getDocs(collection(db, "formations"));
-        const evts = snap.docs.map(d => {
-            const data = d.data();
-            
-            // --- LOGIQUE DE COULEUR ---
-            let eventColor = "#0B1F3A"; // Couleur Navy par défaut
-            const nom = data.nom.toUpperCase();
-            
-            if (nom.includes("MSO")) {
-                eventColor = "#E2725B"; 
-            } else if (nom.includes("RECYCLAGE SAV SEV")) {
-                eventColor = "#90EE90"; 
-            } else if (nom.includes("FMPA MER")) {
-                eventColor = "#87CEFA"; 
-            }
+            events: async (info, success, failure) => {
+                try {
+                    const snap = await getDocs(collection(db, "formations"));
+                    const evts = snap.docs.map(d => {
+                        const data = d.data();
+                        
+                        // --- LOGIQUE DE COULEUR ---
+                        let eventColor = "#0B1F3A"; // Navy par défaut
+                        let txtColor = "white";
+                        const nomMaj = data.nom.toUpperCase();
+                        
+                        if (nomMaj.includes("MSO")) {
+                            eventColor = "#E2725B"; // Terracotta
+                        } else if (nomMaj.includes("RECYCLAGE SAV SEV")) {
+                            eventColor = "#90EE90"; // Vert clair
+                            txtColor = "black";    // Texte noir pour lisibilité sur vert
+                        } else if (nomMaj.includes("FMPA MER")) {
+                            eventColor = "#87CEFA"; // Bleu clair
+                            txtColor = "black";    // Texte noir pour lisibilité sur bleu clair
+                        }
 
-            let visuelFin = new Date(data.dateFin || data.date);
-            visuelFin.setDate(visuelFin.getDate() + 1);
-            const isoFin = visuelFin.toISOString().split('T')[0];
+                        let visuelFin = new Date(data.dateFin || data.date);
+                        visuelFin.setDate(visuelFin.getDate() + 1);
+                        const isoFin = visuelFin.toISOString().split('T')[0];
 
-            return {
-                id: d.id,
-                title: data.nom,
-                start: data.date,
-                end: isoFin,
-                color: eventColor, // On applique la couleur ici
-                extendedProps: { 
-                    lieu: data.lieu,
-                    inscrits: data.inscrits || [], 
-                    nom: data.nom,
-                    dateFinReelle: data.dateFin || data.date,
-                    dateDebutReelle: data.date
-                }
-            };
-        });
-        success(evts);
-    } catch (e) { console.error(e); failure(e); }
-},
-          eventClick: (info) => ouvrirDetails(info.event)
+                        return {
+                            id: d.id,
+                            title: data.nom,
+                            start: data.date,
+                            end: isoFin,
+                            color: eventColor,
+                            textColor: txtColor,
+                            extendedProps: { 
+                                lieu: data.lieu,
+                                inscrits: data.inscrits || [], 
+                                nom: data.nom,
+                                dateFinReelle: data.dateFin || data.date,
+                                dateDebutReelle: data.date
+                            }
+                        };
+                    });
+                    success(evts);
+                } catch (e) { console.error(e); failure(e); }
+            },
+            eventClick: (info) => ouvrirDetails(info.event)
         });
         calendar.render();
     }
 
+    // Le reste de tes fonctions (ouvrirDetails, inscrire, desinscrire) est conservé à l'identique
     function ouvrirDetails(event) {
         const data = event.extendedProps;
         const id = event.id;
         const inscrits = data.inscrits || [];
-
         document.getElementById('modalTitle').innerText = data.nom;
         document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
         document.getElementById('detInscrits').innerText = inscrits.length + " inscrit(s).";
-
-        // AFFICHAGE DES DATES RÉELLES DANS LE MODAL
         const d1 = new Date(data.dateDebutReelle).toLocaleDateString('fr-FR');
         const d2 = new Date(data.dateFinReelle).toLocaleDateString('fr-FR');
         document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
-        
         const inscription = inscrits.find(i => i.nom === agentConnecte);
         const estInscrit = !!inscription;
-
         const btnInscrire = document.getElementById('btnInscrire');
         const btnDesinscrire = document.getElementById('btnDesinscrire');
-
         if (estInscrit) {
             btnInscrire.style.display = "none";
             btnDesinscrire.style.display = "block";
-
             if(inscription.statut === "présent") {
                 btnDesinscrire.innerText = "PRÉSENCE VALIDÉE ✅";
                 btnDesinscrire.style.background = "#2A9D5C";
@@ -168,44 +170,31 @@
             btnDesinscrire.style.display = "none";
             btnInscrire.onclick = () => inscrire(id);
         }
-        
         document.getElementById('modalEvent').style.display = 'block';
     }
 
     async function inscrire(formationId) {
         try {
             const formationRef = doc(db, "formations", formationId);
-            await updateDoc(formationRef, { 
-                inscrits: arrayUnion({ nom: agentConnecte, statut: "en attente" }) 
-            });
-            
+            await updateDoc(formationRef, { inscrits: arrayUnion({ nom: agentConnecte, statut: "en attente" }) });
             alert("Inscription validée !");
             document.getElementById('modalEvent').style.display = 'none';
             if(calendar) calendar.refetchEvents();
-        } catch (e) { 
-            console.error(e);
-            alert("Erreur lors de l'inscription."); 
-        }
+        } catch (e) { console.error(e); alert("Erreur lors de l'inscription."); }
     }
 
     async function desinscrire(formationId, objetInscrit) {
         if(!confirm("Voulez-vous vraiment vous désister ?")) return;
         try {
             const formationRef = doc(db, "formations", formationId);
-            await updateDoc(formationRef, { 
-                inscrits: arrayRemove(objetInscrit) 
-            });
+            await updateDoc(formationRef, { inscrits: arrayRemove(objetInscrit) });
             alert("Désinscription prise en compte.");
             document.getElementById('modalEvent').style.display = 'none';
             if(calendar) calendar.refetchEvents();
-        } catch (e) { 
-            console.error(e);
-            alert("Erreur lors de la désinscription."); 
-        }
+        } catch (e) { console.error(e); alert("Erreur lors de la désinscription."); }
     }
 
     window.fermerModal = () => document.getElementById('modalEvent').style.display = 'none';
-
     init();
   </script>
 </body>
