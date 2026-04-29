@@ -91,7 +91,7 @@
 
             const formations = fSnap.docs
                 .map(doc => ({ id: doc.id, ...doc.data() }))
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
+                .sort((a, b) => new Date(a.date) - new Date(b.date));
 
             formations.forEach(f => {
                 const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "??";
