@@ -46,10 +46,10 @@
     </button>
     <button onclick="ouvrirMaFiche()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit;">
     👤<br>MA FICHE<br>
-    <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Mes infos - Visite médicale</small>
+    <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Mes infos - Mon suivi</small>
 </button>
 
-    <button onclick="ouvrirCarte()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit; background-color: #fdfaf3; border: 1px solid var(--amber);">
+    <button onclick="ouvrirCarte()" class="menu-btn" style="display: block; font-size: 1rem; width:100%; font-family:inherit;">
     📍<br>CARTOGRAPHIE<br>
     <small style="font-weight:normal; opacity:0.7; font-size: 0.75rem;">Points GPS - Mises à l'eau</small>
 </button>
@@ -110,7 +110,6 @@
                 
                 snap.forEach(doc => {
                     const item = doc.data();
-                    
                     if(item.visible !== false) {
                         let opt = document.createElement('option');
                         const t = item.taille ? ` (${item.taille})` : "";
@@ -136,32 +135,29 @@
             chargerListeMateriel();
         };
 
-window.ouvrirFormation = () => {
-    if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
-    const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
-    localStorage.setItem('agentNomSelected', nomAgent);
-    window.location.href = `calendrier-public.html`;
-};
+        window.ouvrirFormation = () => {
+            if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
+            const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
+            localStorage.setItem('agentNomSelected', nomAgent);
+            window.location.href = `calendrier-public.html`;
+        };
 
-window.ouvrirMaFiche = () => {
-    if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
-    const agentId = selectAgent.value;
-    const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
-    localStorage.setItem('agentNomSelected', nomAgent);
-    localStorage.setItem('modeConsultation', 'true');
-    window.location.href = `fiche-agent.html?id=${agentId}`;
-};
+        window.ouvrirMaFiche = () => {
+            if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
+            const agentId = selectAgent.value;
+            const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
+            localStorage.setItem('agentNomSelected', nomAgent);
+            localStorage.setItem('modeConsultation', 'true');
+            window.location.href = `fiche-agent.html?id=${agentId}`;
+        };
 
-// FONCTION POUR OUVRIR LA CARTE
-window.ouvrirCarte = () => {
-    window.location.href = `carte.html`;
-};
+        window.ouvrirCarte = () => {
+            window.location.href = `carte.html`;
+        };
 
         document.getElementById('btnEnvoyer').onclick = async () => {
             if(!selectMat.value) return alert("Sélectionne un article.");
-            
             const [type, taille] = selectMat.value.split("##");
-
             try {
                 await addDoc(collection(db, "demandes_materiel"), {
                     agentId: selectAgent.value,
