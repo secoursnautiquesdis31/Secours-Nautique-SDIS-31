@@ -15,7 +15,16 @@
     body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
-    .fc-event { cursor: pointer; padding: 2px 5px; background-color: var(--navy) !important; color: white !important; font-size: 0.75rem !important; border: none !important; }
+    
+    /* MODIF : Suppression du background-color !important pour laisser passer les couleurs JS */
+    .fc-event { 
+        cursor: pointer; 
+        padding: 2px 5px; 
+        color: white !important; 
+        font-size: 0.75rem !important; 
+        border: none !important; 
+    }
+    
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; border: 2px solid #E8A020; font-weight: bold; }
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
@@ -60,7 +69,6 @@
           <strong>Liste des inscrits :</strong>
           <div id="detInscrits" style="margin: 15px 0; max-height: 200px; overflow-y: auto;"></div>
           <button class="btn-main" id="btnInscrire" style="background: #2A9D5C;">M'INSCRIRE</button>
-          <button class="btn-main" id="btnDesinscrire" style="background: #D94040; display:none;">SE DÉSISTER</button>
           <button class="btn-main" id="btnSuppr" style="background: #eee; color: #666; font-size: 0.7rem;">Supprimer la session</button>
       </div>
       
@@ -118,38 +126,42 @@
             locale: 'fr',
             firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
-           events: async (info, success) => {
-    const snap = await getDocs(collection(db, "formations"));
-    success(snap.docs.map(d => {
-        const data = d.data();
-        
-        // --- LOGIQUE DE COULEUR ---
-        let eventColor = "#0B1F3A"; // Couleur Navy par défaut
-        const nom = data.nom.toUpperCase(); // On met en majuscule pour comparer sans erreur
-        
-        if (nom.includes("MSO")) {
-            eventColor = "#E2725B"; // Terracotta
-        } else if (nom.includes("RECYCLAGE SAV SEV")) {
-            eventColor = "#90EE90"; // Vert clair (LightGreen)
-        } else if (nom.includes("FMPA MER")) {
-            eventColor = "#87CEFA"; // Bleu clair (LightSkyBlue)
-        }
+            events: async (info, success) => {
+                const snap = await getDocs(collection(db, "formations"));
+                success(snap.docs.map(d => {
+                    const data = d.data();
+                    
+                    // --- LOGIQUE DE COULEUR ---
+                    let eventColor = "#0B1F3A"; 
+                    let txtColor = "white";
+                    const nomMaj = data.nom.toUpperCase();
+                    
+                    if (nomMaj.includes("MSO")) {
+                        eventColor = "#E2725B"; // Terracotta
+                    } else if (nomMaj.includes("RECYCLAGE SAV SEV")) {
+                        eventColor = "#90EE90"; // Vert clair
+                        txtColor = "black";
+                    } else if (nomMaj.includes("FMPA MER")) {
+                        eventColor = "#87CEFA"; // Bleu clair
+                        txtColor = "black";
+                    }
 
-        let visuelFin = new Date(data.dateFin || data.date);
-        visuelFin.setDate(visuelFin.getDate() + 1);
-        const isoFin = visuelFin.toISOString().split('T')[0];
+                    let visuelFin = new Date(data.dateFin || data.date);
+                    visuelFin.setDate(visuelFin.getDate() + 1);
+                    const isoFin = visuelFin.toISOString().split('T')[0];
 
-        return { 
-            id: d.id, 
-            title: data.nom, 
-            start: data.date, 
-            end: isoFin, 
-            color: eventColor, // On applique la couleur ici
-            extendedProps: data 
-        };
-    }));
-},
-          dateClick: (info) => {
+                    return { 
+                        id: d.id, 
+                        title: data.nom, 
+                        start: data.date, 
+                        end: isoFin, 
+                        color: eventColor,
+                        textColor: txtColor,
+                        extendedProps: data 
+                    };
+                }));
+            },
+            dateClick: (info) => {
                 document.getElementById('modalTitle').innerText = "Nouvelle Session";
                 document.getElementById('formSection').style.display = "block";
                 document.getElementById('detailSection').style.display = "none";
@@ -165,7 +177,6 @@
                 document.getElementById('detailSection').style.display = "block";
                 document.getElementById('detLieu').innerText = "📍 " + data.lieu;
                 
-                // Affichage propre des dates réelles
                 const d1 = new Date(data.date).toLocaleDateString('fr-FR');
                 const d2 = new Date(data.dateFin || data.date).toLocaleDateString('fr-FR');
                 document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
@@ -189,7 +200,6 @@
                 const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
                 const inscrit = agentConnecte && noms.includes(agentConnecte);
                 document.getElementById('btnInscrire').style.display = inscrit ? "none" : "block";
-                document.getElementById('btnDesinscrire').style.display = inscrit ? "block" : "none";
 
                 document.getElementById('btnInscrire').onclick = async () => {
                     if(!agentConnecte) return alert("Sélectionnez un agent");
@@ -217,7 +227,7 @@
                 nom, 
                 lieu, 
                 date, 
-                dateFin: dateFin || date, // Stocke la vraie date de fin choisie
+                dateFin: dateFin || date, 
                 inscrits: [] 
             });
             calendar.refetchEvents(); fermerModal();
