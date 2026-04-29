@@ -8,20 +8,20 @@
   <style>
     :root { --navy: #0B1F3A; --amber: #E8A020; --green: #2A9D5C; --red: #D94040; --bg: #F4F6F8; }
     body { font-family: 'Barlow', sans-serif; background: var(--bg); margin: 0; padding: 20px; }
-    .container { max-width: 1300px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+    .container { max-width: 1400px; margin: 40px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
     
     .header-flex { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid var(--navy); padding-bottom: 15px; margin-bottom: 20px; }
     
     table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    th { background: var(--navy); color: white; padding: 12px; text-align: left; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    td { padding: 12px; border-bottom: 1px solid #EEE; font-size: 0.9rem; }
+    th { background: var(--navy); color: white; padding: 12px; text-align: left; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td { padding: 12px; border-bottom: 1px solid #EEE; font-size: 0.85rem; }
     
-    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.8rem; display: inline-block; min-width: 100px; text-align: center; }
+    .status-badge { padding: 6px 12px; border-radius: 20px; font-weight: bold; font-size: 0.75rem; display: inline-block; min-width: 90px; text-align: center; }
     .ok { background: #D4EDDA; color: var(--green); border: 1px solid var(--green); }
     .ko { background: #F8D7DA; color: var(--red); border: 1px solid var(--red); }
     
     .score-detail { font-weight: bold; color: var(--navy); }
-    .quota-info { color: #888; font-size: 0.8rem; }
+    .quota-info { color: #888; font-size: 0.75rem; }
     
     .btn-export { background: var(--green); color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; font-weight: bold; transition: 0.3s; }
     .btn-export:hover { background: #217a48; }
@@ -37,7 +37,7 @@
     <div class="header-flex">
         <div>
             <h1 style="color: var(--navy); margin:0;">📊 Suivi des Aptitudes Opérationnelles</h1>
-            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Calculé selon les objectifs individuels définis dans chaque fiche agent.</p>
+            <p style="margin: 5px 0 0 0; color: #666; font-size: 0.9rem;">Calculé selon les nouveaux intitulés et objectifs définis dans chaque fiche agent.</p>
         </div>
         <button class="btn-export" id="btnExport">📥 EXPORTER EXCEL (2026)</button>
     </div>
@@ -46,15 +46,15 @@
         <thead>
             <tr>
                 <th>Agent</th>
-                <th>Recyclage SAV SEV</th>
+                <th>FMPA SAV SEV</th>
                 <th>FMPA Mer</th>
-                <th>Recyclage CEN</th>
-                <th>Entrainement / MSO</th>
+                <th>FMPA CEN</th>
+                <th>MSO / Entrainement</th>
+                <th>Tests Annuels</th>
                 <th style="text-align: center;">Statut Aptitude</th>
             </tr>
         </thead>
-        <tbody id="tableBody">
-            </tbody>
+        <tbody id="tableBody"></tbody>
     </table>
   </div>
 
@@ -76,68 +76,75 @@
     const currentYear = 2026;
 
     async function genererTableau() {
-        // 1. On récupère TOUTES les formations une seule fois pour tout le monde
         const fSnap = await getDocs(collection(db, "formations"));
         const toutesLesFormations = fSnap.docs.map(doc => doc.data());
 
-        // 2. On récupère les agents
         const querySnapshot = await getDocs(collection(db, "users"));
         const tbody = document.getElementById('tableBody');
         tbody.innerHTML = "";
         let dataExport = [];
 
-        querySnapshot.forEach((doc) => {
-            const agent = doc.data();
+        // Tri des agents par nom
+        const agents = [];
+        querySnapshot.forEach(doc => agents.push({ id: doc.id, ...doc.data() }));
+        agents.sort((a, b) => a.nom.localeCompare(b.nom));
+
+        agents.forEach((agent) => {
             const agentNom = agent.nom;
             
-            // QUOTAS (Objectifs définis dans la fiche agent)
-            const q = agent.quotas || { sav: 1, fmpa: 1, cen: 1, mso: 2 };
+            // QUOTAS - On utilise les mêmes clés que dans fiche-agent.html
+            const q = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
 
-            // CALCUL DES PRÉSENCES RÉELLES (Scan du calendrier)
-            let score = { SAV: 0, FMPA: 0, CEN: 0, MSO: 0 };
+            // CALCUL DES PRÉSENCES RÉELLES
+            let score = { SAV: 0, MER: 0, CEN: 0, MSO_ENT: 0, TESTS: 0 };
 
             toutesLesFormations.forEach(f => {
-                // On vérifie l'année et si l'agent est présent
                 const formationDate = new Date(f.date);
                 if (formationDate.getFullYear() === currentYear) {
                     const estPresent = (f.inscrits || []).find(i => i.nom === agentNom && i.statut === "présent");
                     
                     if (estPresent) {
                         const titre = f.nom.toUpperCase();
-                        if (titre.includes("SAV") || titre.includes("SEV")) score.SAV++;
-                        if (titre.includes("FMPA") || titre.includes("MER")) score.FMPA++;
-                        if (titre.includes("CEN")) score.CEN++;
-                        if (titre.includes("MSO") || titre.includes("ENTRAINEMENT") || titre.includes("ENT")) score.MSO++;
+                        if (titre.includes("FMPA SAV SEV")) score.SAV++;
+                        else if (titre.includes("FMPA MER")) score.MER++;
+                        else if (titre.includes("FMPA CEN")) score.CEN++;
+                        else if (titre.includes("MSO") || titre.includes("ENTRAINEMENT")) score.MSO_ENT++;
+                        else if (titre.includes("TESTS ANNUELS")) score.TESTS++;
                     }
                 }
             });
 
-            // VÉRIFICATION DE L'APTITUDE
+            // VÉRIFICATION DE L'APTITUDE (Vérifie si chaque score atteint l'objectif)
             const checkSAV = score.SAV >= (q.sav || 0);
-            const checkFMPA = score.FMPA >= (q.fmpa || 0);
+            const checkMER = score.MER >= (q.fmpa || 0);
             const checkCEN = score.CEN >= (q.cen || 0);
-            const checkMSO = score.MSO >= (q.mso || 0);
-            const isApte = checkSAV && checkFMPA && checkCEN && checkMSO;
+            const checkMSO = score.MSO_ENT >= (q.mso || 0);
+            const checkTests = score.TESTS >= (q.tests || 0);
+            
+            const isApte = checkSAV && checkMER && checkCEN && checkMSO && checkTests;
 
-            // AFFICHAGE
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${agentNom}</strong><br><small style="color:#888">${agent.cis || 'N/A'}</small></td>
                 <td>
                     <span class="${checkSAV ? 'score-detail' : 'ko-text'}">${score.SAV}</span> 
-                    <span class="quota-info">/ ${q.sav}</span>
+                    <span class="quota-info">/ ${q.sav || 0}</span>
                 </td>
                 <td>
-                    <span class="${checkFMPA ? 'score-detail' : 'ko-text'}">${score.FMPA}</span> 
-                    <span class="quota-info">/ ${q.fmpa}</span>
+                    <span class="${checkMER ? 'score-detail' : 'ko-text'}">${score.MER}</span> 
+                    <span class="quota-info">/ ${q.fmpa || 0}</span>
                 </td>
                 <td>
                     <span class="${checkCEN ? 'score-detail' : 'ko-text'}">${score.CEN}</span> 
-                    <span class="quota-info">/ ${q.cen}</span>
+                    <span class="quota-info">/ ${q.cen || 0}</span>
                 </td>
                 <td>
-                    <span class="${checkMSO ? 'score-detail' : 'ko-text'}">${score.MSO}</span> 
-                    <span class="quota-info">/ ${q.mso}</span>
+                    <span class="${checkMSO ? 'score-detail' : 'ko-text'}">${score.MSO_ENT}</span> 
+                    <span class="quota-info">/ ${q.mso || 0}</span>
+                </td>
+                <td>
+                    <span class="${checkTests ? 'score-detail' : 'ko-text'}">${score.TESTS}</span> 
+                    <span class="quota-info">/ ${q.tests || 0}</span>
                 </td>
                 <td style="text-align: center;">
                     <span class="status-badge ${isApte ? 'ok' : 'ko'}">${isApte ? '✅ APTE' : '❌ INCOMPLET'}</span>
@@ -148,10 +155,11 @@
             dataExport.push({
                 "Agent": agentNom,
                 "CIS": agent.cis || "",
-                "SAV/SEV": `${score.SAV}/${q.sav}`,
-                "FMPA Mer": `${score.FMPA}/${q.fmpa}`,
-                "Recyclage CEN": `${score.CEN}/${q.cen}`,
-                "MSO": `${score.MSO}/${q.mso}`,
+                "FMPA SAV SEV": `${score.SAV}/${q.sav}`,
+                "FMPA Mer": `${score.MER}/${q.fmpa}`,
+                "FMPA CEN": `${score.CEN}/${q.cen}`,
+                "MSO / Entrainement": `${score.MSO_ENT}/${q.mso}`,
+                "Tests Annuels": `${score.TESTS}/${q.tests}`,
                 "Aptitude": isApte ? "APTE" : "INCOMPLET"
             });
         });
@@ -160,7 +168,7 @@
             const ws = XLSX.utils.json_to_sheet(dataExport);
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, "Aptitudes");
-            XLSX.writeFile(wb, `Aptitudes_Individuelles_2026.xlsx`);
+            XLSX.writeFile(wb, `Suivi_Aptitudes_Nautiques_2026.xlsx`);
         };
     }
 
