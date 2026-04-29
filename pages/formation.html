@@ -150,22 +150,26 @@
                 const snap = await getDocs(collection(db, "formations"));
                 success(snap.docs.map(d => {
                     const data = d.data();
-                    let eventColor = "#0B1F3A"; 
-                    let txtColor = "white";
-                    const nomMaj = data.nom.toUpperCase();
-                    
-                    if (nomMaj.includes("MSO")) {
-                        eventColor = "#E2725B"; 
-                    } else if (nomMaj.includes("SAV SEV")) {
-                        eventColor = "#90EE90"; 
-                        txtColor = "black";
-                    } else if (nomMaj.includes("MER")) {
-                        eventColor = "#87CEFA"; 
-                        txtColor = "black";
-                    } else if (nomMaj.includes("ENTRAINEMENT")) {
-                        eventColor = "#A9A9A9";
-                    }
+                let eventColor = "#0B1F3A"; // PAR DÉFAUT : Navy (pour FI CEN, FI SAV SEV, FI MSN)
+                let txtColor = "white";
+                const nomMaj = data.nom.toUpperCase();
 
+                if (nomMaj.includes("MSO")) {
+                 eventColor = "#E2725B"; // Terracotta
+} 
+else if (nomMaj.includes("FMPA SAV SEV")) {
+    eventColor = "#90EE90"; // Vert clair
+    txtColor = "black";
+} 
+else if (nomMaj.includes("FMPA MER")) {
+    eventColor = "#87CEFA"; // Bleu clair
+    txtColor = "black";
+} 
+else if (nomMaj.includes("ENTRAINEMENT")) {
+    eventColor = "#FFD700"; // Jaune (Gold)
+    txtColor = "black";
+}
+                  
                     let visuelFin = new Date(data.dateFin || data.date);
                     visuelFin.setDate(visuelFin.getDate() + 1);
                     const isoFin = visuelFin.toISOString().split('T')[0];
