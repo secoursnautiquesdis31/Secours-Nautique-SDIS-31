@@ -23,6 +23,7 @@
     .modal-content { background: white; margin: 10% auto; padding: 30px; width: 400px; border-radius: 12px; text-align: center; }
     
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 15px; font-size: 1rem; }
+    .date-info { font-size: 0.85rem; color: #666; margin-bottom: 10px; font-style: italic; }
   </style>
 </head>
 <body>
@@ -38,7 +39,7 @@
   <div id="modalEvent" class="modal">
     <div class="modal-content">
       <h2 id="modalTitle" style="margin-top:0; color: var(--navy);">Formation</h2>
-      <p id="detLieu" style="font-weight: bold; color: #555;"></p>
+      <p id="detDates" class="date-info"></p> <p id="detLieu" style="font-weight: bold; color: #555;"></p>
       
       <hr style="border: 0; border-top: 1px solid #EEE; margin: 15px 0;">
       
@@ -89,14 +90,23 @@
                     const snap = await getDocs(collection(db, "formations"));
                     const evts = snap.docs.map(d => {
                         const data = d.data();
+                        
+                        // --- LOGIQUE VISUELLE MULTI-JOURS (+1 JOUR POUR FULLCALENDAR) ---
+                        let visuelFin = new Date(data.dateFin || data.date);
+                        visuelFin.setDate(visuelFin.getDate() + 1);
+                        const isoFin = visuelFin.toISOString().split('T')[0];
+
                         return {
                             id: d.id,
                             title: data.nom,
                             start: data.date,
+                            end: isoFin, // On ajoute la fin pour l'affichage public
                             extendedProps: { 
                                 lieu: data.lieu,
                                 inscrits: data.inscrits || [], 
-                                nom: data.nom
+                                nom: data.nom,
+                                dateFinReelle: data.dateFin || data.date, // On garde la date réelle pour le modal
+                                dateDebutReelle: data.date
                             }
                         };
                     });
@@ -116,8 +126,12 @@
         document.getElementById('modalTitle').innerText = data.nom;
         document.getElementById('detLieu').innerText = "📍 Lieu : " + data.lieu;
         document.getElementById('detInscrits').innerText = inscrits.length + " inscrit(s).";
+
+        // AFFICHAGE DES DATES RÉELLES DANS LE MODAL
+        const d1 = new Date(data.dateDebutReelle).toLocaleDateString('fr-FR');
+        const d2 = new Date(data.dateFinReelle).toLocaleDateString('fr-FR');
+        document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
         
-        // RECHERCHE DE L'AGENT DANS LE TABLEAU D'OBJETS
         const inscription = inscrits.find(i => i.nom === agentConnecte);
         const estInscrit = !!inscription;
 
@@ -128,7 +142,6 @@
             btnInscrire.style.display = "none";
             btnDesinscrire.style.display = "block";
 
-            // SI L'AGENT EST MARQUÉ "PRÉSENT", IL NE PEUT PLUS SE DÉSISTER
             if(inscription.statut === "présent") {
                 btnDesinscrire.innerText = "PRÉSENCE VALIDÉE ✅";
                 btnDesinscrire.style.background = "#2A9D5C";
@@ -150,7 +163,6 @@
     async function inscrire(formationId) {
         try {
             const formationRef = doc(db, "formations", formationId);
-            // ON INSCRIT UN OBJET AVEC STATUT PAR DÉFAUT
             await updateDoc(formationRef, { 
                 inscrits: arrayUnion({ nom: agentConnecte, statut: "en attente" }) 
             });
@@ -168,7 +180,6 @@
         if(!confirm("Voulez-vous vraiment vous désister ?")) return;
         try {
             const formationRef = doc(db, "formations", formationId);
-            // ON RETIRE L'OBJET PRÉCIS
             await updateDoc(formationRef, { 
                 inscrits: arrayRemove(objetInscrit) 
             });
