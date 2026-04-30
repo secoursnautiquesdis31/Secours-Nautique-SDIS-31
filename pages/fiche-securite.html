@@ -1,65 +1,82 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <title>Fiche de Sécurité SAL</title>
-    <!-- Vous pouvez ajouter ici vos liens CSS existants pour garder le même style -->
-    <style>
-        body { font-family: sans-serif; padding: 20px; }
-        form { max-width: 500px; display: flex; flex-direction: column; gap: 10px; }
-        input, button { padding: 10px; }
-        button { background-color: #d32f2f; color: white; border: none; cursor: pointer; }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fiche de Sécurité SAL — SDIS 31</title>
+  <link rel="stylesheet" href="../main.css">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <style>
+    .form-container { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: 20px auto; }
+    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    label { font-weight: 600; margin-bottom: 5px; color: #0B1F3A; }
+    input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Barlow', sans-serif; }
+    .btn-submit { background-color: #d32f2f; color: white; border: none; padding: 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 20px; }
+    .btn-submit:disabled { background-color: #ccc; }
+    #status { margin-top: 15px; font-weight: 500; text-align: center; }
+  </style>
 </head>
-<body>
-    <h1>Nouvelle Fiche de Sécurité</h1>
-    
-    <form id="formPlongee">
-        <label>Nom du Responsable / Plongeur :</label>
-        <input type="text" id="nom" name="nom" required>
+<body class="app-layout">
 
-        <label>Site de plongée :</label>
-        <input type="text" id="site" name="site" required>
+  <main class="main-content">
+    <a href="dashboard.html" style="text-decoration: none; color: #d32f2f;">← Retour au tableau de bord</a>
+    <h1>Création d'une Fiche de Sécurité</h1>
 
-        <label>Date :</label>
-        <input type="date" id="date" name="date" required>
+    <div class="form-container">
+      <form id="ficheForm">
+        <div class="form-row">
+          <div class="form-group">
+            <label>N° SAL</label>
+            <input type="text" id="num_sal" placeholder="Ex: 2024-001">
+          </div>
+          <div class="form-group">
+            <label>Date de l'opération</label>
+            <input type="date" id="date_op" required>
+          </div>
+        </div>
 
-        <button type="submit" id="btnEnvoyer">Créer la fiche dans Sheets</button>
-    </form>
+        <div class="form-group">
+          <label>Site de plongée</label>
+          <input type="text" id="site" placeholder="Nom du plan d'eau / rivière" required>
+        </div>
 
-    <p id="statut"></p>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Point GPS</label>
+            <input type="text" id="gps" placeholder="43.XXXX, 1.XXXX">
+          </div>
+          <div class="form-group">
+            <label>Altitude</label>
+            <select id="altitude">
+              <option value="0 - 300 mètres">0 - 300 mètres</option>
+              <option value="300 - 500 mètres">300 - 500 mètres</option>
+              <option value="> 700 mètres">> 700 mètres</option>
+            </select>
+          </div>
+        </div>
 
-    <script>
-        const scriptURL = 'https://script.google.com/macros/s/AKfycby_S_3JMh-hfOWa4OD1xeCagx7FsqaHHxUJmxVUvqwn00kBoYNAeKUeOex5zEYlThN2kg/exec'; // <-- METTEZ VOTRE URL ICI
-        const form = document.getElementById('formPlongee');
-        const statut = document.getElementById('statut');
+        <div class="form-group">
+          <label>Directeur de Plongée (DP)</label>
+          <input type="text" id="dp" placeholder="Nom et Prénom" required>
+        </div>
 
-        form.addEventListener('submit', e => {
-            e.preventDefault();
-            statut.innerText = "Envoi en cours... la feuille est en cours de création.";
-            document.getElementById('btnEnvoyer').disabled = true;
+        <button type="submit" class="btn-submit" id="submitBtn">GÉNÉRER LA FICHE DANS LE SHEETS</button>
+      </form>
+      <div id="status"></div>
+    </div>
+  </main>
 
-            const data = {
-                nom: document.getElementById('nom').value,
-                site: document.getElementById('site').value,
-                date: document.getElementById('date').value
-            };
+  <script>
+    // REMPLACEZ PAR VOTRE URL /EXEC
+    const WEB_APP_URL = "VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI"; 
 
-            fetch(scriptURL, { 
-                method: 'POST', 
-                mode: 'no-cors', 
-                body: JSON.stringify(data) 
-            })
-            .then(() => {
-                statut.innerText = "✅ Succès ! Une nouvelle feuille a été créée dans le fichier Sheets.";
-                form.reset();
-                document.getElementById('btnEnvoyer').disabled = false;
-            })
-            .catch(error => {
-                statut.innerText = "❌ Erreur lors de l'envoi.";
-                console.error('Erreur:', error);
-            });
-        });
-    </script>
-</body>
-</html>
+    document.getElementById('ficheForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const status = document.getElementById('status');
+      
+      btn.disabled = true;
+      status.innerText = "⏳ Création de l'onglet en cours...";
+
+      const payload = {
