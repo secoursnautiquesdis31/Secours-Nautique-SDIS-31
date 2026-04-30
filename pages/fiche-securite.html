@@ -95,7 +95,7 @@
       </div>
     </div>
 
-    <!-- TABLEAU PARAMETRES (MIS À JOUR SELON PHOTO) -->
+    <!-- TABLEAU PARAMETRES -->
     <h3 style="text-align:center; margin:10px 0 5px 0;">PARAMETRES DE PLONGEE</h3>
     <table class="params">
       <thead>
@@ -127,7 +127,7 @@
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxs_hyj8b3phVuPEXSJayhrbmzseC6MjcHPUVyJXi-KAHKUISfDOFoIGKXe0aHqEQhWFg/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbz_WSeAnw6OVWLKdFe_jyNNuPGjPsMW9mdeDcVaQC2AqWTKbtR-f34bTaiGkzsmoLB_4g/exec";
   
   const pBody = document.getElementById('pBody');
   for(let i=0; i<24; i++) {
@@ -149,16 +149,32 @@
     </tr>`;
   }
 
+  // CHARGEMENT DES AGENTS DEPUIS LE SCRIPT GOOGLE
   window.onload = async () => {
-    const res = await fetch(SCRIPT_URL);
-    const agents = await res.json();
-    document.querySelectorAll('.agent-list').forEach(select => {
-      select.innerHTML = '<option value="">-- Agent --</option>';
-      agents.forEach(a => select.innerHTML += `<option value="${a.nom}" data-niv="${a.niveau}">${a.nom}</option>`);
-    });
+    try {
+      const res = await fetch(SCRIPT_URL);
+      const agents = await res.json();
+      
+      document.querySelectorAll('.agent-list').forEach(select => {
+        select.innerHTML = '<option value="">-- Agent --</option>';
+        agents.forEach(a => {
+          let opt = document.createElement('option');
+          opt.value = a.nom;
+          opt.textContent = a.nom;
+          opt.dataset.niv = a.niveau; // Stocke le niveau dans l'option
+          select.appendChild(opt);
+        });
+      });
+    } catch (err) {
+      console.error("Erreur lors du chargement des agents:", err);
+    }
   };
 
-  function updateNiv(el) { el.nextSibling.value = el.options[el.selectedIndex].dataset.niv; }
+  // Met à jour le champ caché "niveau" quand on choisit un nom
+  function updateNiv(el) { 
+    const selectedOption = el.options[el.selectedIndex];
+    el.nextElementSibling.value = selectedOption.dataset.niv || ""; 
+  }
 
   document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
@@ -221,8 +237,12 @@
       plongeurs: plongeurs
     };
 
-    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-    alert("Fiche créée !");
+    try {
+      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+      alert("Fiche créée avec succès !");
+    } catch (err) {
+      alert("Erreur lors de l'envoi : " + err.message);
+    }
   };
 </script>
 </body>
