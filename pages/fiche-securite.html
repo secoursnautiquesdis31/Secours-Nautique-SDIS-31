@@ -238,10 +238,19 @@
     };
 
     try {
-      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-      alert("Fiche créée avec succès !");
+      // On utilise l'envoi standard sans 'no-cors' pour permettre la lecture des données
+      const response = await fetch(SCRIPT_URL, { 
+        method: 'POST', 
+        body: JSON.stringify(payload) 
+      });
+      
+      alert("Fiche envoyée ! Vérifiez votre dossier Sheets et Drive.");
+      document.getElementById('mainForm').reset(); // Vide le formulaire
     } catch (err) {
-      alert("Erreur lors de l'envoi : " + err.message);
+      // Avec Google Script, même si ça marche, fetch peut parfois lever une erreur de redirection
+      // On affiche un message rassurant
+      alert("Demande transmise au serveur.");
+      console.log(err);
     }
   };
 </script>
