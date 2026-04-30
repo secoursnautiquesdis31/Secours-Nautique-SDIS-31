@@ -4,18 +4,19 @@
   <meta charset="UTF-8">
   <title>Fiche de Sécurité SDIS 31</title>
   <style>
-    body { font-family: 'Barlow', sans-serif; font-size: 11px; background: #f4f4f4; padding: 10px; }
-    .container { background: white; max-width: 1200px; margin: auto; padding: 15px; border: 1px solid #ccc; }
-    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-    .section-title { background: #0B1F3A; color: white; padding: 5px; font-weight: bold; text-align: center; }
+    body { font-family: 'Barlow', sans-serif; font-size: 10px; background: #f4f4f4; padding: 10px; }
+    .container { background: white; max-width: 1300px; margin: auto; padding: 15px; border: 1px solid #ccc; }
     .grid-box { display: grid; grid-template-columns: 100px 1fr; border: 1px solid #000; margin-bottom: 5px; }
-    .label-side { background: #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; border-right: 1px solid #000; color: #0D47A1; }
+    .label-side { background: #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; border-right: 1px solid #000; color: #0D47A1; text-align: center; }
     .fields { display: grid; grid-template-columns: repeat(4, 1fr); }
     .f-row { border: 0.5px solid #ddd; padding: 4px; display: flex; align-items: center; }
     .f-row label { width: 80px; font-weight: bold; }
-    input, select, textarea { flex: 1; font-size: 11px; padding: 2px; }
-    table.params { width: 100%; border-collapse: collapse; margin-top: 10px; }
-    table.params th, table.params td { border: 1px solid #000; text-align: center; }
+    input, select, textarea { flex: 1; font-size: 10px; padding: 2px; }
+    
+    table.params { width: 100%; border-collapse: collapse; margin-top: 10px; table-layout: fixed; }
+    table.params th { background: #eee; font-size: 9px; border: 1px solid #000; padding: 2px; }
+    table.params td { border: 1px solid #000; padding: 1px; }
+    .p-row input { width: 95%; border: none; text-align: center; }
     .btn { background: #d32f2f; color: white; padding: 10px; width: 100%; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
@@ -28,7 +29,7 @@
   </div>
 
   <form id="mainForm">
-    <!-- CONDITIONS -->
+    <!-- BLOC CONDITIONS -->
     <div class="grid-box">
       <div class="label-side">CONDITIONS</div>
       <div class="fields">
@@ -57,7 +58,7 @@
       </div>
     </div>
 
-    <!-- PLANIFICATION -->
+    <!-- BLOC PLANIFICATION -->
     <div class="grid-box">
       <div class="label-side">PLANIFICATION</div>
       <div style="display:grid; grid-template-columns: 2fr 1fr 1fr;">
@@ -73,7 +74,7 @@
       </div>
     </div>
 
-    <!-- SECURITE -->
+    <!-- BLOC SECURITE -->
     <div class="grid-box">
       <div class="label-side">SECURITE</div>
       <div style="display:grid; grid-template-columns: 1fr 1fr;">
@@ -85,7 +86,7 @@
         <div class="f-row"><label>Sécu Pal 2:</label><input type="text" id="secu2_pal"></div>
         <div class="f-row" style="grid-column: span 2;"><label>Matériels:</label><textarea id="materiels" rows="1"></textarea></div>
         <div class="f-row"><label>SSSM:</label><input type="text" id="sssm"></div>
-        <div class="f-row"><label>Nom/Tel:</label><input type="text" id="sssm_nom" style="width:50%;"> <input type="text" id="sssm_tel" style="width:50%;"></div>
+        <div class="f-row"><label>Nom/Tel:</label><input type="text" id="sssm_nom" style="width:45%;"> <input type="text" id="sssm_tel" style="width:45%;"></div>
         <div class="f-row"><label>Caisson:</label><input type="text" id="caisson_lieux"></div>
         <div class="f-row"><label>Tel Caisson:</label><input type="text" id="caisson_tel"></div>
         <div class="f-row"><label>Médecin:</label><input type="text" id="medecin"></div>
@@ -94,8 +95,30 @@
       </div>
     </div>
 
+    <!-- TABLEAU PARAMETRES (MIS À JOUR SELON PHOTO) -->
+    <h3 style="text-align:center; margin:10px 0 5px 0;">PARAMETRES DE PLONGEE</h3>
     <table class="params">
-      <thead><tr><th>Palanquée</th><th>Nom</th><th>P.Entrée</th><th>Imm.</th><th>Sortie</th><th>Prof.</th><th>P.Sortie</th></tr></thead>
+      <thead>
+        <tr>
+          <th rowspan="2" style="width:30px;">Pal.</th>
+          <th rowspan="2" style="width:120px;">Nom</th>
+          <th rowspan="2">P.Entrée</th>
+          <th colspan="3">Heures</th>
+          <th rowspan="2">Durée totale</th>
+          <th colspan="4">Paliers</th>
+          <th rowspan="2">Prof.</th>
+          <th rowspan="2">P.Sortie</th>
+        </tr>
+        <tr>
+          <th>Imm.</th>
+          <th>HS Para</th>
+          <th>Sortie</th>
+          <th>3m</th>
+          <th>6m</th>
+          <th>6m O2</th>
+          <th>9m</th>
+        </tr>
+      </thead>
       <tbody id="pBody"></tbody>
     </table>
 
@@ -104,17 +127,25 @@
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2YFOQ_DGH3td7xiJhDSsWP9pighRTVgSOZf4CcGyNDyWbksOHHsR-AUCPqPlhAYntuw/exec";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx3LKUQrVZqS4brp7F24zjnUD8hwL0qQxxZok_X-tCeS3Z3akQ9NPdx3z5sWyYyT-ecCQ/exec";
   
   const pBody = document.getElementById('pBody');
   for(let i=0; i<24; i++) {
     const pLetter = ['A','B','C','D','E','F'][Math.floor(i/4)];
     pBody.innerHTML += `<tr class="p-row">
-      <td>${i%4===0 ? pLetter : ''}</td>
-      <td><select class="p_nom agent-list" onchange="updateNiv(this)"></select><input type="hidden" class="p_niv"></td>
-      <td><input type="number" class="p_e"></td><td><input type="time" class="p_imm"></td>
-      <td><input type="time" class="p_sor"></td><td><input type="number" class="p_pr"></td>
-      <td><input type="number" class="p_s"></td>
+      <td style="text-align:center; font-weight:bold;">${i%4===0 ? pLetter : ''}</td>
+      <td><select class="p_nom agent-list" onchange="updateNiv(this)" style="width:100%"></select><input type="hidden" class="p_niv"></td>
+      <td><input type="number" class="p_e"></td>
+      <td><input type="time" class="p_imm"></td>
+      <td><input type="time" class="p_para"></td>
+      <td><input type="time" class="p_sor"></td>
+      <td><input type="text" class="p_duree"></td>
+      <td><input type="number" class="p_3"></td>
+      <td><input type="number" class="p_6"></td>
+      <td><input type="number" class="p_6o2"></td>
+      <td><input type="number" class="p_9"></td>
+      <td><input type="number" class="p_prof"></td>
+      <td><input type="number" class="p_ps"></td>
     </tr>`;
   }
 
@@ -134,7 +165,23 @@
     const plongeurs = [];
     document.querySelectorAll('.p-row').forEach(r => {
       const nom = r.querySelector('.p_nom').value;
-      if(nom) plongeurs.push({ nom: nom, niv: r.querySelector('.p_niv').value, e: r.querySelector('.p_e').value, imm: r.querySelector('.p_imm').value, sor: r.querySelector('.p_sor').value, pr: r.querySelector('.p_pr').value, s: r.querySelector('.p_s').value });
+      if(nom) {
+        plongeurs.push({
+          nom: nom, 
+          niv: r.querySelector('.p_niv').value, 
+          e: r.querySelector('.p_e').value, 
+          imm: r.querySelector('.p_imm').value, 
+          para: r.querySelector('.p_para').value,
+          sor: r.querySelector('.p_sor').value, 
+          duree: r.querySelector('.p_duree').value,
+          p3: r.querySelector('.p_3').value,
+          p6: r.querySelector('.p_6').value,
+          p6o2: r.querySelector('.p_6o2').value,
+          p9: r.querySelector('.p_9').value,
+          prof: r.querySelector('.p_prof').value, 
+          ps: r.querySelector('.p_ps').value 
+        });
+      }
     });
 
     const payload = {
