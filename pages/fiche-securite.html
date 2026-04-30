@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Fiche de Sécurité SAL</title>
+    <!-- Vous pouvez ajouter ici vos liens CSS existants pour garder le même style -->
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        form { max-width: 500px; display: flex; flex-direction: column; gap: 10px; }
+        input, button { padding: 10px; }
+        button { background-color: #d32f2f; color: white; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Nouvelle Fiche de Sécurité</h1>
+    
+    <form id="formPlongee">
+        <label>Nom du Responsable / Plongeur :</label>
+        <input type="text" id="nom" name="nom" required>
+
+        <label>Site de plongée :</label>
+        <input type="text" id="site" name="site" required>
+
+        <label>Date :</label>
+        <input type="date" id="date" name="date" required>
+
+        <button type="submit" id="btnEnvoyer">Créer la fiche dans Sheets</button>
+    </form>
+
+    <p id="statut"></p>
+
+    <script>
+        const scriptURL = 'https://script.google.com/macros/s/AKfycby_S_3JMh-hfOWa4OD1xeCagx7FsqaHHxUJmxVUvqwn00kBoYNAeKUeOex5zEYlThN2kg/exec'; // <-- METTEZ VOTRE URL ICI
+        const form = document.getElementById('formPlongee');
+        const statut = document.getElementById('statut');
+
+        form.addEventListener('submit', e => {
+            e.preventDefault();
+            statut.innerText = "Envoi en cours... la feuille est en cours de création.";
+            document.getElementById('btnEnvoyer').disabled = true;
+
+            const data = {
+                nom: document.getElementById('nom').value,
+                site: document.getElementById('site').value,
+                date: document.getElementById('date').value
+            };
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                mode: 'no-cors', 
+                body: JSON.stringify(data) 
+            })
+            .then(() => {
+                statut.innerText = "✅ Succès ! Une nouvelle feuille a été créée dans le fichier Sheets.";
+                form.reset();
+                document.getElementById('btnEnvoyer').disabled = false;
+            })
+            .catch(error => {
+                statut.innerText = "❌ Erreur lors de l'envoi.";
+                console.error('Erreur:', error);
+            });
+        });
+    </script>
+</body>
+</html>
