@@ -2,188 +2,146 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fiche SAL — SDIS 31</title>
-  <link rel="stylesheet" href="../main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap" rel="stylesheet">
+  <title>Fiche SAL - Paramètres complets</title>
   <style>
-    :root { --sdis-red: #d32f2f; --sdis-blue: #0B1F3A; }
-    body { font-family: 'Barlow', sans-serif; background: #f4f7f6; padding: 15px; color: #333; }
-    .form-card { background: white; max-width: 1100px; margin: 0 auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-    h1 { text-align: center; color: var(--sdis-blue); margin-bottom: 25px; text-transform: uppercase; }
-    h2 { color: var(--sdis-blue); border-bottom: 2px solid var(--sdis-red); padding-bottom: 8px; margin-top: 35px; font-size: 1.3em; }
-    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
-    .field { display: flex; flex-direction: column; margin-bottom: 10px; }
-    label { font-weight: 600; font-size: 0.9em; margin-bottom: 5px; color: #555; }
-    input, select { padding: 10px; border: 1px solid #ccc; border-radius: 6px; font-size: 1em; }
-    
-    /* Tableau des Plongeurs */
-    .table-container { overflow-x: auto; margin-top: 15px; }
-    table { width: 100%; border-collapse: collapse; min-width: 800px; }
-    th { background: #f8f9fa; padding: 10px; border: 1px solid #ddd; font-size: 0.85em; text-align: center; }
-    td { border: 1px solid #ddd; padding: 0; }
-    td input, td select { width: 100%; border: none; padding: 10px; font-size: 0.9em; background: transparent; text-align: center; }
-    
-    .btn-submit { background: var(--sdis-red); color: white; border: none; padding: 18px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; margin-top: 30px; transition: 0.3s; }
-    .btn-submit:hover { background: #b71c1c; }
-    #status { text-align: center; margin-top: 20px; font-weight: bold; padding: 10px; border-radius: 6px; }
+    body { font-family: sans-serif; font-size: 11px; background: #f0f0f0; }
+    .container { background: white; padding: 20px; max-width: 1200px; margin: auto; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    th { background: #eee; border: 1px solid #000; padding: 5px; text-align: center; }
+    td { border: 1px solid #000; padding: 2px; }
+    .palanquee-cell { font-weight: bold; text-align: center; font-size: 1.5em; background: #fafafa; }
+    input, select { width: 100%; border: none; padding: 5px; box-sizing: border-box; font-size: 11px; }
+    .header-info { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+    .btn { background: #d32f2f; color: white; padding: 15px; border: none; width: 100%; cursor: pointer; font-weight: bold; }
   </style>
 </head>
 <body>
 
-<div class="form-card">
-  <a href="dashboard.html" style="color: var(--sdis-red); text-decoration: none; font-weight: bold;">← Retour</a>
-  <h1>Fiche de Sécurité SAL</h1>
+<div class="container">
+  <h2 style="text-align:center">PARAMETRES DE PLONGEE</h2>
+  
+  <div class="header-info">
+    <div><label>N° SAL</label><input type="text" id="num_sal" required></div>
+    <div><label>Site</label><input type="text" id="site" required></div>
+    <div><label>Date</label><input type="date" id="date" required></div>
+  </div>
 
   <form id="salForm">
-    <!-- SECTION 1 : ORGANISATION -->
-    <h2>1. Organisation & Conditions</h2>
-    <div class="grid">
-      <div class="field"><label>N° SAL</label><input type="text" id="num_sal" placeholder="Ex: 2026-04" required></div>
-      <div class="field"><label>Date</label><input type="date" id="date_op" required></div>
-      <div class="field"><label>Site</label><input type="text" id="site" placeholder="Lieu de l'immersion" required></div>
-      <div class="field"><label>Altitude</label>
-        <select id="altitude">
-          <option>0 - 300 mètres</option>
-          <option>300 - 500 mètres</option>
-          <option>> 700 mètres</option>
-        </select>
-      </div>
-      <div class="field"><label>Courant</label><select id="courant"><option>Nul</option><option>Faible</option><option>Moyen</option><option>Fort</option></select></div>
-      <div class="field"><label>Visibilité</label><select id="visibilite"><option>Bonne</option><option>Moyenne</option><option>Nulle</option></select></div>
-      <div class="field"><label>T° Eau (°C)</label><input type="number" id="temp_eau"></div>
-      <div class="field"><label>Prof. Prévue (m)</label><input type="number" id="prof_prevue"></div>
-    </div>
-
-    <!-- SECTION 2 : ENCADREMENT -->
-    <h2>2. Encadrement</h2>
-    <div class="grid">
-      <div class="field"><label>Directeur de Plongée (DP)</label><input type="text" id="dp" required></div>
-      <div class="field"><label>Chef de Bord</label><input type="text" id="chef_bord"></div>
-      <div class="field"><label>Sécu Surface</label><input type="text" id="secu_surface"></div>
-    </div>
-
-    <!-- SECTION 3 : PARAMÈTRES DE PLONGÉE -->
-    <h2>3. Paramètres de Plongée (La Bordée)</h2>
-    <div class="table-container">
-      <table id="plongeursTable">
-        <thead>
-          <tr>
-            <th style="width: 200px;">Nom / Prénom</th>
-            <th>P. Entrée (bar)</th>
-            <th>Heure Immersion</th>
-            <th>Heure Sortie</th>
-            <th>Profondeur (m)</th>
-            <th>P. Sortie (bar)</th>
-          </tr>
-        </thead>
-        <tbody>
-          <!-- Génération de 6 lignes pour correspondre au Sheets -->
-          <script>
-            for(let i=0; i<6; i++) {
-              document.write(`
-                <tr>
-                  <td><select class="p_nom"><option value="">-- Charger les agents... --</option></select></td>
-                  <td><input type="number" class="p_p_dep"></td>
-                  <td><input type="time" class="p_h_dep"></td>
-                  <td><input type="time" class="p_h_ret"></td>
-                  <td><input type="number" class="p_prof"></td>
-                  <td><input type="number" class="p_p_ret"></td>
-                </tr>
-              `);
-            }
-          </script>
-        </tbody>
-      </table>
-    </div>
-
-    <button type="submit" class="btn-submit" id="submitBtn">GÉNÉRER LA FICHE DANS GOOGLE SHEETS</button>
+    <table>
+      <thead>
+        <tr>
+          <th>Palanquée</th>
+          <th>Niveau</th>
+          <th>Nom / Prénom</th>
+          <th>P. Entrée</th>
+          <th>Immersion</th>
+          <th>HS Para</th>
+          <th>Sortie</th>
+          <th>3m</th>
+          <th>6m</th>
+          <th>6m O2</th>
+          <th>9m</th>
+          <th>Prof.</th>
+          <th>P. Sortie</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- Généré par JS -->
+      </tbody>
+    </table>
+    <button type="submit" class="btn">GÉNÉRER LA FICHE DANS GOOGLE SHEETS</button>
   </form>
-  <div id="status"></div>
 </div>
 
 <script>
-  // REMPLACEZ PAR VOTRE URL D'APPLICATION WEB (URL /exec)
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxXjpMmyS0hWoq77mUVtRncdrhC9wCt9qc2Loiquy3uPxvtqEnVI_g2CfTNYpKu_GP0RA/exec";
+  const SCRIPT_URL = "VOTRE_URL_EXEC";
+  let agentsData = [];
 
-  // 1. CHARGEMENT AUTOMATIQUE DES NOMS DEPUIS L'ONGLET PARAMETRE
-  window.onload = async function() {
-    try {
-      const response = await fetch(SCRIPT_URL);
-      const agents = await response.json();
-      const selects = document.querySelectorAll('.p_nom');
+  // Générer les 6 palanquées (A à F) de 4 plongeurs
+  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
+  const tbody = document.getElementById('tableBody');
+
+  letters.forEach(letter => {
+    for (let i = 0; i < 4; i++) {
+      const tr = document.createElement('tr');
+      tr.className = "row-plongeur";
       
-      selects.forEach(select => {
-        select.innerHTML = '<option value="">-- Sélectionner Agent --</option>';
-        agents.forEach(agent => {
-          let opt = document.createElement('option');
-          opt.value = agent;
-          opt.text = agent;
-          select.appendChild(opt);
-        });
-      });
-    } catch (e) {
-      console.error("Erreur de chargement des agents", e);
-      document.getElementById('status').innerText = "⚠️ Erreur de chargement des agents. Vérifiez le déploiement Apps Script.";
+      // Cellule Palanquée (fusion visuelle pour le 1er de chaque groupe)
+      let palCell = (i === 0) ? `<td rowspan="4" class="palanquee-cell">${letter}</td>` : "";
+      
+      tr.innerHTML = `
+        ${palCell}
+        <td><input type="text" class="p_niveau" readonly></td>
+        <td><select class="p_nom" onchange="updateNiveau(this)"><option value="">-- Agent --</option></select></td>
+        <td><input type="number" class="p_entree"></td>
+        <td><input type="time" class="p_h_imm"></td>
+        <td><input type="time" class="p_h_para"></td>
+        <td><input type="time" class="p_h_sortie"></td>
+        <td><input type="number" class="p_3m"></td>
+        <td><input type="number" class="p_6m"></td>
+        <td><input type="number" class="p_6mO2"></td>
+        <td><input type="number" class="p_9m"></td>
+        <td><input type="number" class="p_prof"></td>
+        <td><input type="number" class="p_sortie"></td>
+      `;
+      tbody.appendChild(tr);
     }
+  });
+
+  // Charger les agents et leurs niveaux
+  window.onload = async () => {
+    const res = await fetch(SCRIPT_URL);
+    agentsData = await res.json();
+    const selects = document.querySelectorAll('.p_nom');
+    selects.forEach(s => {
+      agentsData.forEach(a => {
+        let opt = document.createElement('option');
+        opt.value = a.nom; opt.text = a.nom;
+        s.appendChild(opt);
+      });
+    });
   };
 
-  // 2. ENVOI DES DONNÉES AU SHEETS
-  document.getElementById('salForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const btn = document.getElementById('submitBtn');
-    const status = document.getElementById('status');
-    
-    btn.disabled = true;
-    status.style.background = "#e3f2fd";
-    status.style.color = "#0D47A1";
-    status.innerText = "⏳ Envoi des données en cours...";
+  // Met à jour le niveau automatiquement quand on choisit un nom
+  function updateNiveau(selectElt) {
+    const row = selectElt.closest('tr');
+    const agent = agentsData.find(a => a.nom === selectElt.value);
+    row.querySelector('.p_niveau').value = agent ? agent.niveau : "";
+  }
 
+  document.getElementById('salForm').onsubmit = async (e) => {
+    e.preventDefault();
     const plongeurs = [];
-    document.querySelectorAll('#plongeursTable tbody tr').forEach(row => {
+    document.querySelectorAll('.row-plongeur').forEach(row => {
       const nom = row.querySelector('.p_nom').value;
-      if(nom) {
+      if (nom) {
         plongeurs.push({
           nom: nom,
-          p_dep: row.querySelector('.p_p_dep').value,
-          h_dep: row.querySelector('.p_h_dep').value,
-          h_ret: row.querySelector('.p_h_ret').value,
+          niveau: row.querySelector('.p_niveau').value,
+          p_entree: row.querySelector('.p_entree').value,
+          h_immersion: row.querySelector('.p_h_imm').value,
+          h_parachute: row.querySelector('.p_h_para').value,
+          h_sortie: row.querySelector('.p_h_sortie').value,
+          p3m: row.querySelector('.p_3m').value,
+          p6m: row.querySelector('.p_6m').value,
+          p6mO2: row.querySelector('.p_6mO2').value,
+          p9m: row.querySelector('.p_9m').value,
           prof: row.querySelector('.p_prof').value,
-          p_ret: row.querySelector('.p_p_ret').value
+          p_sortie: row.querySelector('.p_sortie').value
         });
       }
     });
 
     const payload = {
       num_sal: document.getElementById('num_sal').value,
-      date: document.getElementById('date_op').value,
       site: document.getElementById('site').value,
-      altitude: document.getElementById('altitude').value,
-      courant: document.getElementById('courant').value,
-      visibilite: document.getElementById('visibilite').value,
-      temp_eau: document.getElementById('temp_eau').value,
-      prof_prevue: document.getElementById('prof_prevue').value,
-      dp: document.getElementById('dp').value,
-      chef_bord: document.getElementById('chef_bord').value,
-      secu_surface: document.getElementById('secu_surface').value,
+      date: document.getElementById('date').value,
       plongeurs: plongeurs
     };
 
-    try {
-      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-      status.style.background = "#e8f5e9";
-      status.style.color = "#2e7d32";
-      status.innerHTML = "✅ Fiche SAL créée avec succès !";
-      document.getElementById('salForm').reset();
-    } catch (err) {
-      status.style.background = "#ffebee";
-      status.style.color = "#c62828";
-      status.innerText = "❌ Erreur de connexion au serveur.";
-    } finally {
-      btn.disabled = false;
-    }
-  });
+    await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+    alert("Fiche envoyée !");
+  };
 </script>
-
 </body>
 </html>
