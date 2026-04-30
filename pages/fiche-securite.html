@@ -35,8 +35,22 @@
         <div class="f-row"><label>Date:</label><input type="date" id="date"></div>
         <div class="f-row"><label>Site:</label><input type="text" id="site"></div>
         <div class="f-row"><label>Point GPS:</label><input type="text" id="gps"></div>
-        <div class="f-row"><label>Altitude:</label><input type="text" id="altitude"></div>
-        <div class="f-row"><label>Courant:</label><select id="courant"><option>Nul</option><option>Faible</option><option>Moyen</option><option>Fort</option></select></div>
+        <div class="f-row"><label>Altitude:</label>
+          <select id="altitude">
+            <option>0 - 300 mètres</option>
+            <option>300 - 500 mètres</option>
+            <option>501 - 1000 mètres</option>
+            <option>1001 - 1500 mètres</option>
+            <option>1501 - 2000 mètres</option>
+          </select>
+        </div>
+        <div class="f-row"><label>Courant:</label>
+          <select id="courant">
+            <option>Inf. à 1 m/s</option>
+            <option>Sup. à 1 m/s</option>
+            <option>Nul</option>
+          </select>
+        </div>
         <div class="f-row"><label>Visibilité:</label><input type="text" id="visibilite"></div>
         <div class="f-row"><label>T° Eau:</label><input type="number" id="temp_eau"></div>
         <div class="f-row"><label>Houle:</label><input type="text" id="houle"></div>
@@ -69,11 +83,10 @@
         <div class="f-row"><label>Sécu Pal 1:</label><input type="text" id="secu1_pal"></div>
         <div class="f-row"><label>Bordée 2:</label><input type="text" id="bordee2"></div>
         <div class="f-row"><label>Sécu Pal 2:</label><input type="text" id="secu2_pal"></div>
-        <div class="f-row" style="grid-column: span 2;"><label>Matériels:</label><textarea id="materiels"></textarea></div>
-        <!-- Secours -->
-        <div class="f-row"><label>SSSM:</label><input type="text" id="sssm" placeholder="Moyens"></div>
-        <div class="f-row"><label>Nom/Tel:</label><input type="text" id="sssm_nom" placeholder="Nom"> <input type="text" id="sssm_tel" placeholder="Tel"></div>
-        <div class="f-row"><label>Caisson:</label><input type="text" id="caisson_lieux" placeholder="Lieux"></div>
+        <div class="f-row" style="grid-column: span 2;"><label>Matériels:</label><textarea id="materiels" rows="1"></textarea></div>
+        <div class="f-row"><label>SSSM:</label><input type="text" id="sssm"></div>
+        <div class="f-row"><label>Nom/Tel:</label><input type="text" id="sssm_nom" style="width:50%;"> <input type="text" id="sssm_tel" style="width:50%;"></div>
+        <div class="f-row"><label>Caisson:</label><input type="text" id="caisson_lieux"></div>
         <div class="f-row"><label>Tel Caisson:</label><input type="text" id="caisson_tel"></div>
         <div class="f-row"><label>Médecin:</label><input type="text" id="medecin"></div>
         <div class="f-row"><label>Plan Secours:</label><input type="text" id="plan_secours" value="Affiché sur site"></div>
@@ -81,7 +94,6 @@
       </div>
     </div>
 
-    <!-- TABLEAU PARAMETRES (Simplifié pour cette étape) -->
     <table class="params">
       <thead><tr><th>Palanquée</th><th>Nom</th><th>P.Entrée</th><th>Imm.</th><th>Sortie</th><th>Prof.</th><th>P.Sortie</th></tr></thead>
       <tbody id="pBody"></tbody>
@@ -94,7 +106,6 @@
 <script>
   const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2YFOQ_DGH3td7xiJhDSsWP9pighRTVgSOZf4CcGyNDyWbksOHHsR-AUCPqPlhAYntuw/exec";
   
-  // Générer 24 lignes (6 palanquées x 4)
   const pBody = document.getElementById('pBody');
   for(let i=0; i<24; i++) {
     const pLetter = ['A','B','C','D','E','F'][Math.floor(i/4)];
@@ -107,7 +118,6 @@
     </tr>`;
   }
 
-  // Chargement agents
   window.onload = async () => {
     const res = await fetch(SCRIPT_URL);
     const agents = await res.json();
