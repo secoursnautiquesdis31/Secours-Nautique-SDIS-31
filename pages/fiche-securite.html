@@ -3,80 +3,100 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fiche de Sécurité SAL — SDIS 31</title>
+  <title>Fiche SAL — SDIS 31</title>
   <link rel="stylesheet" href="../main.css">
-  <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700&family=Barlow:wght@300;400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;600&display=swap" rel="stylesheet">
   <style>
-    .form-container { background: white; padding: 30px; border-radius: 12px; shadow: 0 4px 6px rgba(0,0,0,0.1); max-width: 800px; margin: 20px auto; }
-    .form-group { margin-bottom: 15px; display: flex; flex-direction: column; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-    label { font-weight: 600; margin-bottom: 5px; color: #0B1F3A; }
-    input, select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-family: 'Barlow', sans-serif; }
-    .btn-submit { background-color: #d32f2f; color: white; border: none; padding: 15px; border-radius: 5px; cursor: pointer; font-weight: bold; margin-top: 20px; }
-    .btn-submit:disabled { background-color: #ccc; }
-    #status { margin-top: 15px; font-weight: 500; text-align: center; }
+    :root { --sdis-red: #d32f2f; --sdis-blue: #0B1F3A; }
+    body { font-family: 'Barlow', sans-serif; background: #f4f7f6; padding: 20px; }
+    .form-card { background: white; max-width: 900px; margin: 0 auto; padding: 25px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+    h2 { color: var(--sdis-blue); border-bottom: 2px solid var(--sdis-red); padding-bottom: 10px; margin-top: 30px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    .field { display: flex; flex-direction: column; margin-bottom: 15px; }
+    label { font-weight: 600; font-size: 0.9em; margin-bottom: 5px; color: #555; }
+    input, select { padding: 10px; border: 1px solid #ddd; border-radius: 6px; font-size: 1em; }
+    .btn-submit { background: var(--sdis-red); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1.1em; margin-top: 30px; transition: 0.3s; }
+    .btn-submit:hover { background: #b71c1c; }
+    #status { text-align: center; margin-top: 15px; font-weight: bold; }
   </style>
 </head>
-<body class="app-layout">
+<body>
 
-  <main class="main-content">
-    <a href="dashboard.html" style="text-decoration: none; color: #d32f2f;">← Retour au tableau de bord</a>
-    <h1>Création d'une Fiche de Sécurité</h1>
+<div class="form-card">
+  <a href="dashboard.html" style="color: var(--sdis-red); text-decoration: none;">← Retour</a>
+  <h1 style="text-align:center;">Fiche de Sécurité SAL</h1>
 
-    <div class="form-container">
-      <form id="ficheForm">
-        <div class="form-row">
-          <div class="form-group">
-            <label>N° SAL</label>
-            <input type="text" id="num_sal" placeholder="Ex: 2024-001">
-          </div>
-          <div class="form-group">
-            <label>Date de l'opération</label>
-            <input type="date" id="date_op" required>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Site de plongée</label>
-          <input type="text" id="site" placeholder="Nom du plan d'eau / rivière" required>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group">
-            <label>Point GPS</label>
-            <input type="text" id="gps" placeholder="43.XXXX, 1.XXXX">
-          </div>
-          <div class="form-group">
-            <label>Altitude</label>
-            <select id="altitude">
-              <option value="0 - 300 mètres">0 - 300 mètres</option>
-              <option value="300 - 500 mètres">300 - 500 mètres</option>
-              <option value="> 700 mètres">> 700 mètres</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Directeur de Plongée (DP)</label>
-          <input type="text" id="dp" placeholder="Nom et Prénom" required>
-        </div>
-
-        <button type="submit" class="btn-submit" id="submitBtn">GÉNÉRER LA FICHE DANS LE SHEETS</button>
-      </form>
-      <div id="status"></div>
+  <form id="salForm">
+    <!-- SECTION 1 : ORGANISATION -->
+    <h2>1. Organisation</h2>
+    <div class="grid">
+      <div class="field"><label>N° SAL</label><input type="text" id="num_sal" required></div>
+      <div class="field"><label>Date</label><input type="date" id="date_op" required></div>
+      <div class="field"><label>Site</label><input type="text" id="site" required></div>
+      <div class="field"><label>Altitude</label>
+        <select id="altitude">
+          <option>0 - 300 mètres</option>
+          <option>300 - 500 mètres</option>
+          <option>> 700 mètres</option>
+        </select>
+      </div>
     </div>
-  </main>
 
-  <script>
-    // REMPLACEZ PAR VOTRE URL /EXEC
-    const WEB_APP_URL = "VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI"; 
+    <!-- SECTION 2 : CONDITIONS -->
+    <h2>2. Conditions & Planification</h2>
+    <div class="grid">
+      <div class="field"><label>Courant</label><select id="courant"><option>Nul</option><option>Faible</option><option>Fort</option></select></div>
+      <div class="field"><label>Visibilité</label><select id="visibilite"><option>Bonne</option><option>Moyenne</option><option>Nulle</option></select></div>
+      <div class="field"><label>T° Eau (°C)</label><input type="number" id="temp_eau"></div>
+      <div class="field"><label>Profondeur Prévue (m)</label><input type="number" id="prof_prevue"></div>
+    </div>
 
-    document.getElementById('ficheForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = document.getElementById('submitBtn');
-      const status = document.getElementById('status');
-      
-      btn.disabled = true;
-      status.innerText = "⏳ Création de l'onglet en cours...";
+    <!-- SECTION 3 : SÉCURITÉ -->
+    <h2>3. Encadrement</h2>
+    <div class="grid">
+      <div class="field"><label>Directeur de Plongée (DP)</label><input type="text" id="dp" required></div>
+      <div class="field"><label>Chef de Bord</label><input type="text" id="chef_bord"></div>
+      <div class="field"><label>Sécu Surface</label><input type="text" id="secu_surface"></div>
+    </div>
 
-      const payload = {
+    <button type="submit" class="btn-submit" id="submitBtn">GÉNÉRER LA FICHE DANS GOOGLE SHEETS</button>
+  </form>
+  <div id="status"></div>
+</div>
+
+<script>
+  const SCRIPT_URL = "VOTRE_URL_APPS_SCRIPT_ICI"; // À REMPLACER
+
+  document.getElementById('salForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const btn = document.getElementById('submitBtn');
+    const status = document.getElementById('status');
+    btn.disabled = true;
+    status.innerText = "⏳ Création de la fiche en cours...";
+
+    const payload = {
+      num_sal: document.getElementById('num_sal').value,
+      date: document.getElementById('date_op').value,
+      site: document.getElementById('site').value,
+      altitude: document.getElementById('altitude').value,
+      courant: document.getElementById('courant').value,
+      visibilite: document.getElementById('visibilite').value,
+      temp_eau: document.getElementById('temp_eau').value,
+      prof_prevue: document.getElementById('prof_prevue').value,
+      dp: document.getElementById('dp').value,
+      chef_bord: document.getElementById('chef_bord').value,
+      secu_surface: document.getElementById('secu_surface').value
+    };
+
+    try {
+      await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+      status.innerHTML = "✅ Fiche enregistrée ! Onglet créé.";
+      document.getElementById('salForm').reset();
+    } catch (err) {
+      status.innerText = "❌ Erreur de connexion.";
+    } finally { btn.disabled = false; }
+  });
+</script>
+
+</body>
+</html>
