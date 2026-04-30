@@ -2,157 +2,129 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <title>Saisie Fiche de Sécurité SAL - SDIS 31</title>
+  <title>Fiche de Sécurité SDIS 31</title>
   <style>
-    body { font-family: 'Barlow', Arial, sans-serif; background: #f0f2f5; padding: 20px; font-size: 12px; }
-    .form-container { background: white; max-width: 1200px; margin: auto; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
-    h1, h2 { background: #0B1F3A; color: white; padding: 10px; text-align: center; text-transform: uppercase; margin: 20px 0 10px 0; }
-    
-    .section-grid { display: grid; grid-template-columns: 120px 1fr; border: 1px solid #000; margin-bottom: 10px; }
-    .section-label { background: #fafafa; display: flex; align-items: center; justify-content: center; font-weight: bold; border-right: 1px solid #000; text-align: center; color: #d32f2f; }
-    .content-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; }
-    .field { border: 0.5px solid #ccc; padding: 5px; display: flex; align-items: center; }
-    .field label { width: 100px; font-weight: bold; font-size: 10px; }
-    input, select, textarea { flex: 1; border: 1px solid #eee; padding: 4px; font-size: 11px; }
-
-    /* Tableau des Paramètres */
-    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 10px; }
-    th { background: #eee; border: 1px solid #000; padding: 5px; }
-    td { border: 1px solid #000; padding: 0; }
-    .palanquee-cell { font-weight: bold; text-align: center; background: #f9f9f9; font-size: 14px; }
-    
-    .btn-submit { background: #d32f2f; color: white; padding: 20px; border: none; width: 100%; cursor: pointer; font-weight: bold; font-size: 16px; margin-top: 20px; border-radius: 4px; }
-    .btn-submit:hover { background: #b71c1c; }
+    body { font-family: 'Barlow', sans-serif; font-size: 11px; background: #f4f4f4; padding: 10px; }
+    .container { background: white; max-width: 1200px; margin: auto; padding: 15px; border: 1px solid #ccc; }
+    .header-table { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+    .section-title { background: #0B1F3A; color: white; padding: 5px; font-weight: bold; text-align: center; }
+    .grid-box { display: grid; grid-template-columns: 100px 1fr; border: 1px solid #000; margin-bottom: 5px; }
+    .label-side { background: #eee; display: flex; align-items: center; justify-content: center; font-weight: bold; border-right: 1px solid #000; color: #0D47A1; }
+    .fields { display: grid; grid-template-columns: repeat(4, 1fr); }
+    .f-row { border: 0.5px solid #ddd; padding: 4px; display: flex; align-items: center; }
+    .f-row label { width: 80px; font-weight: bold; }
+    input, select, textarea { flex: 1; font-size: 11px; padding: 2px; }
+    table.params { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    table.params th, table.params td { border: 1px solid #000; text-align: center; }
+    .btn { background: #d32f2f; color: white; padding: 10px; width: 100%; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; }
   </style>
 </head>
 <body>
 
-<div class="form-container">
-  <div style="display:flex; justify-content: space-between; align-items: center;">
-    <img src="https://via.placeholder.com/80?text=SDIS31" alt="Logo"> <!-- Remplacez par votre logo réel -->
-    <h1 style="flex:1; margin: 0 20px;">ORGANISATION DES PLONGEES</h1>
-    <div class="field"><label>N° SAL :</label><input type="text" id="num_sal"></div>
+<div class="container">
+  <div style="display:flex; align-items:center; justify-content: space-between;">
+    <h2 style="margin:0;">ORGANISATION DES PLONGEES</h2>
+    <div>N° SAL : <input type="text" id="num_sal" style="width:100px;"></div>
   </div>
 
-  <form id="fullSalForm">
-    
-    <!-- SECTION CONDITIONS -->
-    <div class="section-grid">
-      <div class="section-label">CONDITIONS</div>
-      <div class="content-grid">
-        <div class="field"><label>Date:</label><input type="date" id="date"></div>
-        <div class="field"><label>Site:</label><input type="text" id="site"></div>
-        <div class="field"><label>Point GPS:</label><input type="text" id="gps"></div>
-        <div class="field"><label>Altitude:</label><select id="altitude"><option>Mer (0m)</option><option>300m</option><option>500m</option><option>700m</option></select></div>
-        <div class="field"><label>Courant:</label><select id="courant"><option>Nul</option><option>Faible</option><option>Moyen</option><option>Fort</option></select></div>
-        <div class="field"><label>Visibilité:</label><select id="visibilite"><option>Bonne</option><option>Moyenne</option><option>Nulle</option></select></div>
-        <div class="field"><label>T° Eau:</label><input type="number" id="temp_eau"></div>
-        <div class="field"><label>Houle:</label><select id="houle"><option>Nulle</option><option>Calme</option><option>Agitée</option></select></div>
+  <form id="mainForm">
+    <!-- CONDITIONS -->
+    <div class="grid-box">
+      <div class="label-side">CONDITIONS</div>
+      <div class="fields">
+        <div class="f-row"><label>Date:</label><input type="date" id="date"></div>
+        <div class="f-row"><label>Site:</label><input type="text" id="site"></div>
+        <div class="f-row"><label>Point GPS:</label><input type="text" id="gps"></div>
+        <div class="f-row"><label>Altitude:</label><input type="text" id="altitude"></div>
+        <div class="f-row"><label>Courant:</label><select id="courant"><option>Nul</option><option>Faible</option><option>Moyen</option><option>Fort</option></select></div>
+        <div class="f-row"><label>Visibilité:</label><input type="text" id="visibilite"></div>
+        <div class="f-row"><label>T° Eau:</label><input type="number" id="temp_eau"></div>
+        <div class="f-row"><label>Houle:</label><input type="text" id="houle"></div>
       </div>
     </div>
 
-    <!-- SECTION PLANIFICATION -->
-    <div class="section-grid">
-      <div class="section-label">PLANIFICATION</div>
+    <!-- PLANIFICATION -->
+    <div class="grid-box">
+      <div class="label-side">PLANIFICATION</div>
+      <div style="display:grid; grid-template-columns: 2fr 1fr 1fr;">
+        <div class="f-row"><label>Plongée prévue:</label><input type="text" id="plongee_prevue"></div>
+        <div class="f-row"><label>Profondeur:</label><input type="number" id="prof_plan"></div>
+        <div class="f-row"><label>Durée travail:</label><input type="text" id="duree_travail"></div>
+        <div class="f-row"><label>Int. surface:</label><input type="text" id="int_surface"></div>
+        <div class="f-row"><label>Majoration:</label><input type="text" id="majoration"></div>
+        <div class="f-row"><label>Pression ret (SNL):</label><input type="text" id="pression_retour"></div>
+        <div class="f-row" style="grid-column: span 2;"><label>Moyens:</label><input type="text" id="moyens"></div>
+        <div class="f-row"><label>Paliers:</label><input type="text" id="paliers_plan"></div>
+        <div class="f-row"><label>DTR:</label><input type="text" id="dtr_plan"></div>
+      </div>
+    </div>
+
+    <!-- SECURITE -->
+    <div class="grid-box">
+      <div class="label-side">SECURITE</div>
       <div style="display:grid; grid-template-columns: 1fr 1fr;">
-        <div class="field"><label>Plongée prévue:</label><input type="text" id="plongee_prevue"></div>
-        <div class="field"><label>Profondeur:</label><input type="number" id="prof_plan"></div>
-        <div class="field"><label>Intervalle surface:</label><input type="text" id="int_surface"></div>
-        <div class="field"><label>Majoration:</label><input type="text" id="majoration"></div>
-        <div class="field"><label>Moyens:</label><textarea id="moyens" rows="1"></textarea></div>
-        <div class="field"><label>DTR:</label><input type="text" id="dtr"></div>
+        <div class="f-row"><label>DP:</label><select id="dp" class="agent-list"></select></div>
+        <div class="f-row"><label>Chef de Bord:</label><select id="chef_bord" class="agent-list"></select></div>
+        <div class="f-row"><label>Bordée 1:</label><input type="text" id="bordee1"></div>
+        <div class="f-row"><label>Sécu Pal 1:</label><input type="text" id="secu1_pal"></div>
+        <div class="f-row"><label>Bordée 2:</label><input type="text" id="bordee2"></div>
+        <div class="f-row"><label>Sécu Pal 2:</label><input type="text" id="secu2_pal"></div>
+        <div class="f-row" style="grid-column: span 2;"><label>Matériels:</label><textarea id="materiels"></textarea></div>
+        <!-- Secours -->
+        <div class="f-row"><label>SSSM:</label><input type="text" id="sssm" placeholder="Moyens"></div>
+        <div class="f-row"><label>Nom/Tel:</label><input type="text" id="sssm_nom" placeholder="Nom"> <input type="text" id="sssm_tel" placeholder="Tel"></div>
+        <div class="f-row"><label>Caisson:</label><input type="text" id="caisson_lieux" placeholder="Lieux"></div>
+        <div class="f-row"><label>Tel Caisson:</label><input type="text" id="caisson_tel"></div>
+        <div class="f-row"><label>Médecin:</label><input type="text" id="medecin"></div>
+        <div class="f-row"><label>Plan Secours:</label><input type="text" id="plan_secours" value="Affiché sur site"></div>
+        <div class="f-row"><label>N° Inter:</label><input type="text" id="num_inter"></div>
       </div>
     </div>
 
-    <!-- SECTION SECURITE -->
-    <div class="section-grid">
-      <div class="section-label">SECURITE</div>
-      <div style="display:grid; grid-template-columns: 1fr 1fr;">
-        <div class="field"><label>DP:</label><select id="dp" class="agent-select"><option value="">-- Charger --</option></select></div>
-        <div class="field"><label>Chef de Bord:</label><select id="chef_bord" class="agent-select"><option value="">-- Charger --</option></select></div>
-        <div class="field"><label>Sécu 1:</label><input type="text" id="secu1"></div>
-        <div class="field"><label>Sécu 2:</label><input type="text" id="secu2"></div>
-        <div class="field"><label>Plan Secours:</label><textarea id="plan_secours" rows="1">Affiché sur site</textarea></div>
-        <div class="field"><label>N° Inter:</label><input type="text" id="num_inter"></div>
-      </div>
-    </div>
-
-    <h2>Paramètres de Plongée</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Palanquée</th><th>Niveau</th><th>Nom</th><th>P. Entrée</th><th>Immersion</th><th>Para</th><th>Sortie</th><th>3m</th><th>6m</th><th>9m</th><th>Prof.</th><th>P. Sortie</th>
-        </tr>
-      </thead>
-      <tbody id="tableBody"></tbody>
+    <!-- TABLEAU PARAMETRES (Simplifié pour cette étape) -->
+    <table class="params">
+      <thead><tr><th>Palanquée</th><th>Nom</th><th>P.Entrée</th><th>Imm.</th><th>Sortie</th><th>Prof.</th><th>P.Sortie</th></tr></thead>
+      <tbody id="pBody"></tbody>
     </table>
 
-    <button type="submit" class="btn-submit">GÉNÉRER LA FICHE DANS GOOGLE SHEETS</button>
+    <button type="submit" class="btn">GENERER LA FICHE DANS SHEETS</button>
   </form>
 </div>
 
 <script>
-  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwlh9P2ExNPEAvsY64qB5jcK48Nmjw2O_t7_xEPfhd5mfrLaxdyBivMQ87B3lo-FSabnQ/exec";
-  let agentsData = [];
-
-  // 1. Initialisation du tableau (A-F)
-  const letters = ['A', 'B', 'C', 'D', 'E', 'F'];
-  const tbody = document.getElementById('tableBody');
-  letters.forEach(letter => {
-    for (let i = 0; i < 4; i++) {
-      const tr = document.createElement('tr');
-      tr.className = "row-plongeur";
-      let palCell = (i === 0) ? `<td rowspan="4" class="palanquee-cell">${letter}</td>` : "";
-      tr.innerHTML = `
-        ${palCell}
-        <td><input type="text" class="p_niv" readonly></td>
-        <td><select class="p_nom agent-select" onchange="updateNiveau(this)"><option value="">-- Agent --</option></select></td>
-        <td><input type="number" class="p_e"></td><td><input type="time" class="p_imm"></td>
-        <td><input type="time" class="p_para"></td><td><input type="time" class="p_sor"></td>
-        <td><input type="number" class="p_3"></td><td><input type="number" class="p_6"></td>
-        <td><input type="number" class="p_9"></td><td><input type="number" class="p_pr"></td>
-        <td><input type="number" class="p_s"></td>
-      `;
-      tbody.appendChild(tr);
-    }
-  });
-
-  // 2. Chargement des agents
-  window.onload = async () => {
-    try {
-      const res = await fetch(SCRIPT_URL);
-      agentsData = await res.json();
-      document.querySelectorAll('.agent-select').forEach(select => {
-        agentsData.forEach(a => {
-          let opt = document.createElement('option');
-          opt.value = a.nom; opt.text = a.nom;
-          select.appendChild(opt);
-        });
-      });
-    } catch(e) { alert("Erreur de chargement des agents"); }
-  };
-
-  function updateNiveau(sel) {
-    const agent = agentsData.find(a => a.nom === sel.value);
-    sel.closest('tr').querySelector('.p_niv').value = agent ? agent.niveau : "";
+  const SCRIPT_URL = "https://script.google.com/macros/s/AKfycby2YFOQ_DGH3td7xiJhDSsWP9pighRTVgSOZf4CcGyNDyWbksOHHsR-AUCPqPlhAYntuw/exec";
+  
+  // Générer 24 lignes (6 palanquées x 4)
+  const pBody = document.getElementById('pBody');
+  for(let i=0; i<24; i++) {
+    const pLetter = ['A','B','C','D','E','F'][Math.floor(i/4)];
+    pBody.innerHTML += `<tr class="p-row">
+      <td>${i%4===0 ? pLetter : ''}</td>
+      <td><select class="p_nom agent-list" onchange="updateNiv(this)"></select><input type="hidden" class="p_niv"></td>
+      <td><input type="number" class="p_e"></td><td><input type="time" class="p_imm"></td>
+      <td><input type="time" class="p_sor"></td><td><input type="number" class="p_pr"></td>
+      <td><input type="number" class="p_s"></td>
+    </tr>`;
   }
 
-  // 3. Envoi au Google Sheets
-  document.getElementById('fullSalForm').onsubmit = async (e) => {
+  // Chargement agents
+  window.onload = async () => {
+    const res = await fetch(SCRIPT_URL);
+    const agents = await res.json();
+    document.querySelectorAll('.agent-list').forEach(select => {
+      select.innerHTML = '<option value="">-- Agent --</option>';
+      agents.forEach(a => select.innerHTML += `<option value="${a.nom}" data-niv="${a.niveau}">${a.nom}</option>`);
+    });
+  };
+
+  function updateNiv(el) { el.nextSibling.value = el.options[el.selectedIndex].dataset.niv; }
+
+  document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
     const plongeurs = [];
-    document.querySelectorAll('.row-plongeur').forEach(row => {
-      const nom = row.querySelector('.p_nom').value;
-      if (nom) {
-        plongeurs.push({
-          nom: nom, niv: row.querySelector('.p_niv').value,
-          e: row.querySelector('.p_e').value, imm: row.querySelector('.p_imm').value,
-          para: row.querySelector('.p_para').value, sor: row.querySelector('.p_sor').value,
-          p3: row.querySelector('.p_3').value, p6: row.querySelector('.p_6').value,
-          p9: row.querySelector('.p_9').value, pr: row.querySelector('.p_pr').value,
-          s: row.querySelector('.p_s').value
-        });
-      }
+    document.querySelectorAll('.p-row').forEach(r => {
+      const nom = r.querySelector('.p_nom').value;
+      if(nom) plongeurs.push({ nom: nom, niv: r.querySelector('.p_niv').value, e: r.querySelector('.p_e').value, imm: r.querySelector('.p_imm').value, sor: r.querySelector('.p_sor').value, pr: r.querySelector('.p_pr').value, s: r.querySelector('.p_s').value });
     });
 
     const payload = {
@@ -162,15 +134,38 @@
       gps: document.getElementById('gps').value,
       altitude: document.getElementById('altitude').value,
       courant: document.getElementById('courant').value,
+      visibilite: document.getElementById('visibilite').value,
       temp_eau: document.getElementById('temp_eau').value,
+      houle: document.getElementById('houle').value,
+      plongee_prevue: document.getElementById('plongee_prevue').value,
+      prof_plan: document.getElementById('prof_plan').value,
+      duree_travail: document.getElementById('duree_travail').value,
+      int_surface: document.getElementById('int_surface').value,
+      majoration: document.getElementById('majoration').value,
+      pression_retour: document.getElementById('pression_retour').value,
+      moyens: document.getElementById('moyens').value,
+      paliers_plan: document.getElementById('paliers_plan').value,
+      dtr_plan: document.getElementById('dtr_plan').value,
       dp: document.getElementById('dp').value,
       chef_bord: document.getElementById('chef_bord').value,
+      bordee1: document.getElementById('bordee1').value,
+      secu1_pal: document.getElementById('secu1_pal').value,
+      bordee2: document.getElementById('bordee2').value,
+      secu2_pal: document.getElementById('secu2_pal').value,
+      materiels: document.getElementById('materiels').value,
+      sssm: document.getElementById('sssm').value,
+      sssm_nom: document.getElementById('sssm_nom').value,
+      sssm_tel: document.getElementById('sssm_tel').value,
+      caisson_lieux: document.getElementById('caisson_lieux').value,
+      caisson_tel: document.getElementById('caisson_tel').value,
+      medecin: document.getElementById('medecin').value,
+      plan_secours: document.getElementById('plan_secours').value,
       num_inter: document.getElementById('num_inter').value,
       plongeurs: plongeurs
     };
 
     await fetch(SCRIPT_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
-    alert("Fiche générée avec succès !");
+    alert("Fiche créée !");
   };
 </script>
 </body>
