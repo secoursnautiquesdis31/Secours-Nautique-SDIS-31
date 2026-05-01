@@ -29,7 +29,6 @@
   </div>
 
   <form id="mainForm">
-    <!-- BLOC CONDITIONS -->
     <div class="grid-box">
       <div class="label-side">CONDITIONS</div>
       <div class="fields">
@@ -58,7 +57,6 @@
       </div>
     </div>
 
-    <!-- BLOC PLANIFICATION -->
     <div class="grid-box">
       <div class="label-side">PLANIFICATION</div>
       <div style="display:grid; grid-template-columns: 2fr 1fr 1fr;">
@@ -74,7 +72,6 @@
       </div>
     </div>
 
-    <!-- BLOC SECURITE -->
     <div class="grid-box">
       <div class="label-side">SECURITE</div>
       <div style="display:grid; grid-template-columns: 1fr 1fr;">
@@ -95,7 +92,6 @@
       </div>
     </div>
 
-    <!-- TABLEAU PARAMETRES -->
     <h3 style="text-align:center; margin:10px 0 5px 0;">PARAMETRES DE PLONGEE</h3>
     <table class="params">
       <thead>
@@ -177,11 +173,18 @@
   document.getElementById('mainForm').onsubmit = async (e) => {
     e.preventDefault();
     const plongeurs = [];
+
+    // AJOUT : On récupère le DP et le Chef de bord pour les inclure dans l'archive
+    const dpNom = document.getElementById('dp').value;
+    const cbNom = document.getElementById('chef_bord').value;
+    if(dpNom) plongeurs.push({ nom: dpNom });
+    if(cbNom) plongeurs.push({ nom: cbNom });
+
     document.querySelectorAll('.p-row').forEach((r, i) => {
       const nom = r.querySelector('.p_nom').value;
       if(nom) {
         plongeurs.push({
-          line: i + 32, // <-- AJOUTÉ : Définit la ligne exacte dans le Sheets
+          line: i + 32, 
           nom: nom, 
           niv: r.querySelector('.p_niv').value, 
           e: r.querySelector('.p_e').value, 
