@@ -89,6 +89,7 @@
         <div class="f-row"><label>Médecin:</label><input type="text" id="medecin"></div>
         <div class="f-row"><label>Plan Secours:</label><input type="text" id="plan_secours" value="Affiché sur site"></div>
         <div class="f-row"><label>N° Inter:</label><input type="text" id="num_inter"></div>
+        <div class="f-row" style="grid-column: span 2;"><label>Observations:</label><textarea id="observations" rows="1"></textarea></div>
       </div>
     </div>
 
@@ -236,6 +237,7 @@
       medecin: document.getElementById('medecin').value,
       plan_secours: document.getElementById('plan_secours').value,
       num_inter: document.getElementById('num_inter').value,
+      observations: document.getElementById('observations').value
       plongeurs: plongeurs
     };
 
