@@ -89,7 +89,7 @@
         <div class="f-row"><label>Médecin:</label><input type="text" id="medecin"></div>
         <div class="f-row"><label>Plan Secours:</label><input type="text" id="plan_secours" value="Affiché sur site"></div>
         <div class="f-row"><label>N° Inter:</label><input type="text" id="num_inter"></div>
-        <div class="f-row"><label>Observations</label><input type="text" id="observations"></div>
+        <div class="f-row" style="grid-column: span 2;"><label>Observations:</label><textarea id="observations" rows="1"></textarea></div>
       </div>
     </div>
 
@@ -175,7 +175,6 @@
     e.preventDefault();
     const plongeurs = [];
 
-    // AJOUT : On récupère le DP et le Chef de bord pour les inclure dans l'archive
     const dpNom = document.getElementById('dp').value;
     const cbNom = document.getElementById('chef_bord').value;
     if(dpNom) plongeurs.push({ nom: dpNom });
@@ -237,7 +236,7 @@
       medecin: document.getElementById('medecin').value,
       plan_secours: document.getElementById('plan_secours').value,
       num_inter: document.getElementById('num_inter').value,
-      observations: document.getElementById('observations').value
+      observations: document.getElementById('observations').value, // <--- La virgule était manquante ici !
       plongeurs: plongeurs
     };
 
