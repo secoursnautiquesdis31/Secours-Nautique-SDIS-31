@@ -66,6 +66,16 @@
             </table>
         </div>
 
+        <div class="section-title">Archives Fiches de Sécurité (Drive)</div>
+        <div style="overflow-x: auto; margin-bottom: 30px;">
+            <table>
+                <thead><tr><th>Date</th><th>Fiche / Site</th><th>Action</th></tr></thead>
+                <tbody id="listeFichesPDF">
+                    <tr><td colspan="3" style="text-align:center; padding:20px; color:#888;">Recherche des documents en cours...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
         <div class="section-title">
             <span>Paquetage Individuel (EPI)</span>
             <button id="btnOpenStock" style="background:var(--navy); color:white; border:1px solid var(--amber); padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold;">+ Affecter Matériel</button>
@@ -124,6 +134,30 @@
 
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
+
+            // --- APPEL ARCHIVES PDF GOOGLE SCRIPT ---
+            const scriptURL = "https://script.google.com/macros/s/AKfycbxdTAvPv98L133VfvXkstwot3zszb12x5n5tYIPfOxQGmvC3W9vnjgr-HPOLRmeVOCCbA/exec"; 
+            fetch(`${scriptURL}?agent=${encodeURIComponent(agentNom)}`)
+                .then(response => response.json())
+                .then(fiches => {
+                    const pdfTbody = document.getElementById('listeFichesPDF');
+                    pdfTbody.innerHTML = "";
+                    if (fiches.length === 0) {
+                        pdfTbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:#888;">Aucune fiche trouvée pour cet agent.</td></tr>`;
+                    } else {
+                        fiches.forEach(f => {
+                            pdfTbody.innerHTML += `
+                                <tr>
+                                    <td>${f.date}</td>
+                                    <td>${f.titre}</td>
+                                    <td><a href="${f.url}" target="_blank" style="background:var(--navy); color:white; padding:5px 10px; border-radius:4px; text-decoration:none; font-size:0.8rem; font-weight:bold; border:1px solid var(--amber);">📄 VOIR PDF</a></td>
+                                </tr>`;
+                        });
+                    }
+                })
+                .catch(err => {
+                    document.getElementById('listeFichesPDF').innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erreur de connexion aux archives PDF.</td></tr>`;
+                });
             
             // Récupération des quotas avec ajout des TESTS ANNUELS
             const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
@@ -165,7 +199,6 @@
 
                     if (inscription.statut === "présent") {
                         const titre = f.nom.toUpperCase();
-                        // NOUVELLE LOGIQUE DE TRI RH
                         if (titre.includes("FMPA SAV SEV")) presences.sav++;
                         else if (titre.includes("FMPA MER")) presences.fmpa++;
                         else if (titre.includes("FMPA CEN")) presences.cen++;
