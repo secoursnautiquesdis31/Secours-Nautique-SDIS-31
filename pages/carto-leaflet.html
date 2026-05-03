@@ -13,13 +13,11 @@
         body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         #map { height: 100vh; width: 100%; }
         
-        /* Style des Popups */
         .popup-content { width: 220px; }
         .popup-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #0D47A1; }
         .popup-type { font-style: italic; color: #666; margin-bottom: 10px; display: block; }
         .popup-img { width: 100%; border-radius: 5px; margin-bottom: 10px; cursor: pointer; }
         
-        /* Style des boutons de navigation */
         .nav-buttons { display: flex; gap: 5px; margin-top: 10px; }
         .btn-nav { 
             flex: 1; padding: 8px 2px; border-radius: 5px; text-decoration: none; 
@@ -45,10 +43,8 @@
     // --- CONFIGURATION ---
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzD-u_QFYGlmPbuaU9xpjJ36-ZtWGwtKJzZgbLU8ipx0M0mL5eX3_1F3XHObo1LqmIQ/exec"; 
 
-    // Initialisation de la carte
     const map = L.map('map').setView([43.6047, 1.4442], 10);
 
-    // --- COUCHES DE FOND (Basemaps) ---
     const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
     }).addTo(map);
@@ -57,23 +53,19 @@
         attribution: 'Imagery © Esri'
     });
 
-    // --- GROUPES DE CALQUES (Layers) ---
     const pointsGroup = L.markerClusterGroup();
     const zonesGroup = L.featureGroup();
 
-    // --- ICÔNES ---
     const iconDefault = L.icon({
         iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
         iconSize: [30, 30], iconAnchor: [15, 30]
     });
 
-    // Fonction pour charger les données
     async function fetchData() {
         try {
             const response = await fetch(SCRIPT_URL);
             const data = await response.json();
 
-            // 1. Chargement des Points
             data.points.forEach(p => {
                 const coords = p.gps.split(',').map(Number);
                 if (coords.length === 2) {
@@ -99,7 +91,6 @@
                 }
             });
 
-            // 2. Chargement des Zones
             data.zones.forEach(z => {
                 try {
                     const poly = L.polygon(z.coords, {
@@ -129,8 +120,8 @@
     map.on('contextmenu', function(e) {
         const gpsValue = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
         
-        // REMPLACE "TON_LIEN_PRE_REMPLI_ICI" par ton lien Google Form
-        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=pp_url&entry.809938941=VALEUR_GPS'.replace('VALEUR_GPS', gpsValue);
+        // CORRECTION ICI : Ajout de la quote manquante et fermeture propre de l'URL
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=pp_url&entry.809938941=${gpsValue}`;
 
         L.popup()
             .setLatLng(e.latlng)
