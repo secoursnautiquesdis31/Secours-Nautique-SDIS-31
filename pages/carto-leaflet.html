@@ -56,10 +56,17 @@
     const pointsGroup = L.markerClusterGroup();
     const zonesGroup = L.featureGroup();
 
-    const iconDefault = L.icon({
-        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
-        iconSize: [30, 30], iconAnchor: [15, 30]
-    });
+    // Configuration des icônes par type
+    const iconConfig = {
+        "Mise à l'eau": "https://github.com/secoursnautiquesdis31/Secours-Nautique-SDIS-31/blob/main/icone%20mise%20a%20l%20eau.png",
+        "Danger": "LIEN_VERS_ICONE_DANGER",
+        "Site": "LIEN_VERS_ICONE_SITE",
+        "Ouvrage": "LIEN_VERS_ICONE_OUVRAGE",
+        "Zone non navigable": "LIEN_VERS_ICONE_ZONE_NON_NAVIGABLE",
+        "Acces pedestre": "LIEN_VERS_ICONE_ACCES_PEDESTRE",
+        "Autre": "LIEN_VERS_ICONE_AUTRE",
+        "Défaut": "https://cdn-icons-png.flaticon.com/512/684/684908.png"
+    };
 
     async function fetchData() {
         try {
@@ -69,7 +76,17 @@
             data.points.forEach(p => {
                 const coords = p.gps.split(',').map(Number);
                 if (coords.length === 2) {
-                    const marker = L.marker([coords[0], coords[1]], { icon: iconDefault });
+                    
+                    // Sélection de l'icône selon le type (sinon défaut)
+                    const urlIcone = iconConfig[p.type] || iconConfig["Défaut"];
+                    const customIcon = L.icon({
+                        iconUrl: urlIcone,
+                        iconSize: [32, 32],
+                        iconAnchor: [16, 32],
+                        popupAnchor: [0, -30]
+                    });
+
+                    const marker = L.marker([coords[0], coords[1]], { icon: customIcon });
                     
                     let popupHTML = `
                         <div class="popup-content">
@@ -119,8 +136,6 @@
     // --- AJOUT DE POINTS PAR CLIC DROIT ---
     map.on('contextmenu', function(e) {
         const gpsValue = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
-        
-        // Utilisation de ton lien pré-rempli avec le bon identifiant de champ
         const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=pp_url&entry.809938941=${gpsValue}`;
 
         L.popup()
