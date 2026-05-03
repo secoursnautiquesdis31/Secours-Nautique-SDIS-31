@@ -130,7 +130,7 @@
         const gpsValue = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
         
         // REMPLACE "TON_LIEN_PRE_REMPLI_ICI" par ton lien Google Form
-        const formUrl = `TON_LIEN_PRE_REMPLI_ICI`.replace('VALEUR_GPS', gpsValue);
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=pp_url&entry.809938941=VALEUR_GPS'.replace('VALEUR_GPS', gpsValue);
 
         L.popup()
             .setLatLng(e.latlng)
