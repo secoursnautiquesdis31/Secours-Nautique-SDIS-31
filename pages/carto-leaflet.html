@@ -43,7 +43,7 @@
 
 <script>
     // --- CONFIGURATION ---
-    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzD-u_QFYGlmPbuaU9xpjJ36-ZtWGwtKJzZgbLU8ipx0M0mL5eX3_1F3XHObo1LqmIQ/exec"; // <--- METS TON URL ICI
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzD-u_QFYGlmPbuaU9xpjJ36-ZtWGwtKJzZgbLU8ipx0M0mL5eX3_1F3XHObo1LqmIQ/exec"; 
 
     // Initialisation de la carte
     const map = L.map('map').setView([43.6047, 1.4442], 10);
@@ -87,7 +87,7 @@
                             ${p.photo ? `<img src="${p.photo}" class="popup-img" onclick="window.open('${p.photo}')">` : ''}
                             
                             <div class="nav-buttons">
-                                <a href="https://www.google.com/maps/dir/?api=1&destination=LAT,LNG${coords[0]},${coords[1]}" target="_blank" class="btn-nav btn-google">Google Maps</a>
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=${coords[0]},${coords[1]}" target="_blank" class="btn-nav btn-google">Google Maps</a>
                                 <a href="https://waze.com/ul?ll=${coords[0]},${coords[1]}&navigate=yes" target="_blank" class="btn-nav btn-waze">Waze</a>
                             </div>
 
@@ -111,28 +111,41 @@
                 } catch (e) { console.error("Erreur zone:", z.nom); }
             });
 
-            // Ajouter les groupes à la carte
             map.addLayer(pointsGroup);
             map.addLayer(zonesGroup);
 
-            // --- AJOUT DU CONTRÔLE DES CALQUES ---
-            const baseMaps = {
-                "Plan": osm,
-                "Satellite": satellite
-            };
-            const overlayMaps = {
-                "Points d'intérêt": pointsGroup,
-                "Zones & Tracés": zonesGroup
-            };
+            const baseMaps = { "Plan": osm, "Satellite": satellite };
+            const overlayMaps = { "Points d'intérêt": pointsGroup, "Zones & Tracés": zonesGroup };
             L.control.layers(baseMaps, overlayMaps).addTo(map);
 
         } catch (error) {
             console.error("Erreur de chargement:", error);
-            alert("Erreur lors de la récupération des données cartographiques.");
         }
     }
 
     fetchData();
+
+    // --- AJOUT DE POINTS PAR CLIC DROIT ---
+    map.on('contextmenu', function(e) {
+        const gpsValue = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
+        
+        // REMPLACE "TON_LIEN_PRE_REMPLI_ICI" par ton lien Google Form
+        const formUrl = `TON_LIEN_PRE_REMPLI_ICI`.replace('VALEUR_GPS', gpsValue);
+
+        L.popup()
+            .setLatLng(e.latlng)
+            .setContent(`
+                <div style="text-align:center;">
+                    <b style="color:#D32F2F;">Nouveau site ?</b><br>
+                    <small>${gpsValue}</small><br><br>
+                    <a href="${formUrl}" target="_blank" 
+                       style="background:#0D47A1; color:white; padding:8px 12px; text-decoration:none; border-radius:5px; font-weight:bold; display:inline-block;">
+                       ➕ Ajouter au registre
+                    </a>
+                </div>
+            `)
+            .openOn(map);
+    });
 </script>
 
 </body>
