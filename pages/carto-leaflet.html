@@ -120,8 +120,8 @@
     map.on('contextmenu', function(e) {
         const gpsValue = e.latlng.lat.toFixed(6) + "," + e.latlng.lng.toFixed(6);
         
-        // CORRECTION ICI : Ajout de la quote manquante et fermeture propre de l'URL
-        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=publish-editor`;
+        // Utilisation de ton lien pré-rempli avec le bon identifiant de champ
+        const formUrl = `https://docs.google.com/forms/d/e/1FAIpQLScdoyuien6Xx-O1LrRkcwOiCd__7STRftwkgF-mcpNUCGX8BA/viewform?usp=pp_url&entry.809938941=${gpsValue}`;
 
         L.popup()
             .setLatLng(e.latlng)
