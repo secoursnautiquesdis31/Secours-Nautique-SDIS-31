@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cartographie Opérationnelle - Plongée</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+
+    <style>
+        body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        #map { height: 100vh; width: 100%; }
+        
+        /* Style des Popups */
+        .popup-content { width: 220px; }
+        .popup-title { font-weight: bold; font-size: 16px; margin-bottom: 5px; color: #0D47A1; }
+        .popup-type { font-style: italic; color: #666; margin-bottom: 10px; display: block; }
+        .popup-img { width: 100%; border-radius: 5px; margin-bottom: 10px; cursor: pointer; }
+        
+        /* Style des boutons de navigation */
+        .nav-buttons { display: flex; gap: 5px; margin-top: 10px; }
+        .btn-nav { 
+            flex: 1; padding: 8px 2px; border-radius: 5px; text-decoration: none; 
+            color: white; text-align: center; font-weight: bold; font-size: 11px; 
+        }
+        .btn-google { background-color: #4285F4; }
+        .btn-waze { background-color: #33CCFF; }
+        .btn-pdf { 
+            display: block; background-color: #D32F2F; color: white; 
+            text-align: center; padding: 8px; margin-top: 10px; 
+            text-decoration: none; border-radius: 5px; font-weight: bold; 
+        }
+    </style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+
+<script>
+    // --- CONFIGURATION ---
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzD-u_QFYGlmPbuaU9xpjJ36-ZtWGwtKJzZgbLU8ipx0M0mL5eX3_1F3XHObo1LqmIQ/exec"; // <--- METS TON URL ICI
+
+    // Initialisation de la carte
+    const map = L.map('map').setView([43.6047, 1.4442], 10);
+
+    // --- COUCHES DE FOND (Basemaps) ---
+    const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    const satellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Imagery © Esri'
+    });
+
+    // --- GROUPES DE CALQUES (Layers) ---
+    const pointsGroup = L.markerClusterGroup();
+    const zonesGroup = L.featureGroup();
+
+    // --- ICÔNES ---
+    const iconDefault = L.icon({
+        iconUrl: 'https://cdn-icons-png.flaticon.com/512/684/684908.png',
+        iconSize: [30, 30], iconAnchor: [15, 30]
+    });
+
+    // Fonction pour charger les données
+    async function fetchData() {
+        try {
+            const response = await fetch(SCRIPT_URL);
+            const data = await response.json();
+
+            // 1. Chargement des Points
+            data.points.forEach(p => {
+                const coords = p.gps.split(',').map(Number);
+                if (coords.length === 2) {
+                    const marker = L.marker([coords[0], coords[1]], { icon: iconDefault });
+                    
+                    let popupHTML = `
+                        <div class="popup-content">
+                            <span class="popup-title">${p.nom}</span>
+                            <span class="popup-type">${p.type}</span>
+                            <p>${p.desc}</p>
+                            ${p.photo ? `<img src="${p.photo}" class="popup-img" onclick="window.open('${p.photo}')">` : ''}
+                            
+                            <div class="nav-buttons">
+                                <a href="https://www.google.com/maps/dir/?api=1&destination=LAT,LNG${coords[0]},${coords[1]}" target="_blank" class="btn-nav btn-google">Google Maps</a>
+                                <a href="https://waze.com/ul?ll=${coords[0]},${coords[1]}&navigate=yes" target="_blank" class="btn-nav btn-waze">Waze</a>
+                            </div>
+
+                            ${p.pdf ? `<a href="${p.pdf}" target="_blank" class="btn-pdf">📄 Fiche PDF</a>` : ''}
+                        </div>
+                    `;
+                    marker.bindPopup(popupHTML);
+                    pointsGroup.addLayer(marker);
+                }
+            });
+
+            // 2. Chargement des Zones
+            data.zones.forEach(z => {
+                try {
+                    const poly = L.polygon(z.coords, {
+                        color: z.couleur,
+                        fillColor: z.couleur,
+                        fillOpacity: 0.4
+                    }).bindPopup(`<b>${z.nom}</b><br><i>${z.type}</i><br>${z.desc}`);
+                    zonesGroup.addLayer(poly);
+                } catch (e) { console.error("Erreur zone:", z.nom); }
+            });
+
+            // Ajouter les groupes à la carte
+            map.addLayer(pointsGroup);
+            map.addLayer(zonesGroup);
+
+            // --- AJOUT DU CONTRÔLE DES CALQUES ---
+            const baseMaps = {
+                "Plan": osm,
+                "Satellite": satellite
+            };
+            const overlayMaps = {
+                "Points d'intérêt": pointsGroup,
+                "Zones & Tracés": zonesGroup
+            };
+            L.control.layers(baseMaps, overlayMaps).addTo(map);
+
+        } catch (error) {
+            console.error("Erreur de chargement:", error);
+            alert("Erreur lors de la récupération des données cartographiques.");
+        }
+    }
+
+    fetchData();
+</script>
+
+</body>
+</html>
