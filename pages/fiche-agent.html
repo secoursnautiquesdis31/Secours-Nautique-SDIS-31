@@ -30,8 +30,21 @@
         .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
         .stock-item:hover { background: #F0F4F8; color: var(--navy); }
 
-        /* SÉCURITÉ : On cache le lien de retour par défaut pour éviter le clignotement */
         #backLink { display: none !important; }
+
+        /* Style pour les notifications de demande */
+        .notification-card {
+            background: #fdfdfd;
+            border-left: 4px solid var(--green);
+            padding: 12px;
+            margin-bottom: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
     </style>
 </head>
 <body>
@@ -67,6 +80,12 @@
                 <thead><tr><th>Date</th><th>Désignation</th><th>Lieu</th><th>Statut</th></tr></thead>
                 <tbody id="listeFormations"></tbody>
             </table>
+        </div>
+
+        <!-- NOUVELLE SECTION : SUIVI DES DEMANDES -->
+        <div class="section-title">Suivi de mes demandes matériel</div>
+        <div id="suiviDemandes" style="margin-bottom: 30px;">
+            <p style="color: #888; font-style: italic;">Aucune demande traitée pour le moment.</p>
         </div>
 
         <div class="section-title">Archives Fiches de Sécurité (Drive)</div>
@@ -138,6 +157,26 @@
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
 
+            // --- AFFICHAGE DU SUIVI DES DEMANDES ---
+            const suiviContainer = document.getElementById('suiviDemandes');
+            if (agent.suiviDemandes && agent.suiviDemandes.length > 0) {
+                suiviContainer.innerHTML = "";
+                const demandes = [...agent.suiviDemandes].reverse(); // Plus récent en haut
+                demandes.forEach(dem => {
+                    const dateAction = dem.date ? new Date(dem.date).toLocaleDateString('fr-FR') : "---";
+                    suiviContainer.innerHTML += `
+                        <div class="notification-card">
+                            <div>
+                                <small style="color: #666;">${dateAction}</small><br>
+                                <strong>${dem.message}</strong>
+                            </div>
+                            <span style="background: var(--green); color: white; padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.75rem;">
+                                ${dem.statut}
+                            </span>
+                        </div>`;
+                });
+            }
+
             // --- APPEL ARCHIVES PDF GOOGLE SCRIPT ---
             const scriptURL = "https://script.google.com/macros/s/AKfycbxFLMLB0J1sEYzn9eCXbmjT3UqFBlY4S9-PqT09chtbK4pB4pXOTAzOcdr4cQM8pB3V7A/exec"; 
             fetch(`${scriptURL}?agent=${encodeURIComponent(agentNom)}`)
@@ -162,7 +201,6 @@
                     document.getElementById('listeFichesPDF').innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erreur de connexion aux archives PDF.</td></tr>`;
                 });
             
-            // Récupération des quotas
             const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
             document.getElementById('q_sav').value = obj.sav || 0;
             document.getElementById('q_fmpa').value = obj.fmpa || 0;
@@ -175,23 +213,19 @@
             histTbody.innerHTML = "";
 
             const fSnap = await getDocs(collection(db, "formations"));
-            
             const formationsTriées = fSnap.docs
                 .map(doc => doc.data())
                 .sort((a, b) => new Date(b.date) - new Date(a.date));
 
             formationsTriées.forEach(f => {
                 const inscription = (f.inscrits || []).find(i => i.nom === agentNom);
-
                 if (inscription) {
                     const dateFmt = f.date ? new Date(f.date).toLocaleDateString('fr-FR') : "---";
                     let statutAffiché = inscription.statut || "Inscrit";
                     if (statutAffiché === "en attente") statutAffiché = "Inscrit";
-                    
                     let couleurStatut = "#888";
                     if(statutAffiché === "présent") couleurStatut = "var(--green)";
                     if(statutAffiché === "absent") couleurStatut = "var(--danger)";
-
                     histTbody.innerHTML += `
                         <tr>
                             <td>${dateFmt}</td>
@@ -199,7 +233,6 @@
                             <td>${f.lieu || "---"}</td>
                             <td style="font-weight:bold; color:${couleurStatut}">${statutAffiché.toUpperCase()}</td>
                         </tr>`;
-
                     if (inscription.statut === "présent") {
                         const titre = f.nom.toUpperCase();
                         if (titre.includes("FMPA SAV SEV")) presences.sav++;
@@ -217,7 +250,6 @@
             appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
             appliquerCouleurs(presences.tests, 'q_tests', 'count_tests');
 
-            // Spécialités
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
             const agentSpecs = agent.specialites || [];
@@ -234,7 +266,6 @@
                 grid.appendChild(btn);
             });
 
-            // EPI
             const epiList = document.getElementById('epiList');
             epiList.innerHTML = "";
             (agent.epi || []).forEach(item => {
@@ -247,28 +278,17 @@
                 epiList.appendChild(div);
             });
 
-            // --- GESTION DES DROITS ET AFFICHAGE PUBLIC (SÉCURISÉ) ---
             const backLink = document.getElementById('backLink');
-
             if (modePublic === 'true') {
-                // 1. Bouton MENU redirige vers Espace Public
                 const homeBtn = document.getElementById('btnHome');
                 if(homeBtn) homeBtn.href = "espace-public.html";
-
-                // 2. Cache les fonctions admin
                 if(document.getElementById('btnSaveQuotas')) document.getElementById('btnSaveQuotas').style.display = 'none';
                 if(document.getElementById('btnOpenStock')) document.getElementById('btnOpenStock').style.display = 'none';
-                
-                // 3. SUPPRESSION du lien de retour pour éviter toute fraude
                 if(backLink) backLink.remove();
-
-                // 4. Verrouille les inputs de quotas
                 document.querySelectorAll('.quota-item input').forEach(i => i.readOnly = true);
             } else {
-                // SI MODE ADMIN : On affiche le lien (puisqu'il est masqué par le CSS par défaut)
                 if(backLink) backLink.style.setProperty('display', 'inline', 'important');
             }
-
         } catch (e) { console.error(e); }
     }
 
