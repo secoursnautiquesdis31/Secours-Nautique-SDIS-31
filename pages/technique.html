@@ -32,7 +32,6 @@
         .btn-valider { background: var(--green); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; font-weight: bold; }
         .btn-refuser { background: var(--red); color: white; border: none; padding: 8px 15px; border-radius: 5px; cursor: pointer; margin-left: 5px; }
 
-        /* Style spécifique pour l'icône de visibilité */
         .vis-btn { cursor: pointer; font-size: 1.2rem; text-align: center; user-select: none; }
         .vis-off { opacity: 0.2; grayscale: 1; }
     </style>
@@ -117,7 +116,7 @@
 
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, arrayUnion, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, getDocs, doc, setDoc, updateDoc, deleteDoc, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -133,7 +132,6 @@
     const stockBody = document.getElementById('stockBody');
     let allItems = [];
 
-    // --- GESTION DES DEMANDES ---
     async function chargerDemandes() {
         try {
             const snap = await getDocs(collection(db, "demandes_materiel"));
@@ -163,6 +161,7 @@
         } catch(e) { console.error(e); }
     }
 
+    // --- FONCTION VALIDER MODIFIÉE POUR INCREMENTER LE SUIVI AGENT ---
     window.validerDemande = async (demandeId, agentId, type, taille) => {
         if(!confirm("Valider cette distribution ?")) return;
         try {
@@ -171,17 +170,36 @@
                 alert("Article introuvable ou stock épuisé.");
                 return;
             }
-            const epiRef = { id: itemStock.id, type: itemStock.type, date: new Date().toLocaleDateString() };
+            
+            const dateAction = new Date().toLocaleDateString('fr-FR');
+            const epiRef = { 
+                id: itemStock.id, 
+                type: itemStock.type, 
+                date: dateAction 
+            };
             if(itemStock.taille) epiRef.taille = itemStock.taille;
 
-            await updateDoc(doc(db, "users", agentId), { epi: arrayUnion(epiRef) });
+            // 1. On ajoute l'EPI au paquetage de l'agent
+            // 2. NOUVEAU : On ajoute une notification dans "suiviDemandes" pour la fiche agent
+            await updateDoc(doc(db, "users", agentId), { 
+                epi: arrayUnion(epiRef),
+                suiviDemandes: arrayUnion({
+                    message: `Demande de ${type} ${taille ? '('+taille+')' : ''} validée. Matériel distribué.`,
+                    date: new Date().toISOString(),
+                    statut: "TRAITÉE"
+                })
+            });
+
+            // 3. Décrémenter le stock
             await updateDoc(doc(db, "stocks", itemStock.id), { quantite: itemStock.quantite - 1 });
+            
+            // 4. Supprimer la demande traitée
             await deleteDoc(doc(db, "demandes_materiel", demandeId));
 
-            alert("Validé !");
+            alert("Validé ! L'agent a été notifié sur sa fiche.");
             chargerDemandes();
             charger();
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); alert("Erreur : " + e.message); }
     };
 
     window.refuserDemande = async (id) => {
@@ -191,7 +209,6 @@
         }
     };
 
-    // --- GESTION DU STOCK ---
     async function charger() {
         try {
             const snap = await getDocs(collection(db, "stocks"));
@@ -207,7 +224,7 @@
         items.sort((a,b) => (a.type || "").localeCompare(b.type || "")).forEach(item => {
             const q = parseInt(item.quantite || 0);
             const s = parseInt(item.seuil || 0);
-            const isVisible = item.visible !== false; // Visible par défaut
+            const isVisible = item.visible !== false; 
             const cl = q === 0 ? "bg-red" : (q <= s ? "bg-orange" : "bg-green");
             const tr = document.createElement('tr');
             tr.innerHTML = `
