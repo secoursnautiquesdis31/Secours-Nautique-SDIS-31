@@ -53,7 +53,6 @@
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
     
-    /* Styles boutons Admin */
     .btn-action-group { display: flex; gap: 5px; }
     .btn-admin-v { background: #2A9D5C; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
     .btn-admin-a { background: #D94040; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
@@ -138,7 +137,6 @@
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
 
-    // --- NOUVELLE FONCTION DE STATUT (REMPLACE VALIDERAGENT) ---
     window.modifierStatut = async (formationId, nomAgent, nouveauStatut) => {
         if(!confirm(`Confirmer le statut "${nouveauStatut.toUpperCase()}" pour ${nomAgent} ?`)) return;
         
@@ -241,7 +239,7 @@
                 
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
-                    let statut = (typeof i === 'object') ? i.statut : "inscrit";
+                    let statut = (typeof i === 'object' && i.statut) ? i.statut : "inscrit";
                     
                     let ligneHtml = `<div class="admin-row"><span>${nom}</span>`;
                     
@@ -250,7 +248,7 @@
                     } else if (statut === "absent") {
                         ligneHtml += `<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>`;
                     } else {
-                        // On affiche les deux boutons si le statut est "en attente" ou inconnu
+                        // Affiche les deux boutons si le statut est "inscrit", "en attente" ou vide
                         ligneHtml += `
                             <div class="btn-action-group">
                                 <button class="btn-admin-v" onclick="modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
@@ -267,7 +265,10 @@
 
                 document.getElementById('btnInscrire').onclick = async () => {
                     if(!agentConnecte) return alert("Sélectionnez un agent");
-                    await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion({nom: agentConnecte, statut: "en attente"}) });
+                    // On enregistre avec le statut "inscrit" pour matcher la boucle d'affichage
+                    await updateDoc(doc(db, "formations", id), { 
+                        inscrits: arrayUnion({nom: agentConnecte, statut: "inscrit"}) 
+                    });
                     calendar.refetchEvents(); fermerModal();
                 };
 
