@@ -15,6 +15,7 @@
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
+    /* --- MISE À JOUR DU STYLE POUR LE LIEU À DROITE --- */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -44,6 +45,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
+    /* ------------------------------------------------ */
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; font-weight: bold; color: var(--navy); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
@@ -155,6 +157,7 @@
                     success(evts);
                 } catch (e) { console.error(e); failure(e); }
             },
+            // --- AJOUT DE LA LOGIQUE D'AFFICHAGE DU LIEU À DROITE ---
             eventContent: function(arg) {
                 let title = arg.event.title;
                 let lieu = arg.event.extendedProps.lieu || "";
@@ -170,6 +173,7 @@
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
+            // -------------------------------------------------------
             eventClick: (info) => ouvrirDetails(info.event)
         });
         calendar.render();
@@ -185,23 +189,16 @@
         const d1 = new Date(data.dateDebutReelle).toLocaleDateString('fr-FR');
         const d2 = new Date(data.dateFinReelle).toLocaleDateString('fr-FR');
         document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
-        
-        const inscription = inscrits.find(i => (typeof i === 'object' ? i.nom : i) === agentConnecte);
+        const inscription = inscrits.find(i => i.nom === agentConnecte);
         const estInscrit = !!inscription;
         const btnInscrire = document.getElementById('btnInscrire');
         const btnDesinscrire = document.getElementById('btnDesinscrire');
-
         if (estInscrit) {
             btnInscrire.style.display = "none";
             btnDesinscrire.style.display = "block";
-            
             if(inscription.statut === "présent") {
                 btnDesinscrire.innerText = "PRÉSENCE VALIDÉE ✅";
                 btnDesinscrire.style.background = "#2A9D5C";
-                btnDesinscrire.onclick = null; 
-            } else if (inscription.statut === "absent") {
-                btnDesinscrire.innerText = "ABSENCE NOTIFIÉE ❌";
-                btnDesinscrire.style.background = "#842029";
                 btnDesinscrire.onclick = null; 
             } else {
                 btnDesinscrire.innerText = "SE DÉSISTER";
