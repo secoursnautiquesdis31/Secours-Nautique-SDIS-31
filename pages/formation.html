@@ -16,7 +16,6 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    /* Style pour l'alignement sur une ligne */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -29,7 +28,7 @@
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        gap: 8px; /* Espace entre le nom et le lieu */
+        gap: 8px;
         width: 100%;
         overflow: hidden;
     }
@@ -44,7 +43,7 @@
         opacity: 0.9;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis; /* Coupe le lieu si trop long */
+        text-overflow: ellipsis;
     }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
@@ -53,7 +52,11 @@
     .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; position: relative; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
-    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+    
+    /* Styles boutons Admin */
+    .btn-action-group { display: flex; gap: 5px; }
+    .btn-admin-v { background: #2A9D5C; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
+    .btn-admin-a { background: #D94040; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
     
     select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #CCC; border-radius: 4px; box-sizing: border-box; font-family: 'Barlow'; }
   </style>
@@ -77,7 +80,6 @@
       
       <div id="formSection" style="display:none;">
           <input type="hidden" id="selectedDate">
-          
           <label style="font-size: 0.8rem; font-weight: bold;">Intitulé :</label>
           <select id="formNom">
               <option value="">-- Sélectionner --</option>
@@ -90,12 +92,9 @@
               <option value="Entrainement">Entrainement</option>
               <option value="AUTRE">AUTRE (Saisie manuelle)</option>
           </select>
-
           <input type="text" id="formNomManuel" placeholder="Nom de la formation" style="display:none;">
-          
           <label style="display:block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Date de fin :</label>
           <input type="date" id="formDateFin">
-          
           <input type="text" id="formLieu" placeholder="Lieu">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">CRÉER LA SESSION</button>
       </div>
@@ -139,18 +138,25 @@
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
 
-    window.validerAgent = async (formationId, nomAgent) => {
-        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+    // --- NOUVELLE FONCTION DE STATUT (REMPLACE VALIDERAGENT) ---
+    window.modifierStatut = async (formationId, nomAgent, nouveauStatut) => {
+        if(!confirm(`Confirmer le statut "${nouveauStatut.toUpperCase()}" pour ${nomAgent} ?`)) return;
+        
         const ref = doc(db, "formations", formationId);
         const snap = await getDoc(ref);
         const fData = snap.data();
+        
         let inscrits = fData.inscrits || [];
         inscrits = inscrits.map(i => {
             let n = (typeof i === 'object') ? i.nom : i;
-            return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
+            if (n === nomAgent) {
+                return { nom: n, statut: nouveauStatut, type: fData.nom };
+            }
+            return i;
         });
+
         await updateDoc(ref, { inscrits: inscrits });
-        alert("Validé !");
+        alert("Statut mis à jour !");
         calendar.refetchEvents();
         fermerModal();
     };
@@ -196,19 +202,13 @@
                     };
                 }));
             },
-            // Affichage de l'intitulé et du lieu côte à côte
             eventContent: function(arg) {
                 let title = arg.event.title;
                 let lieu = arg.event.extendedProps.lieu || "";
-                
                 let container = document.createElement('div');
                 container.className = 'event-wrapper';
-                
                 let html = `<span class="fc-event-title-custom">${title}</span>`;
-                if (lieu) {
-                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
-                }
-                
+                if (lieu) { html += `<span class="fc-event-location-custom"> — ${lieu}</span>`; }
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
@@ -241,13 +241,24 @@
                 
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
-                    let statut = (typeof i === 'object') ? i.statut : "inscrit";
-                    let estP = (statut === "présent");
-                    zone.innerHTML += `
-                        <div class="admin-row">
-                            <span>${nom} ${estP ? '✅' : ''}</span>
-                            ${!estP ? `<button class="btn-valider" onclick="validerAgent('${id}', '${nom}')">Valider</button>` : '<b style="color:green; font-size:0.7rem;">PRÉSENT</b>'}
-                        </div>`;
+                    let statut = (typeof i === 'object') ? i.statut : "en attente";
+                    
+                    let ligneHtml = `<div class="admin-row"><span>${nom}</span>`;
+                    
+                    if (statut === "présent") {
+                        ligneHtml += `<b style="color:green; font-size:0.7rem;">PRÉSENT ✅</b>`;
+                    } else if (statut === "absent") {
+                        ligneHtml += `<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>`;
+                    } else {
+                        // On affiche les deux boutons si le statut est "en attente" ou inconnu
+                        ligneHtml += `
+                            <div class="btn-action-group">
+                                <button class="btn-admin-v" onclick="modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
+                                <button class="btn-admin-a" onclick="modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
+                            </div>`;
+                    }
+                    ligneHtml += `</div>`;
+                    zone.innerHTML += ligneHtml;
                 });
 
                 const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
@@ -274,7 +285,6 @@
         const sel = document.getElementById('formNom').value;
         const man = document.getElementById('formNomManuel').value;
         const nomFinal = (sel === "AUTRE") ? man : sel;
-        
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
         const dateFin = document.getElementById('formDateFin').value;
