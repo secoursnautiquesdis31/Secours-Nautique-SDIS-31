@@ -5,7 +5,7 @@
     <title>Technique — SDIS 31</title>
     <link rel="stylesheet" href="../css/main.css">
     <style>
-        :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; }
+        :root { --navy: #0B1F3A; --amber: #E8A020; --red: #D94040; --green: #2A9D5C; --danger: #bb2d3b; }
         body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
         .tech-container { max-width: 1200px; margin: 0 auto; }
         .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
@@ -53,7 +53,10 @@
 
     <div class="header-flex">
       <h1>LOGISTIQUE TECHNIQUE</h1>
-      <button style="background: var(--amber); border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
+      <div style="display: flex; gap: 10px;">
+          <button id="btnResetHistorique" style="background: var(--red); color: white; border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;">🗑️ SUPPRIMER LES DEMANDES TRAITÉES</button>
+          <button style="background: var(--amber); border:none; padding: 10px; border-radius: 5px; cursor:pointer; font-weight:bold;" onclick="document.getElementById('csvInput').click()">📥 IMPORTER CSV</button>
+      </div>
       <input type="file" id="csvInput" accept=".csv" style="display:none">
     </div>
 
@@ -161,7 +164,6 @@
         } catch(e) { console.error(e); }
     }
 
-    // --- FONCTION VALIDER MODIFIÉE POUR INCREMENTER LE SUIVI AGENT ---
     window.validerDemande = async (demandeId, agentId, type, taille) => {
         if(!confirm("Valider cette distribution ?")) return;
         try {
@@ -179,8 +181,6 @@
             };
             if(itemStock.taille) epiRef.taille = itemStock.taille;
 
-            // 1. On ajoute l'EPI au paquetage de l'agent
-            // 2. NOUVEAU : On ajoute une notification dans "suiviDemandes" pour la fiche agent
             await updateDoc(doc(db, "users", agentId), { 
                 epi: arrayUnion(epiRef),
                 suiviDemandes: arrayUnion({
@@ -190,10 +190,7 @@
                 })
             });
 
-            // 3. Décrémenter le stock
             await updateDoc(doc(db, "stocks", itemStock.id), { quantite: itemStock.quantite - 1 });
-            
-            // 4. Supprimer la demande traitée
             await deleteDoc(doc(db, "demandes_materiel", demandeId));
 
             alert("Validé ! L'agent a été notifié sur sa fiche.");
@@ -315,6 +312,32 @@
             charger();
         };
         reader.readAsText(e.target.files[0], 'ISO-8859-1');
+    };
+
+    // --- LOGIQUE DE SUPPRESSION DES DEMANDES TRAITÉES ---
+    document.getElementById('btnResetHistorique').onclick = async () => {
+        const conf1 = confirm("Voulez-vous supprimer toutes les demandes traitées de TOUS les agents ?\n\nCela nettoiera l'affichage de l'historique sur leurs fiches individuelles.");
+        if (!conf1) return;
+
+        const check = prompt("Tapez 'RESET' pour confirmer la suppression définitive :");
+        if (check !== "RESET") return alert("Action annulée.");
+
+        try {
+            const querySnapshot = await getDocs(collection(db, "users"));
+            let count = 0;
+            const promises = querySnapshot.docs.map(agentDoc => {
+                const data = agentDoc.data();
+                if (data.suiviDemandes && data.suiviDemandes.length > 0) {
+                    count++;
+                    return updateDoc(doc(db, "users", agentDoc.id), { suiviDemandes: [] });
+                }
+            });
+            await Promise.all(promises);
+            alert(`Succès ! Les demandes traitées ont été supprimées pour ${count} agents.`);
+        } catch (error) {
+            console.error(error);
+            alert("Erreur lors de la suppression.");
+        }
     };
 
     chargerDemandes();
