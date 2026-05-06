@@ -9,25 +9,6 @@
         body { font-family: sans-serif; background: #f8f9fa; margin: 0; padding: 20px; }
         .tech-container { max-width: 1200px; margin: 0 auto; }
         
-        /* BOUTON EN HAUT À DROITE DE LA PAGE */
-        .btn-top-right {
-            position: fixed;
-            top: 15px;
-            right: 15px;
-            background: var(--black);
-            color: white;
-            border: 2px solid white;
-            padding: 10px 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: bold;
-            font-size: 0.85rem;
-            z-index: 1000;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            transition: transform 0.2s;
-        }
-        .btn-top-right:hover { transform: scale(1.05); background: #b03030; }
-
         .header-flex { display: flex; justify-content: space-between; align-items: center; background: var(--navy); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
         .add-bar { background: white; padding: 15px; border-radius: 8px; display: flex; gap: 10px; margin-bottom: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); align-items: flex-end; border-top: 4px solid var(--amber); }
         .add-bar div { display: flex; flex-direction: column; gap: 5px; }
@@ -60,16 +41,15 @@
 </head>
 <body>
 
-<!-- BOUTON DANS L'ANGLE EN HAUT A DROITE -->
-<button class="btn-top-right" id="btnResetHistorique">🗑️ SUPPRIMER LES<br>DEMANDES TRAITÉES</button>
-
 <a href="dashboard.html" style="position: fixed; top: 15px; left: 15px; background: var(--navy); color: white; padding: 10px; border-radius: 5px; text-decoration: none; border: 1px solid var(--amber); z-index: 999;">🏠 MENU</a>
 
 <div class="tech-container">
 
     <div style="max-width: 800px; margin: 0 auto 30px auto;">
-        <div style="background: var(--navy); color: white; padding: 12px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid var(--amber);">
+        <div style="background: var(--navy); color: white; padding: 12px; border-radius: 12px 12px 0 0; text-align: center; border-bottom: 4px solid var(--amber); display: flex; justify-content: space-between; align-items: center;">
+            <div style="width: 150px;"></div> <!-- Spacer pour équilibrer le centrage -->
             <h2 style="margin: 0; text-transform: uppercase; letter-spacing: 1px; font-size: 1.2rem;">📦 Demandes de matériel en attente</h2>
+            <button id="btnResetHistorique" style="background: var(--danger); color: white; border: 1px solid white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-weight: bold; font-size: 0.75rem; width: 150px;">🗑️ EFFACER TRAITÉES</button>
         </div>
         <div id="listeDemandes" style="background: #fff; padding: 15px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); min-height: 50px;">
             <p style="text-align: center; color: #666; font-style: italic;">Chargement des demandes...</p>
@@ -338,7 +318,6 @@
         reader.readAsText(e.target.files[0], 'ISO-8859-1');
     };
 
-    // LOGIQUE DE NETTOYAGE DES HISTORIQUES
     document.getElementById('btnResetHistorique').onclick = async () => {
         const conf1 = confirm("⚠️ ATTENTION\n\nVoulez-vous supprimer toutes les demandes déjà traitées de TOUS les agents ?\n\nCela nettoiera l'affichage de l'historique sur leurs fiches individuelles.");
         if (!conf1) return;
