@@ -16,20 +16,18 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    /* Style pour l'alignement sur une ligne */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
-        color: white !important; 
-        font-size: 0.75rem !important; 
         border: none !important; 
+        font-size: 0.75rem !important; 
     }
 
     .event-wrapper {
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        gap: 8px; /* Espace entre le nom et le lieu */
+        gap: 8px;
         width: 100%;
         overflow: hidden;
     }
@@ -44,7 +42,7 @@
         opacity: 0.9;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis; /* Coupe le lieu si trop long */
+        text-overflow: ellipsis;
     }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
@@ -172,14 +170,25 @@
                 const snap = await getDocs(collection(db, "formations"));
                 success(snap.docs.map(d => {
                     const data = d.data();
+                    const nomNettoye = (data.nom || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    
                     let eventColor = "#0B1F3A"; 
                     let txtColor = "white";
-                    const nomMaj = data.nom.toUpperCase();
 
-                    if (nomMaj.includes("MSO")) { eventColor = "#E2725B"; } 
-                    else if (nomMaj.includes("FMPA SAV SEV")) { eventColor = "#90EE90"; txtColor = "black"; } 
-                    else if (nomMaj.includes("FMPA MER")) { eventColor = "#87CEFA"; txtColor = "black"; } 
-                    else if (nomMaj.includes("ENTRAINEMENT")) { eventColor = "#FFD700"; txtColor = "black"; }
+                    if (nomNettoye.includes("FMPA SAV SEV")) {
+                        eventColor = "#2A9D5C"; 
+                    } else if (nomNettoye.includes("FMPA MER")) {
+                        eventColor = "#87CEFA"; 
+                    } else if (nomNettoye.includes("FMPA CEN")) {
+                        eventColor = "#E8A020"; 
+                    } else if (nomNettoye.includes("MSO")) {
+                        eventColor = "#E2725B"; 
+                    } else if (nomNettoye.includes("ENTRAINEMENT")) {
+                        eventColor = "#FFD700";
+                        txtColor = "#0B1F3A";
+                    } else if (nomNettoye.includes("TESTS ANNUELS")) {
+                        eventColor = "#D94040"; 
+                    }
                     
                     let visuelFin = new Date(data.dateFin || data.date);
                     visuelFin.setDate(visuelFin.getDate() + 1);
@@ -190,25 +199,22 @@
                         title: data.nom, 
                         start: data.date, 
                         end: isoFin, 
-                        color: eventColor,
+                        backgroundColor: eventColor,
+                        borderColor: eventColor,
                         textColor: txtColor,
                         extendedProps: data 
                     };
                 }));
             },
-            // Affichage de l'intitulé et du lieu côte à côte
             eventContent: function(arg) {
                 let title = arg.event.title;
                 let lieu = arg.event.extendedProps.lieu || "";
-                
                 let container = document.createElement('div');
                 container.className = 'event-wrapper';
-                
                 let html = `<span class="fc-event-title-custom">${title}</span>`;
                 if (lieu) {
                     html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
                 }
-                
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
