@@ -32,18 +32,8 @@
         overflow: hidden;
     }
 
-    .fc-event-title-custom {
-        font-weight: bold;
-        white-space: nowrap;
-    }
-
-    .fc-event-location-custom {
-        font-weight: normal;
-        opacity: 0.9;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+    .fc-event-title-custom { font-weight: bold; white-space: nowrap; }
+    .fc-event-location-custom { font-weight: normal; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; border: 2px solid #E8A020; font-weight: bold; }
@@ -117,7 +107,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -140,7 +130,26 @@
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
 
-    // FONCTION MISE À JOUR STATUT (PRÉSENT OU ABSENT)
+    // --- FONCTION DE CORRECTION (RÉINITIALISATION) ---
+    window.resetStatutAgent = async (formationId, nomAgent) => {
+        if(!confirm(`Réinitialiser le statut de ${nomAgent} ? (Les boutons Présent/Absent réapparaîtront)`)) return;
+
+        const ref = doc(db, "formations", formationId);
+        const snap = await getDoc(ref);
+        const fData = snap.data();
+        let inscrits = fData.inscrits || [];
+
+        inscrits = inscrits.map(i => {
+            let n = (typeof i === 'object') ? i.nom : i;
+            return (n === nomAgent) ? { nom: n, statut: "inscrit" } : i;
+        });
+
+        await updateDoc(ref, { inscrits: inscrits });
+        calendar.refetchEvents();
+        fermerModal();
+    };
+
+    // --- FONCTION MISE À JOUR STATUT (PRÉSENT OU ABSENT) ---
     window.changerStatutAgent = async (formationId, nomAgent, nouveauStatut) => {
         const action = nouveauStatut === "présent" ? "Valider la présence" : "Signaler l'absence";
         if(!confirm(`${action} de ${nomAgent} ?`)) return;
@@ -152,11 +161,10 @@
 
         inscrits = inscrits.map(i => {
             let n = (typeof i === 'object') ? i.nom : i;
-            return (n === nomAgent) ? { nom: n, statut: nouveauStatut, type: fData.nom } : i;
+            return (n === nomAgent) ? { nom: n, statut: nouveauStatut } : i;
         });
 
         await updateDoc(ref, { inscrits: inscrits });
-        alert(nouveauStatut === "présent" ? "Présence validée !" : "Absence enregistrée.");
         calendar.refetchEvents();
         fermerModal();
     };
@@ -248,8 +256,11 @@
                     let statut = (typeof i === 'object') ? i.statut : "inscrit";
                     
                     let statusLabel = "";
-                    if (statut === "présent") statusLabel = '<b style="color:green; font-size:0.7rem;">PRÉSENT ✅</b>';
-                    else if (statut === "absent") statusLabel = '<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>';
+                    if (statut === "présent") {
+                        statusLabel = `<button onclick="resetStatutAgent('${id}', '${nom}')" style="background:none; border:none; cursor:pointer; padding:0;"><b style="color:green; font-size:0.7rem;">PRÉSENT ✅</b></button>`;
+                    } else if (statut === "absent") {
+                        statusLabel = `<button onclick="resetStatutAgent('${id}', '${nom}')" style="background:none; border:none; cursor:pointer; padding:0;"><b style="color:red; font-size:0.7rem;">ABSENT ❌</b></button>`;
+                    }
 
                     zone.innerHTML += `
                         <div class="admin-row">
@@ -269,7 +280,7 @@
 
                 document.getElementById('btnInscrire').onclick = async () => {
                     if(!agentConnecte) return alert("Sélectionnez un agent");
-                    await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion({nom: agentConnecte, statut: "en attente"}) });
+                    await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion({nom: agentConnecte, statut: "inscrit"}) });
                     calendar.refetchEvents(); fermerModal();
                 };
 
