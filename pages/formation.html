@@ -16,6 +16,7 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
+    /* Style pour l'alignement sur une ligne */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
@@ -28,7 +29,7 @@
         display: flex;
         justify-content: flex-start;
         align-items: center;
-        gap: 8px;
+        gap: 8px; /* Espace entre le nom et le lieu */
         width: 100%;
         overflow: hidden;
     }
@@ -43,7 +44,7 @@
         opacity: 0.9;
         white-space: nowrap;
         overflow: hidden;
-        text-overflow: ellipsis;
+        text-overflow: ellipsis; /* Coupe le lieu si trop long */
     }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
@@ -52,10 +53,7 @@
     .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; position: relative; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
-    
-    .btn-action-group { display: flex; gap: 5px; }
-    .btn-admin-v { background: #2A9D5C; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
-    .btn-admin-a { background: #D94040; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
+    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
     
     select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #CCC; border-radius: 4px; box-sizing: border-box; font-family: 'Barlow'; }
   </style>
@@ -79,6 +77,7 @@
       
       <div id="formSection" style="display:none;">
           <input type="hidden" id="selectedDate">
+          
           <label style="font-size: 0.8rem; font-weight: bold;">Intitulé :</label>
           <select id="formNom">
               <option value="">-- Sélectionner --</option>
@@ -91,9 +90,12 @@
               <option value="Entrainement">Entrainement</option>
               <option value="AUTRE">AUTRE (Saisie manuelle)</option>
           </select>
+
           <input type="text" id="formNomManuel" placeholder="Nom de la formation" style="display:none;">
+          
           <label style="display:block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Date de fin :</label>
           <input type="date" id="formDateFin">
+          
           <input type="text" id="formLieu" placeholder="Lieu">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">CRÉER LA SESSION</button>
       </div>
@@ -137,24 +139,18 @@
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
 
-    window.modifierStatut = async (formationId, nomAgent, nouveauStatut) => {
-        if(!confirm(`Confirmer le statut "${nouveauStatut.toUpperCase()}" pour ${nomAgent} ?`)) return;
-        
+    window.validerAgent = async (formationId, nomAgent) => {
+        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
         const ref = doc(db, "formations", formationId);
         const snap = await getDoc(ref);
         const fData = snap.data();
-        
         let inscrits = fData.inscrits || [];
         inscrits = inscrits.map(i => {
             let n = (typeof i === 'object') ? i.nom : i;
-            if (n === nomAgent) {
-                return { nom: n, statut: nouveauStatut, type: fData.nom };
-            }
-            return i;
+            return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
         });
-
         await updateDoc(ref, { inscrits: inscrits });
-        alert("Statut mis à jour !");
+        alert("Validé !");
         calendar.refetchEvents();
         fermerModal();
     };
@@ -200,13 +196,19 @@
                     };
                 }));
             },
+            // Affichage de l'intitulé et du lieu côte à côte
             eventContent: function(arg) {
                 let title = arg.event.title;
                 let lieu = arg.event.extendedProps.lieu || "";
+                
                 let container = document.createElement('div');
                 container.className = 'event-wrapper';
+                
                 let html = `<span class="fc-event-title-custom">${title}</span>`;
-                if (lieu) { html += `<span class="fc-event-location-custom"> — ${lieu}</span>`; }
+                if (lieu) {
+                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
+                }
+                
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
@@ -239,23 +241,13 @@
                 
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
-                    let statut = (typeof i === 'object' && i.statut) ? i.statut : "inscrit";
-                    
-                    let ligneHtml = `<div class="admin-row"><span>${nom}</span>`;
-                    
-                    if (statut === "présent") {
-                        ligneHtml += `<b style="color:green; font-size:0.7rem;">PRÉSENT ✅</b>`;
-                    } else if (statut === "absent") {
-                        ligneHtml += `<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>`;
-                    } else {
-                        ligneHtml += `
-                            <div class="btn-action-group">
-                                <button class="btn-admin-v" onclick="window.modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
-                                <button class="btn-admin-a" onclick="window.modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
-                            </div>`;
-                    }
-                    ligneHtml += `</div>`;
-                    zone.innerHTML += ligneHtml;
+                    let statut = (typeof i === 'object') ? i.statut : "inscrit";
+                    let estP = (statut === "présent");
+                    zone.innerHTML += `
+                        <div class="admin-row">
+                            <span>${nom} ${estP ? '✅' : ''}</span>
+                            ${!estP ? `<button class="btn-valider" onclick="validerAgent('${id}', '${nom}')">Valider</button>` : '<b style="color:green; font-size:0.7rem;">PRÉSENT</b>'}
+                        </div>`;
                 });
 
                 const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
@@ -264,9 +256,7 @@
 
                 document.getElementById('btnInscrire').onclick = async () => {
                     if(!agentConnecte) return alert("Sélectionnez un agent");
-                    await updateDoc(doc(db, "formations", id), { 
-                        inscrits: arrayUnion({nom: agentConnecte, statut: "inscrit"}) 
-                    });
+                    await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion({nom: agentConnecte, statut: "en attente"}) });
                     calendar.refetchEvents(); fermerModal();
                 };
 
@@ -284,6 +274,7 @@
         const sel = document.getElementById('formNom').value;
         const man = document.getElementById('formNomManuel').value;
         const nomFinal = (sel === "AUTRE") ? man : sel;
+        
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
         const dateFin = document.getElementById('formDateFin').value;
