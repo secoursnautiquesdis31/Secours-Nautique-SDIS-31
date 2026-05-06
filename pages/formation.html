@@ -16,21 +16,44 @@
     .container { max-width: 1100px; margin: 60px auto 20px auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); min-height: 500px; }
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    .fc-event { cursor: pointer; padding: 2px 5px; color: white !important; font-size: 0.75rem !important; border: none !important; }
-    .event-wrapper { display: flex; justify-content: flex-start; align-items: center; gap: 8px; width: 100%; overflow: hidden; }
-    .fc-event-title-custom { font-weight: bold; white-space: nowrap; }
-    .fc-event-location-custom { font-weight: normal; opacity: 0.9; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    /* Style pour l'alignement sur une ligne */
+    .fc-event { 
+        cursor: pointer; 
+        padding: 2px 5px; 
+        color: white !important; 
+        font-size: 0.75rem !important; 
+        border: none !important; 
+    }
+
+    .event-wrapper {
+        display: flex;
+        justify-content: flex-start;
+        align-items: center;
+        gap: 8px; /* Espace entre le nom et le lieu */
+        width: 100%;
+        overflow: hidden;
+    }
+
+    .fc-event-title-custom {
+        font-weight: bold;
+        white-space: nowrap;
+    }
+
+    .fc-event-location-custom {
+        font-weight: normal;
+        opacity: 0.9;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis; /* Coupe le lieu si trop long */
+    }
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; display: flex; align-items: center; gap: 10px; }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; border: 2px solid #E8A020; font-weight: bold; }
     .modal { display: none; position: fixed; z-index: 10000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); }
     .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; position: relative; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
-    
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
-    .btn-action-group { display: flex; gap: 5px; }
-    .btn-admin-v { background: #2A9D5C; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
-    .btn-admin-a { background: #D94040; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
+    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
     
     select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #CCC; border-radius: 4px; box-sizing: border-box; font-family: 'Barlow'; }
   </style>
@@ -54,6 +77,7 @@
       
       <div id="formSection" style="display:none;">
           <input type="hidden" id="selectedDate">
+          
           <label style="font-size: 0.8rem; font-weight: bold;">Intitulé :</label>
           <select id="formNom">
               <option value="">-- Sélectionner --</option>
@@ -66,9 +90,12 @@
               <option value="Entrainement">Entrainement</option>
               <option value="AUTRE">AUTRE (Saisie manuelle)</option>
           </select>
+
           <input type="text" id="formNomManuel" placeholder="Nom de la formation" style="display:none;">
+          
           <label style="display:block; font-size: 0.8rem; font-weight: bold; margin-bottom: 5px;">Date de fin :</label>
           <input type="date" id="formDateFin">
+          
           <input type="text" id="formLieu" placeholder="Lieu">
           <button class="btn-main" id="btnSave" style="background: var(--amber); color: var(--navy);">CRÉER LA SESSION</button>
       </div>
@@ -89,7 +116,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+    import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, arrayUnion, arrayRemove, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
     const firebaseConfig = {
         apiKey: "AIzaSyDALxymVqh-WmY6VARc-m6zOzyt5zFk66o",
@@ -108,36 +135,24 @@
     const fermerModal = () => { document.getElementById('modalEvent').style.display = 'none'; };
     document.getElementById('btnFermerManual').onclick = fermerModal;
 
-    // RENDRE LA FONCTION GLOBALE POUR LE HTML
-    window.modifierStatut = async (formationId, nomAgent, nouveauStatut) => {
-        console.log("Tentative de changement de statut:", nomAgent, nouveauStatut);
-        if(!confirm(`Confirmer le statut "${nouveauStatut.toUpperCase()}" pour ${nomAgent} ?`)) return;
-        
-        try {
-            const ref = doc(db, "formations", formationId);
-            const snap = await getDoc(ref);
-            if (!snap.exists()) return;
-            
-            const fData = snap.data();
-            let inscrits = fData.inscrits || [];
-            
-            // Mise à jour de l'objet dans le tableau
-            const nouveauxInscrits = inscrits.map(i => {
-                let n = (typeof i === 'object') ? i.nom : i;
-                if (n === nomAgent) {
-                    return { nom: n, statut: nouveauStatut.toLowerCase() };
-                }
-                return i;
-            });
+    document.getElementById('formNom').onchange = function() {
+        document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
+    };
 
-            await updateDoc(ref, { inscrits: nouveauxInscrits });
-            alert("✅ Statut mis à jour !");
-            calendar.refetchEvents();
-            fermerModal();
-        } catch (e) {
-            console.error("Erreur Firestore:", e);
-            alert("Erreur lors de la mise à jour.");
-        }
+    window.validerAgent = async (formationId, nomAgent) => {
+        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+        const ref = doc(db, "formations", formationId);
+        const snap = await getDoc(ref);
+        const fData = snap.data();
+        let inscrits = fData.inscrits || [];
+        inscrits = inscrits.map(i => {
+            let n = (typeof i === 'object') ? i.nom : i;
+            return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
+        });
+        await updateDoc(ref, { inscrits: inscrits });
+        alert("Validé !");
+        calendar.refetchEvents();
+        fermerModal();
     };
 
     async function init() {
@@ -145,19 +160,67 @@
         const sel = document.getElementById('selectAgentSession');
         sel.innerHTML = '<option value="">-- Agent --</option>';
         uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
-        sel.onchange = (e) => { agentConnecte = e.target.value; };
+        sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
 
         const calendarEl = document.getElementById('calendar');
         calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
+            initialView: 'multiMonthYear',
             locale: 'fr',
+            firstDay: 1,
             headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,multiMonthYear' },
             events: async (info, success) => {
                 const snap = await getDocs(collection(db, "formations"));
                 success(snap.docs.map(d => {
                     const data = d.data();
-                    return { id: d.id, title: data.nom, start: data.date, end: data.dateFin || data.date, extendedProps: data };
+                    let eventColor = "#0B1F3A"; 
+                    let txtColor = "white";
+                    const nomMaj = data.nom.toUpperCase();
+
+                    if (nomMaj.includes("MSO")) { eventColor = "#E2725B"; } 
+                    else if (nomMaj.includes("FMPA SAV SEV")) { eventColor = "#90EE90"; txtColor = "black"; } 
+                    else if (nomMaj.includes("FMPA MER")) { eventColor = "#87CEFA"; txtColor = "black"; } 
+                    else if (nomMaj.includes("ENTRAINEMENT")) { eventColor = "#FFD700"; txtColor = "black"; }
+                    
+                    let visuelFin = new Date(data.dateFin || data.date);
+                    visuelFin.setDate(visuelFin.getDate() + 1);
+                    const isoFin = visuelFin.toISOString().split('T')[0];
+
+                    return { 
+                        id: d.id, 
+                        title: data.nom, 
+                        start: data.date, 
+                        end: isoFin, 
+                        color: eventColor,
+                        textColor: txtColor,
+                        extendedProps: data 
+                    };
                 }));
+            },
+            // Affichage de l'intitulé et du lieu côte à côte
+            eventContent: function(arg) {
+                let title = arg.event.title;
+                let lieu = arg.event.extendedProps.lieu || "";
+                
+                let container = document.createElement('div');
+                container.className = 'event-wrapper';
+                
+                let html = `<span class="fc-event-title-custom">${title}</span>`;
+                if (lieu) {
+                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
+                }
+                
+                container.innerHTML = html;
+                return { domNodes: [container] };
+            },
+            dateClick: (info) => {
+                document.getElementById('modalTitle').innerText = "Nouvelle Session";
+                document.getElementById('formSection').style.display = "block";
+                document.getElementById('detailSection').style.display = "none";
+                document.getElementById('formNom').value = "";
+                document.getElementById('formNomManuel').style.display = "none";
+                document.getElementById('selectedDate').value = info.dateStr;
+                document.getElementById('formDateFin').value = info.dateStr;
+                document.getElementById('modalEvent').style.display = 'block';
             },
             eventClick: (info) => {
                 const data = info.event.extendedProps;
@@ -167,46 +230,38 @@
                 document.getElementById('detailSection').style.display = "block";
                 document.getElementById('detLieu').innerText = "📍 " + (data.lieu || "Non précisé");
                 
+                const d1 = new Date(data.date).toLocaleDateString('fr-FR');
+                const d2 = new Date(data.dateFin || data.date).toLocaleDateString('fr-FR');
+                document.getElementById('detDates').innerText = (d1 === d2) ? `Le ${d1}` : `Du ${d1} au ${d2}`;
+
                 const zone = document.getElementById('detInscrits');
                 zone.innerHTML = "";
                 const inscrits = data.inscrits || [];
+                if(inscrits.length === 0) zone.innerHTML = "Aucun inscrit.";
                 
-                if(inscrits.length === 0) {
-                    zone.innerHTML = "Aucun inscrit.";
-                } else {
-                    inscrits.forEach(i => {
-                        let nom = (typeof i === 'object') ? i.nom : i;
-                        let statut = (typeof i === 'object' && i.statut) ? i.statut : "inscrit";
-                        
-                        let ligneHtml = `<div class="admin-row"><span>${nom}</span>`;
-                        
-                        // Condition d'affichage des boutons
-                        if (statut === "présent") {
-                            ligneHtml += `<span style="color:green; font-weight:bold;">✅ PRÉSENT</span>`;
-                        } else if (statut === "absent") {
-                            ligneHtml += `<span style="color:red; font-weight:bold;">❌ ABSENT</span>`;
-                        } else {
-                            ligneHtml += `
-                                <div class="btn-action-group">
-                                    <button class="btn-admin-v" onclick="window.modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
-                                    <button class="btn-admin-a" onclick="window.modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
-                                </div>`;
-                        }
-                        ligneHtml += `</div>`;
-                        zone.innerHTML += ligneHtml;
-                    });
-                }
+                inscrits.forEach(i => {
+                    let nom = (typeof i === 'object') ? i.nom : i;
+                    let statut = (typeof i === 'object') ? i.statut : "inscrit";
+                    let estP = (statut === "présent");
+                    zone.innerHTML += `
+                        <div class="admin-row">
+                            <span>${nom} ${estP ? '✅' : ''}</span>
+                            ${!estP ? `<button class="btn-valider" onclick="validerAgent('${id}', '${nom}')">Valider</button>` : '<b style="color:green; font-size:0.7rem;">PRÉSENT</b>'}
+                        </div>`;
+                });
+
+                const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
+                const inscrit = agentConnecte && noms.includes(agentConnecte);
+                document.getElementById('btnInscrire').style.display = inscrit ? "none" : "block";
 
                 document.getElementById('btnInscrire').onclick = async () => {
-                    if(!agentConnecte) return alert("Sélectionnez d'abord un agent en haut à droite !");
-                    await updateDoc(doc(db, "formations", id), { 
-                        inscrits: arrayUnion({nom: agentConnecte, statut: "inscrit"}) 
-                    });
+                    if(!agentConnecte) return alert("Sélectionnez un agent");
+                    await updateDoc(doc(db, "formations", id), { inscrits: arrayUnion({nom: agentConnecte, statut: "en attente"}) });
                     calendar.refetchEvents(); fermerModal();
                 };
 
                 document.getElementById('btnSuppr').onclick = async () => {
-                    if(confirm("Supprimer cette session ?")) { await deleteDoc(doc(db, "formations", id)); calendar.refetchEvents(); fermerModal(); }
+                    if(confirm("Supprimer ?")) { await deleteDoc(doc(db, "formations", id)); calendar.refetchEvents(); fermerModal(); }
                 };
 
                 document.getElementById('modalEvent').style.display = 'block';
@@ -217,12 +272,24 @@
 
     document.getElementById('btnSave').onclick = async () => {
         const sel = document.getElementById('formNom').value;
-        const nomFinal = (sel === "AUTRE") ? document.getElementById('formNomManuel').value : sel;
+        const man = document.getElementById('formNomManuel').value;
+        const nomFinal = (sel === "AUTRE") ? man : sel;
+        
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
+        const dateFin = document.getElementById('formDateFin').value;
+
         if(nomFinal && lieu) {
-            await addDoc(collection(db, "formations"), { nom: nomFinal, lieu, date, inscrits: [] });
+            await addDoc(collection(db, "formations"), { 
+                nom: nomFinal, 
+                lieu, 
+                date, 
+                dateFin: dateFin || date, 
+                inscrits: [] 
+            });
             calendar.refetchEvents(); fermerModal();
+        } else {
+            alert("Veuillez remplir le nom et le lieu.");
         }
     };
 
