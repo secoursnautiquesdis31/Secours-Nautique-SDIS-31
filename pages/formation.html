@@ -61,8 +61,7 @@
   <a href="dashboard.html" class="btn-back">🏠 MENU</a>
 
   <div class="user-session">
-      <span style="font-size: 0.7rem; font-weight: bold;">AGENT :</span>
-      <select id="selectAgentSession" style="border:none; font-weight: bold; color: var(--navy);"></select>
+      <select id="selectAgentSession" style="border:none; font-weight: bold; color: var(--navy); cursor:pointer; background: transparent;"></select>
   </div>
 
   <div class="container">
@@ -157,7 +156,7 @@
     async function init() {
         const uSnap = await getDocs(collection(db, "users"));
         const sel = document.getElementById('selectAgentSession');
-        sel.innerHTML = '<option value="">-- Agent --</option>';
+        sel.innerHTML = '<option value="">AGENT (Sélectionner)</option>';
         uSnap.forEach(d => { sel.innerHTML += `<option value="${d.data().nom}">${d.data().nom}</option>`; });
         sel.onchange = (e) => { agentConnecte = e.target.value; calendar.refetchEvents(); };
 
