@@ -241,7 +241,7 @@
                 
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
-                    let statut = (typeof i === 'object') ? i.statut : "en attente";
+                    let statut = (typeof i === 'object') ? i.statut : "inscrit";
                     
                     let ligneHtml = `<div class="admin-row"><span>${nom}</span>`;
                     
