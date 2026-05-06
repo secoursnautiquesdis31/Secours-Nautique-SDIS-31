@@ -82,10 +82,10 @@
             </table>
         </div>
 
-        <!-- NOUVELLE SECTION : SUIVI DES DEMANDES -->
+        <!-- SECTION : SUIVI DES DEMANDES -->
         <div class="section-title">Suivi de mes demandes matériel</div>
         <div id="suiviDemandes" style="margin-bottom: 30px;">
-            <p style="color: #888; font-style: italic;">Aucune demande traitée pour le moment.</p>
+            <p style="color: #888; font-style: italic;">Aucune demande en cours ou traitée.</p>
         </div>
 
         <div class="section-title">Archives Fiches de Sécurité (Drive)</div>
@@ -157,15 +157,38 @@
             document.getElementById('nomAgent').innerText = agentNom;
             document.getElementById('cisAgent').innerText = agent.cis || "CIS NON RENSEIGNÉ";
 
-            // --- AFFICHAGE DU SUIVI DES DEMANDES ---
+            // --- AFFICHAGE DU SUIVI DES DEMANDES (EN ATTENTE + TRAITÉES) ---
             const suiviContainer = document.getElementById('suiviDemandes');
+            suiviContainer.innerHTML = ""; 
+            let demandesTrouvees = false;
+
+            // 1. Chercher les demandes "EN ATTENTE" dans la collection globale
+            const qDemandes = await getDocs(collection(db, "demandes_materiel"));
+            qDemandes.forEach(docDem => {
+                const d = docDem.data();
+                if (d.agentId === agentId) { 
+                    demandesTrouvees = true;
+                    suiviContainer.innerHTML += `
+                        <div class="notification-card" style="border-left-color: var(--amber);">
+                            <div>
+                                <small style="color: #666;">Demande envoyée</small><br>
+                                <strong>${d.type} ${d.taille ? '('+d.taille+')' : ''}</strong>
+                            </div>
+                            <span style="background: var(--amber); color: var(--navy); padding: 4px 8px; border-radius: 12px; font-weight: bold; font-size: 0.75rem;">
+                                EN ATTENTE
+                            </span>
+                        </div>`;
+                }
+            });
+
+            // 2. Chercher les demandes "TRAITÉES" dans l'historique de l'agent
             if (agent.suiviDemandes && agent.suiviDemandes.length > 0) {
-                suiviContainer.innerHTML = "";
-                const demandes = [...agent.suiviDemandes].reverse(); // Plus récent en haut
-                demandes.forEach(dem => {
+                demandesTrouvees = true;
+                const demandesHistorique = [...agent.suiviDemandes].reverse();
+                demandesHistorique.forEach(dem => {
                     const dateAction = dem.date ? new Date(dem.date).toLocaleDateString('fr-FR') : "---";
                     suiviContainer.innerHTML += `
-                        <div class="notification-card">
+                        <div class="notification-card" style="border-left-color: var(--green);">
                             <div>
                                 <small style="color: #666;">${dateAction}</small><br>
                                 <strong>${dem.message}</strong>
@@ -175,6 +198,10 @@
                             </span>
                         </div>`;
                 });
+            }
+
+            if(!demandesTrouvees) {
+                suiviContainer.innerHTML = '<p style="color: #888; font-style: italic;">Aucune demande en cours ou traitée.</p>';
             }
 
             // --- APPEL ARCHIVES PDF GOOGLE SCRIPT ---
