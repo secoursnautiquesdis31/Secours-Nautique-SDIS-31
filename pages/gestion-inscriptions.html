@@ -28,21 +28,21 @@
         .formation-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--navy); }
         .info-tags { font-size: 0.85rem; color: #666; display: flex; gap: 15px; }
 
-        /* Couleurs corrigées */
-        .border-sav { border-left-color: #2A9D5C !important; } /* Vert SAV SEV */
-        .border-mer { border-left-color: #0077BE !important; } /* Bleu Mer */
-        .border-cen { border-left-color: #E8A020 !important; } /* Ambre CEN & Entrainement */
-        .border-mso { border-left-color: #E2725B !important; } /* Terracotta MSO */
-        .border-tests { border-left-color: #D94040 !important; } /* Rouge Tests */
+        .border-sav { border-left-color: #2A9D5C !important; }
+        .border-mer { border-left-color: #0077BE !important; }
+        .border-cen { border-left-color: #E8A020 !important; }
+        .border-mso { border-left-color: #E2725B !important; }
+        .border-tests { border-left-color: #D94040 !important; }
 
         .details-content { display: none; background: #FAFAFA; border-top: 1px solid #EEE; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
         th { text-align: left; padding: 12px 20px; color: #888; font-weight: normal; border-bottom: 1px solid #EEE; }
         td { padding: 10px 20px; border-bottom: 1px solid #F0F0F0; }
 
-        .statut-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; }
+        .statut-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
         .badge-inscrit { background: #E9ECEF; color: #495057; }
         .badge-present { background: #D1E7DD; color: #0F5132; }
+        .badge-absent { background: #F8D7DA; color: #842029; } /* Style pour l'absence */
 
         .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--navy); font-weight: bold; font-size: 0.9rem; }
         .count-badge { background: #EEE; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
@@ -97,14 +97,13 @@
                 const dateAffichage = (dateFmt === dateFinFmt) ? dateFmt : `Du ${dateFmt} au ${dateFinFmt}`;
                 const inscrits = f.inscrits || [];
 
-                // --- LOGIQUE DE COULEUR CORRIGÉE ---
                 let colorClass = "";
                 const nomMaj = f.nom.toUpperCase();
                 
                 if (nomMaj.includes("FMPA SAV SEV")) colorClass = "border-sav";
                 else if (nomMaj.includes("FMPA MER")) colorClass = "border-mer";
-                else if (nomMaj.includes("FMPA CEN") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-cen"; // Ambre
-                else if (nomMaj.includes("MSO")) colorClass = "border-mso"; // Terracotta
+                else if (nomMaj.includes("FMPA CEN") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-cen";
+                else if (nomMaj.includes("MSO")) colorClass = "border-mso";
                 else if (nomMaj.includes("TESTS ANNUELS")) colorClass = "border-tests";
 
                 let htmlTable = `
@@ -115,14 +114,25 @@
                                 <tr><th>Nom de l'agent</th><th>Statut</th></tr>
                             </thead>
                             <tbody>
-                                ${inscrits.map(i => `
+                                ${inscrits.map(i => {
+                                    // Logique de badge améliorée
+                                    let badgeClass = "badge-inscrit";
+                                    let texteStatut = "INSCRIT";
+
+                                    if (i.statut === 'présent') {
+                                        badgeClass = "badge-present";
+                                        texteStatut = "PRÉSENT";
+                                    } else if (i.statut === 'absent') {
+                                        badgeClass = "badge-absent";
+                                        texteStatut = "ABSENT";
+                                    }
+
+                                    return `
                                     <tr>
                                         <td><strong>${i.nom}</strong></td>
-                                        <td><span class="statut-badge ${i.statut === 'présent' ? 'badge-present' : 'badge-inscrit'}">
-                                            ${i.statut === 'présent' ? 'PRÉSENT' : 'INSCRIT'}
-                                        </span></td>
-                                    </tr>
-                                `).join('')}
+                                        <td><span class="statut-badge ${badgeClass}">${texteStatut}</span></td>
+                                    </tr>`;
+                                }).join('')}
                             </tbody>
                         </table>` : '<div style="padding:20px; color:#999; text-align:center;">Aucun inscrit</div>'}
                     </div>`;
