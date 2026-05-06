@@ -28,11 +28,13 @@
         .formation-header h3 { margin: 0; font-size: 1rem; font-weight: 700; color: var(--navy); }
         .info-tags { font-size: 0.85rem; color: #666; display: flex; gap: 15px; }
 
-        .border-sav { border-left-color: #2A9D5C !important; }
-        .border-mer { border-left-color: #0077BE !important; }
-        .border-cen { border-left-color: #E8A020 !important; }
-        .border-mso { border-left-color: #E2725B !important; }
-        .border-tests { border-left-color: #D94040 !important; }
+        /* COULEURS SYNCHRONISÉES AVEC LE CALENDRIER */
+        .border-sav { border-left-color: #2A9D5C !important; } /* Vert SAV SEV */
+        .border-mer { border-left-color: #87CEFA !important; } /* Bleu ciel Mer */
+        .border-cen { border-left-color: #E8A020 !important; } /* Ambre CEN */
+        .border-mso { border-left-color: #E2725B !important; } /* Terracotta MSO */
+        .border-entrainement { border-left-color: #FFD700 !important; } /* Jaune Entrainement */
+        .border-tests { border-left-color: #D94040 !important; } /* Rouge Tests */
 
         .details-content { display: none; background: #FAFAFA; border-top: 1px solid #EEE; }
         table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
@@ -42,7 +44,7 @@
         .statut-badge { padding: 3px 10px; border-radius: 20px; font-size: 0.7rem; font-weight: bold; text-transform: uppercase; }
         .badge-inscrit { background: #E9ECEF; color: #495057; }
         .badge-present { background: #D1E7DD; color: #0F5132; }
-        .badge-absent { background: #F8D7DA; color: #842029; } /* Style pour l'absence */
+        .badge-absent { background: #F8D7DA; color: #842029; }
 
         .btn-back { display: inline-block; margin-bottom: 20px; text-decoration: none; color: var(--navy); font-weight: bold; font-size: 0.9rem; }
         .count-badge { background: #EEE; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem; margin-left: 10px; }
@@ -97,14 +99,23 @@
                 const dateAffichage = (dateFmt === dateFinFmt) ? dateFmt : `Du ${dateFmt} au ${dateFinFmt}`;
                 const inscrits = f.inscrits || [];
 
+                // --- LOGIQUE DE COULEUR SYNCHRONISÉE ---
                 let colorClass = "";
-                const nomMaj = f.nom.toUpperCase();
-                
-                if (nomMaj.includes("FMPA SAV SEV")) colorClass = "border-sav";
-                else if (nomMaj.includes("FMPA MER")) colorClass = "border-mer";
-                else if (nomMaj.includes("FMPA CEN") || nomMaj.includes("ENTRAINEMENT")) colorClass = "border-cen";
-                else if (nomMaj.includes("MSO")) colorClass = "border-mso";
-                else if (nomMaj.includes("TESTS ANNUELS")) colorClass = "border-tests";
+                const nomMaj = (f.nom || "").toUpperCase();
+
+                if (nomMaj.includes("FMPA SAV SEV") || nomMaj.includes("FI SAV SEV")) {
+                    colorClass = "border-sav";
+                } else if (nomMaj.includes("FMPA MER")) {
+                    colorClass = "border-mer";
+                } else if (nomMaj.includes("FMPA CEN") || nomMaj.includes("FI CEN")) {
+                    colorClass = "border-cen";
+                } else if (nomMaj.includes("MSO")) {
+                    colorClass = "border-mso";
+                } else if (nomMaj.includes("ENTRAINEMENT")) {
+                    colorClass = "border-entrainement";
+                } else if (nomMaj.includes("TESTS ANNUELS")) {
+                    colorClass = "border-tests";
+                }
 
                 let htmlTable = `
                     <div class="details-content" id="details-${f.id}">
@@ -115,7 +126,6 @@
                             </thead>
                             <tbody>
                                 ${inscrits.map(i => {
-                                    // Logique de badge améliorée
                                     let badgeClass = "badge-inscrit";
                                     let texteStatut = "INSCRIT";
 
