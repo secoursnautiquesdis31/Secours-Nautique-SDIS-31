@@ -15,12 +15,10 @@
     
     .fc { --fc-border-color: #EEE; --fc-button-bg-color: #0B1F3A; --fc-button-border-color: #0B1F3A; }
     
-    /* --- MISE À JOUR DU STYLE POUR LE LIEU À DROITE --- */
     .fc-event { 
         cursor: pointer; 
         padding: 2px 5px; 
         border: none !important; 
-        color: white !important; 
         font-size: 0.75rem !important; 
     }
 
@@ -45,7 +43,6 @@
         overflow: hidden;
         text-overflow: ellipsis;
     }
-    /* ------------------------------------------------ */
     
     .user-session { position: fixed; top: 15px; right: 15px; z-index: 9999; background: white; padding: 8px 15px; border-radius: 8px; border: 1px solid #DDD; font-weight: bold; color: var(--navy); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
     .btn-back { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #0B1F3A; color: white; padding: 10px 15px; border-radius: 8px; text-decoration: none; font-weight: bold; border: 2px solid #E8A020; }
@@ -117,22 +114,23 @@
                     const snap = await getDocs(collection(db, "formations"));
                     const evts = snap.docs.map(d => {
                         const data = d.data();
+                        const nomNettoye = (data.nom || "").toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                         
                         let eventColor = "#0B1F3A"; 
                         let txtColor = "white";
-                        const nomMaj = data.nom.toUpperCase();
                         
-                        if (nomMaj.includes("FMPA SAV SEV")) {
-                            eventColor = "#90EE90"; 
-                        } else if (nomMaj.includes("FMPA MER")) {
+                        if (nomNettoye.includes("FMPA SAV SEV")) {
+                            eventColor = "#2A9D5C"; 
+                        } else if (nomNettoye.includes("FMPA MER")) {
                             eventColor = "#87CEFA"; 
-                        } else if (nomMaj.includes("FMPA CEN")) {
+                        } else if (nomNettoye.includes("FMPA CEN")) {
                             eventColor = "#E8A020"; 
-                        } else if (nomMaj.includes("MSO")) {
+                        } else if (nomNettoye.includes("MSO")) {
                             eventColor = "#E2725B"; 
-                          } else if (nomMaj.includes("ENTRAINEMENT")) {
+                        } else if (nomNettoye.includes("ENTRAINEMENT")) {
                             eventColor = "#FFD700";
-                        } else if (nomMaj.includes("TESTS ANNUELS")) {
+                            txtColor = "#0B1F3A";
+                        } else if (nomNettoye.includes("TESTS ANNUELS")) {
                             eventColor = "#D94040"; 
                         }
 
@@ -145,7 +143,8 @@
                             title: data.nom,
                             start: data.date,
                             end: isoFin,
-                            color: eventColor,
+                            backgroundColor: eventColor,
+                            borderColor: eventColor,
                             textColor: txtColor,
                             extendedProps: { 
                                 lieu: data.lieu,
@@ -159,23 +158,18 @@
                     success(evts);
                 } catch (e) { console.error(e); failure(e); }
             },
-            // --- AJOUT DE LA LOGIQUE D'AFFICHAGE DU LIEU À DROITE ---
             eventContent: function(arg) {
                 let title = arg.event.title;
                 let lieu = arg.event.extendedProps.lieu || "";
-                
                 let container = document.createElement('div');
                 container.className = 'event-wrapper';
-                
                 let html = `<span class="fc-event-title-custom">${title}</span>`;
                 if (lieu) {
                     html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
                 }
-                
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
-            // -------------------------------------------------------
             eventClick: (info) => ouvrirDetails(info.event)
         });
         calendar.render();
