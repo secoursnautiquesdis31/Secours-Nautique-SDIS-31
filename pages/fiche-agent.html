@@ -29,6 +29,9 @@
         .modal-content { background: white; margin: 5% auto; padding: 25px; width: 500px; border-radius: 12px; max-height: 80vh; overflow-y: auto; }
         .stock-item { padding: 12px; border-bottom: 1px solid #EEE; cursor: pointer; display: flex; justify-content: space-between; }
         .stock-item:hover { background: #F0F4F8; color: var(--navy); }
+
+        /* SÉCURITÉ : On cache le lien de retour par défaut pour éviter le clignotement */
+        #backLink { display: none !important; }
     </style>
 </head>
 <body>
@@ -159,7 +162,7 @@
                     document.getElementById('listeFichesPDF').innerHTML = `<tr><td colspan="3" style="text-align:center; color:red;">Erreur de connexion aux archives PDF.</td></tr>`;
                 });
             
-            // Récupération des quotas avec ajout des TESTS ANNUELS
+            // Récupération des quotas
             const obj = agent.quotas || { sav: 0, fmpa: 0, cen: 0, mso: 0, tests: 0 };
             document.getElementById('q_sav').value = obj.sav || 0;
             document.getElementById('q_fmpa').value = obj.fmpa || 0;
@@ -214,16 +217,6 @@
             appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
             appliquerCouleurs(presences.tests, 'q_tests', 'count_tests');
 
-            ['q_sav', 'q_fmpa', 'q_cen', 'q_mso', 'q_tests'].forEach(id => {
-                document.getElementById(id).oninput = () => {
-                    appliquerCouleurs(presences.sav, 'q_sav', 'count_sav');
-                    appliquerCouleurs(presences.fmpa, 'q_fmpa', 'count_fmpa');
-                    appliquerCouleurs(presences.cen, 'q_cen', 'count_cen');
-                    appliquerCouleurs(presences.mso, 'q_mso', 'count_mso');
-                    appliquerCouleurs(presences.tests, 'q_tests', 'count_tests');
-                };
-            });
-
             // Spécialités
             const grid = document.getElementById('specsGrid');
             grid.innerHTML = "";
@@ -254,14 +247,26 @@
                 epiList.appendChild(div);
             });
 
-            // Droits d'affichage Public
+            // --- GESTION DES DROITS ET AFFICHAGE PUBLIC (SÉCURISÉ) ---
+            const backLink = document.getElementById('backLink');
+
             if (modePublic === 'true') {
+                // 1. Bouton MENU redirige vers Espace Public
                 const homeBtn = document.getElementById('btnHome');
                 if(homeBtn) homeBtn.href = "espace-public.html";
+
+                // 2. Cache les fonctions admin
                 if(document.getElementById('btnSaveQuotas')) document.getElementById('btnSaveQuotas').style.display = 'none';
                 if(document.getElementById('btnOpenStock')) document.getElementById('btnOpenStock').style.display = 'none';
-                if(document.getElementById('backLink')) document.getElementById('backLink').style.display = 'none';
+                
+                // 3. SUPPRESSION du lien de retour pour éviter toute fraude
+                if(backLink) backLink.remove();
+
+                // 4. Verrouille les inputs de quotas
                 document.querySelectorAll('.quota-item input').forEach(i => i.readOnly = true);
+            } else {
+                // SI MODE ADMIN : On affiche le lien (puisqu'il est masqué par le CSS par défaut)
+                if(backLink) backLink.style.setProperty('display', 'inline', 'important');
             }
 
         } catch (e) { console.error(e); }
