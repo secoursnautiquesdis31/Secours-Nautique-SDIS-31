@@ -160,7 +160,6 @@
         calendar.refetchEvents();
         fermerModal();
     };
-
     async function init() {
         const uSnap = await getDocs(collection(db, "users"));
         const sel = document.getElementById('selectAgentSession');
@@ -239,7 +238,7 @@
                 const inscrits = data.inscrits || [];
                 if(inscrits.length === 0) zone.innerHTML = "Aucun inscrit.";
                 
-                inscrits.forEach(i => {
+              inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
                     let statut = (typeof i === 'object' && i.statut) ? i.statut : "inscrit";
                     
@@ -250,17 +249,17 @@
                     } else if (statut === "absent") {
                         ligneHtml += `<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>`;
                     } else {
-                        // Affichage des deux boutons si le statut n'est pas encore définit
+                        // AJOUT DE window. DEVANT modifierStatut
                         ligneHtml += `
                             <div class="btn-action-group">
-                                <button class="btn-admin-v" onclick="modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
-                                <button class="btn-admin-a" onclick="modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
+                                <button class="btn-admin-v" onclick="window.modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
+                                <button class="btn-admin-a" onclick="window.modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
                             </div>`;
                     }
                     ligneHtml += `</div>`;
                     zone.innerHTML += ligneHtml;
                 });
-
+              
                 const noms = inscrits.map(i => (typeof i === 'object' ? i.nom : i));
                 const inscrit = agentConnecte && noms.includes(agentConnecte);
                 document.getElementById('btnInscrire').style.display = inscrit ? "none" : "block";
