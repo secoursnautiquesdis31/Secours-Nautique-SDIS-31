@@ -17,6 +17,19 @@
         .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:1000; justify-content:center; align-items:center; }
         .modal-content { background:white; padding:25px; border-radius:15px; width:90%; max-width:400px; }
         .btn-send { background: var(--navy); color: white; border: none; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        /* Style pour le bouton changer d'agent */
+        #btnChangerAgent {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--navy);
+            text-decoration: underline;
+            cursor: pointer;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            font-family: inherit;
+        }
     </style>
 </head>
 <body>
@@ -33,6 +46,7 @@
                 <option value="">-- Sélectionner mon nom --</option>
             </select>
             <p id="msgBienvenue" style="margin-top:10px; font-weight:bold; color:var(--amber); display:none;"></p>
+            <button id="btnChangerAgent">Ce n'est pas moi / Changer d'agent</button>
         </div>
 
         <div class="menu-grid">
@@ -90,16 +104,27 @@
 
         const selectAgent = document.getElementById('selectAgent');
         const selectMat = document.getElementById('matType');
+        const msgBienvenue = document.getElementById('msgBienvenue');
+        const btnChanger = document.getElementById('btnChangerAgent');
 
         async function chargerAgents() {
             try {
                 const snap = await getDocs(collection(db, "users"));
+                selectAgent.innerHTML = '<option value="">-- Sélectionner mon nom --</option>';
                 snap.forEach(doc => {
                     let opt = document.createElement('option');
                     opt.value = doc.id;
                     opt.text = doc.data().nom;
                     selectAgent.appendChild(opt);
                 });
+
+                // --- VÉRIFICATION DE LA MÉMOIRE AU CHARGEMENT ---
+                const savedId = localStorage.getItem('selectedAgentId');
+                if (savedId) {
+                    selectAgent.value = savedId;
+                    majAffichage();
+                }
+
             } catch(e) { console.error(e); }
         }
 
@@ -121,12 +146,28 @@
             } catch(e) { console.error(e); }
         }
         
-        selectAgent.onchange = () => {
-            const nom = selectAgent.options[selectAgent.selectedIndex].text;
+        // --- FONCTION DE MISE À JOUR DE L'AFFICHAGE ET MÉMOIRE ---
+        function majAffichage() {
             if(selectAgent.value !== "") {
-                document.getElementById('msgBienvenue').innerText = "Salut " + nom + " !";
-                document.getElementById('msgBienvenue').style.display = "block";
+                const nom = selectAgent.options[selectAgent.selectedIndex].text;
+                msgBienvenue.innerText = "Salut " + nom + " !";
+                msgBienvenue.style.display = "block";
+                btnChanger.style.display = "inline-block";
+                // On mémorise l'ID de l'agent
+                localStorage.setItem('selectedAgentId', selectAgent.value);
+            } else {
+                msgBienvenue.style.display = "none";
+                btnChanger.style.display = "none";
+                localStorage.removeItem('selectedAgentId');
             }
+        }
+
+        selectAgent.onchange = majAffichage;
+
+        // Action du bouton "Changer"
+        btnChanger.onclick = () => {
+            selectAgent.value = "";
+            majAffichage();
         };
 
         window.ouvrirDemande = () => {
@@ -142,13 +183,11 @@
             window.location.href = `calendrier-public.html`;
         };
 
-        // --- FONCTION MODIFIÉE ICI ---
         window.ouvrirMaFiche = () => {
             if(!selectAgent.value) return alert("Sélectionne ton nom d'abord !");
             const agentId = selectAgent.value;
             const nomAgent = selectAgent.options[selectAgent.selectedIndex].text;
             
-            // On efface le rôle admin pour éviter les bugs d'affichage sur ton PC
             localStorage.removeItem('userRole'); 
             localStorage.setItem('agentNomSelected', nomAgent);
             localStorage.setItem('modeConsultation', 'true');
