@@ -51,7 +51,10 @@
     .modal-content { background: white; margin: 5% auto; padding: 30px; width: 420px; border-radius: 12px; position: relative; }
     .btn-main { background: var(--navy); color: white; border: none; padding: 12px; width: 100%; border-radius: 6px; cursor: pointer; font-weight: bold; margin-top: 10px; }
     .admin-row { display: flex; justify-content: space-between; align-items: center; padding: 8px; background: #f8f9fa; margin-bottom: 5px; border-radius: 4px; border-left: 4px solid #0B1F3A; }
-    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 0.7rem; }
+    
+    .action-buttons { display: flex; gap: 5px; }
+    .btn-valider { background: #2A9D5C; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
+    .btn-absent { background: #D94040; color: white; border: none; padding: 5px 8px; border-radius: 4px; cursor: pointer; font-size: 0.65rem; font-weight: bold; }
     
     select, input { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #CCC; border-radius: 4px; box-sizing: border-box; font-family: 'Barlow'; }
   </style>
@@ -137,18 +140,23 @@
         document.getElementById('formNomManuel').style.display = (this.value === "AUTRE") ? "block" : "none";
     };
 
-    window.validerAgent = async (formationId, nomAgent) => {
-        if(!confirm("Valider la présence de " + nomAgent + " ?")) return;
+    // FONCTION MISE À JOUR STATUT (PRÉSENT OU ABSENT)
+    window.changerStatutAgent = async (formationId, nomAgent, nouveauStatut) => {
+        const action = nouveauStatut === "présent" ? "Valider la présence" : "Signaler l'absence";
+        if(!confirm(`${action} de ${nomAgent} ?`)) return;
+
         const ref = doc(db, "formations", formationId);
         const snap = await getDoc(ref);
         const fData = snap.data();
         let inscrits = fData.inscrits || [];
+
         inscrits = inscrits.map(i => {
             let n = (typeof i === 'object') ? i.nom : i;
-            return (n === nomAgent) ? { nom: n, statut: "présent", type: fData.nom } : i;
+            return (n === nomAgent) ? { nom: n, statut: nouveauStatut, type: fData.nom } : i;
         });
+
         await updateDoc(ref, { inscrits: inscrits });
-        alert("Validé !");
+        alert(nouveauStatut === "présent" ? "Présence validée !" : "Absence enregistrée.");
         calendar.refetchEvents();
         fermerModal();
     };
@@ -175,20 +183,12 @@
                     let eventColor = "#0B1F3A"; 
                     let txtColor = "white";
 
-                    if (nomNettoye.includes("FMPA SAV SEV")) {
-                        eventColor = "#2A9D5C"; 
-                    } else if (nomNettoye.includes("FMPA MER")) {
-                        eventColor = "#87CEFA"; 
-                    } else if (nomNettoye.includes("FMPA CEN")) {
-                        eventColor = "#E8A020"; 
-                    } else if (nomNettoye.includes("MSO")) {
-                        eventColor = "#E2725B"; 
-                    } else if (nomNettoye.includes("ENTRAINEMENT")) {
-                        eventColor = "#FFD700";
-                        txtColor = "#0B1F3A";
-                    } else if (nomNettoye.includes("TESTS ANNUELS")) {
-                        eventColor = "#D94040"; 
-                    }
+                    if (nomNettoye.includes("FMPA SAV SEV")) { eventColor = "#2A9D5C"; } 
+                    else if (nomNettoye.includes("FMPA MER")) { eventColor = "#87CEFA"; } 
+                    else if (nomNettoye.includes("FMPA CEN")) { eventColor = "#E8A020"; } 
+                    else if (nomNettoye.includes("MSO")) { eventColor = "#E2725B"; } 
+                    else if (nomNettoye.includes("ENTRAINEMENT")) { eventColor = "#FFD700"; txtColor = "#0B1F3A"; } 
+                    else if (nomNettoye.includes("TESTS ANNUELS")) { eventColor = "#D94040"; }
                     
                     let visuelFin = new Date(data.dateFin || data.date);
                     visuelFin.setDate(visuelFin.getDate() + 1);
@@ -212,9 +212,7 @@
                 let container = document.createElement('div');
                 container.className = 'event-wrapper';
                 let html = `<span class="fc-event-title-custom">${title}</span>`;
-                if (lieu) {
-                    html += `<span class="fc-event-location-custom"> — ${lieu}</span>`;
-                }
+                if (lieu) { html += `<span class="fc-event-location-custom"> — ${lieu}</span>`; }
                 container.innerHTML = html;
                 return { domNodes: [container] };
             },
@@ -248,11 +246,20 @@
                 inscrits.forEach(i => {
                     let nom = (typeof i === 'object') ? i.nom : i;
                     let statut = (typeof i === 'object') ? i.statut : "inscrit";
-                    let estP = (statut === "présent");
+                    
+                    let statusLabel = "";
+                    if (statut === "présent") statusLabel = '<b style="color:green; font-size:0.7rem;">PRÉSENT ✅</b>';
+                    else if (statut === "absent") statusLabel = '<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>';
+
                     zone.innerHTML += `
                         <div class="admin-row">
-                            <span>${nom} ${estP ? '✅' : ''}</span>
-                            ${!estP ? `<button class="btn-valider" onclick="validerAgent('${id}', '${nom}')">Valider</button>` : '<b style="color:green; font-size:0.7rem;">PRÉSENT</b>'}
+                            <span>${nom}</span>
+                            <div class="action-buttons">
+                                ${statut === "en attente" || statut === "inscrit" ? `
+                                    <button class="btn-valider" onclick="changerStatutAgent('${id}', '${nom}', 'présent')">Présent</button>
+                                    <button class="btn-absent" onclick="changerStatutAgent('${id}', '${nom}', 'absent')">Absent</button>
+                                ` : statusLabel}
+                            </div>
                         </div>`;
                 });
 
@@ -280,18 +287,13 @@
         const sel = document.getElementById('formNom').value;
         const man = document.getElementById('formNomManuel').value;
         const nomFinal = (sel === "AUTRE") ? man : sel;
-        
         const lieu = document.getElementById('formLieu').value;
         const date = document.getElementById('selectedDate').value;
         const dateFin = document.getElementById('formDateFin').value;
 
         if(nomFinal && lieu) {
             await addDoc(collection(db, "formations"), { 
-                nom: nomFinal, 
-                lieu, 
-                date, 
-                dateFin: dateFin || date, 
-                inscrits: [] 
+                nom: nomFinal, lieu, date, dateFin: dateFin || date, inscrits: [] 
             });
             calendar.refetchEvents(); fermerModal();
         } else {
