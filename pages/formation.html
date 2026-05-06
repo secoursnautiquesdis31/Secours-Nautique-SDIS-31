@@ -248,11 +248,10 @@
                     } else if (statut === "absent") {
                         ligneHtml += `<b style="color:red; font-size:0.7rem;">ABSENT ❌</b>`;
                     } else {
-                        // Affiche les deux boutons si le statut est "inscrit", "en attente" ou vide
                         ligneHtml += `
                             <div class="btn-action-group">
-                                <button class="btn-admin-v" onclick="modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
-                                <button class="btn-admin-a" onclick="modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
+                                <button class="btn-admin-v" onclick="window.modifierStatut('${id}', '${nom}', 'présent')">Présent</button>
+                                <button class="btn-admin-a" onclick="window.modifierStatut('${id}', '${nom}', 'absent')">Absent</button>
                             </div>`;
                     }
                     ligneHtml += `</div>`;
@@ -265,7 +264,6 @@
 
                 document.getElementById('btnInscrire').onclick = async () => {
                     if(!agentConnecte) return alert("Sélectionnez un agent");
-                    // On enregistre avec le statut "inscrit" pour matcher la boucle d'affichage
                     await updateDoc(doc(db, "formations", id), { 
                         inscrits: arrayUnion({nom: agentConnecte, statut: "inscrit"}) 
                     });
